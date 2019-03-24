@@ -45,7 +45,7 @@ def popupmsg(msg):
 if __name__ == '__main__':
    root = Tk()
    root.title(".csvDB 1.0")
-   root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
+   #root.iconbitmap(r'C:\Users\Example\newP.ico')
    search_files = []
    global auto_open_box, ents
    answer.extend(intro_dialog(root))
