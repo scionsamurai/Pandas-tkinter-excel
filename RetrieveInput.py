@@ -41,7 +41,7 @@ class Retrieve_Input:
                 print(input_criteria[2][1].get() + " isn't a valid output name/type. Please end name with .csv")
                 if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
                     if len(Split_Entry.split(input_criteria[1][1].get())) > 1:
-                        output_dir = search_column + "(" + str(len(Split_Entry.split(input_criteria[1][1].get()))) + ").csv"
+                        output_dir = search_column + "(" + str(len(Split_Entry.split(input_criteria[1][1].get()))) + ")." + output_type
                     else:
                         output_dir = Split_Entry.split(input_criteria[1][1].get()) + "." + output_type
                 else:
