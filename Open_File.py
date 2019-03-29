@@ -13,6 +13,9 @@ class OpenFile:
             data = pd.read_excel(entry, sheet_name=0)
             data.columns = [col.strip() for col in data.columns]
             return data
+        elif entry[-3:] == '.h5':
+            data = pd.read_hdf(entry,'df')
+            return data
         else:
             print('Not a valid file type...yet.')
                 # print(data)
