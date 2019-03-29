@@ -2,6 +2,7 @@
 from tkinter import *
 from tkinter import filedialog
 import os, warnings, tables
+import pandas as pd
 from RetrieveInput import Retrieve_Input
 from Open_File import OpenFile
 from Make_Forms import MakeForm
@@ -42,15 +43,16 @@ def popupmsg(msg):
    B1.pack()
    popup.mainloop()
 
-def df_to_hdf(df):
-   df.to_hdf('data.h5', key='df', mode='w')
+def df_to_hdf():
+   combined_frames = pd.concat(li, axis=0, sort=False, ignore_index=True)
+   combined_frames.to_hdf('data.h5', key='df', mode='w')
    print('saved')
 
 
 if __name__ == '__main__':
    root = Tk()
    root.title(".csvDB 1.0")
-   root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
+   #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
    search_files = []
    global auto_open_box, ents
    answer.extend(intro_dialog(root))
@@ -69,8 +71,8 @@ if __name__ == '__main__':
       li_dict[i] = (len(li) - 1)
 
    root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
-   b1 = Button(root, text='Show', command=(lambda e=ents: fetch(ents)))
-   b1.pack(side=LEFT, padx=5, pady=5)
+   #b1 = Button(root, text='Show', command=(lambda e=ents: fetch(ents)))
+   #b1.pack(side=LEFT, padx=5, pady=5)
    b2 = Button(root, text='Quit', command=root.quit)
    b2.pack(side=RIGHT, padx=5, pady=5)
    #print(li[0].columns.values)
@@ -84,6 +86,6 @@ if __name__ == '__main__':
                command=(lambda e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
    b4.pack(side=LEFT, padx=5, pady=5)
    b5 = Button(root, text='Save HDF File(s)',
-               command=(lambda e=li[0]: df_to_hdf(e)))
+               command=(lambda e='no value': df_to_hdf()))
    b5.pack(side=LEFT, padx=5, pady=5)
    root.mainloop()
