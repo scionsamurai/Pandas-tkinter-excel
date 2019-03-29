@@ -46,33 +46,34 @@ def df_to_hdf(df):
    df.to_hdf('data.h5', key='df', mode='w')
    print('saved')
 
-def open_file(root, func=0):
-   if func==1:
-      root.destroy()
-      root = Tk()
-      root.title(".csvDB 1.0")
-      root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
-   global auto_open_box, ents
-   search_files = intro_dialog(root)
-   answer.extend(search_files)
-   #answer = list(filter(bool, answer))
-   form1 = MakeForm()
-   ents = form1.make(root, fields, 1)
-   form2 = MakeForm(data_frames=li, frame_keys=li_dict, input_box1=ents[0][1], input_box2=ents[1][1])
-   ents2 = form2.make(root, answer, 2)
-   for i in search_files:
-      li.append(OpenFile.open_file(i))
-      li_dict[i] = (len(li) - 1)
 
+if __name__ == '__main__':
+   root = Tk()
+   root.title(".csvDB 1.0")
+   root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
+   search_files = []
+   global auto_open_box, ents
+   answer.extend(intro_dialog(root))
+   #print(answer)
+   answer = list(filter(bool, answer))
+   #print(answer)
+   form1 = MakeForm()
+   ents = form1.make(root, fields,1)
+   form2= MakeForm(data_frames=li,frame_keys=li_dict, input_box1=ents[0][1],input_box2=ents[1][1])
+   ents2 = form2.make(root, answer,2)
    opt_form = MakeForm()
    inp = Retrieve_Input()
 
+   for i in answer:
+      li.append(OpenFile.open_file(i))
+      li_dict[i] = (len(li) - 1)
+
    root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
-   #b1 = Button(root, text='Open More', command=(lambda e=ents: fetch(ents)))
-   #b1.pack(side=LEFT, padx=5, pady=5)
+   b1 = Button(root, text='Show', command=(lambda e=ents: fetch(ents)))
+   b1.pack(side=LEFT, padx=5, pady=5)
    b2 = Button(root, text='Quit', command=root.quit)
    b2.pack(side=RIGHT, padx=5, pady=5)
-   # print(li[0].columns.values)
+   #print(li[0].columns.values)
    auto_open_box = IntVar()
    open_var = Checkbutton(root, text='Auto Open?', variable=auto_open_box)
    open_var.pack(side=RIGHT)
@@ -85,13 +86,4 @@ def open_file(root, func=0):
    b5 = Button(root, text='Save HDF File(s)',
                command=(lambda e=li[0]: df_to_hdf(e)))
    b5.pack(side=LEFT, padx=5, pady=5)
-
-if __name__ == '__main__':
-   root = Tk()
-   root.title(".csvDB 1.0")
-   root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
-
-   open_file(root)
-   b1 = Button(root, text='Open More', command=(lambda e=root: open_file(e,1)))
-   b1.pack(side=LEFT, padx=5, pady=5)
    root.mainloop()
