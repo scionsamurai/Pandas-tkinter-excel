@@ -1,14 +1,17 @@
 from tkinter import *
 from scrollbarClass import Scrollable
-import shelve
+import shelve, os
+from functools import partial
 class MakeForm:
-    def __init__(self, data_frames=[], frame_keys={},input_box1=False, input_box2=False):
+    def __init__(self, data_frames=[], frame_keys={},input_box1=False, input_box2=False, pass_func=False):
         self.entries = []
         self.entries2 = {}
         self.li = data_frames
         self.li_dict = frame_keys
         self.ents1 = input_box1
         self.ents2 = input_box2
+        self.pass_func=pass_func
+        self.footer = False
 
     def make(self, root=None, fields=[], func=0,body=False, key=False, set_info=False):
 
@@ -23,9 +26,10 @@ class MakeForm:
                 self.entries.append((field, ent))
             return self.entries
         elif func == 2:
+            self.entries = []
             for field in fields:
                 temp_field = field.split('/')
-                new_field = 'Search in:    ' + temp_field[(len(temp_field) - 1)][:-4]
+                new_field = 'Search:  ' + temp_field[(len(temp_field) - 1)]
                 row = Frame(root)
                 var1 = IntVar()
                 ent = Checkbutton(row, text=new_field, variable=var1)
@@ -145,8 +149,163 @@ class MakeForm:
             rprint.pack(side=RIGHT)
 
             headers_window.mainloop()
+        elif func == 6:
+            self.entries = []
+            for field in fields:
+                temp_field = field.split('/')
+                new_field = temp_field[(len(temp_field) - 1)]
+                row = Frame(root)
+                lab = Label(row, width=15, text=new_field, anchor='w')
+                ent2 = Entry(row, width=2)
+                lab.pack(side=LEFT)
+                row.pack(side=TOP, fill=X, padx=5, pady=2)
+                #bx.pack(side=RIGHT)
+                ent2.pack(side=RIGHT)
+                self.entries.append((field, ent2))
+            return self.entries
+        elif func == 7:
+            global opt_footer, opt_window
+            IN_OPTIONS = 'General', 'Specify Columns', 'Set Col DataType'
+            opt_window = Tk()
+            opt_window.wm_title(".csvDB 1.1")
+            header = Frame(opt_window)
+            body = Frame(opt_window)
+            opt_footer = Frame(opt_window)
+            variable = StringVar(header)
+            variable.set('Click Here')  # IN_OPTIONS[0]) #default value
+            w = OptionMenu(header, variable, *IN_OPTIONS)
+            Label(header, text="Input Options").pack()
+            row2 = Frame(opt_window)
+            breset = Button(row2, text='Default Value\'s',
+                            command=(lambda e='what this': self.reset_defaults()))
+            breset.pack(side=RIGHT)
+            row2.pack(padx=20)
+            header.pack()
+            variable.trace("w", partial(self.changed, widget=variable))
+            w.pack()
+            body.pack()
+            opt_window.mainloop()
+        elif func == 8:
+            gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'Verbose'
+            gen_def = {'Delimiter':',','Terminator':'DV', 'Header Line':'DV', 'Index Column':'DV',
+                       'Chunk':'DV', 'Verbose':'DV'}
+            var_file = shelve.open('var_file')
+            temp_dict ={}
+            try:
+                rules = var_file['opt_gen_rules']
+                for gen_set in rules:
+                    if gen_set[0] == 'Delimiter':
+                        temp_dict['Delimiter'] = gen_set[1]
+                    elif gen_set[0] == 'Terminator':
+                        temp_dict['Terminator'] = gen_set[1]
+                    elif gen_set[0] == 'Header Line':
+                        temp_dict['Header Line'] = gen_set[1]
+                    elif gen_set[0] == 'Index Column':
+                        temp_dict['Index Column'] = gen_set[1]
+                    elif gen_set[0] == 'Chunk':
+                        temp_dict['Chunk'] = gen_set[1]
+                    elif gen_set[0] == 'Verbose':
+                        temp_dict['Verbose'] = gen_set[1]
+            except KeyError:
+                print('Default rules')
 
+            for opt in gen_opts:
+                row = Frame(root)
+                #if opt != 'Verbose':
+                lab = Label(row, width=12, text=opt, anchor='w')
+                ent = Entry(row, width=3)
+                row.pack(side=TOP, fill=X, padx=5, pady=2)
+                lab.pack(side=LEFT)
+                ent.pack(side=RIGHT, expand=YES, fill=X)
 
+                if opt in temp_dict:
+                    ent.insert(0,temp_dict[opt])
+                elif opt in gen_def:
+                    ent.insert(0,gen_def[opt])
+                self.entries.append((opt, ent))
+                """else:
+                    var1 = IntVar()
+                    ent = Checkbutton(row, text=opt, variable=var1)
+                    row.pack(side=TOP, fill=X, padx=5, pady=2)
+                    ent.pack(side=RIGHT, expand=YES, fill=X)
+                    self.entries.append((opt, var1)) """
+                #self.entries.append((opt, ent))
+            last_row = Frame(root)
+            bload = Button(last_row, text='Apply Changes',
+                           command=(lambda e='dont get lambda': self.opt_rule()))
+            bload.pack(side=RIGHT)
+            last_row.pack()
+            var_file.close()
+            return self.entries
+        elif func == 9:
+            row = Frame(root)
+            row2 = Frame(root)
+            self.footer = Frame(root)
+            lab = Label(row2, text='Load only columns with the headers ')
+            ent = Entry(row, width=25)
+            bsave = Button(row, text='Add Column: ',
+                           command=(lambda e='nothin': self.add_column(ent, root)))
+            row.pack(side=TOP, fill=X, padx=5, pady=2)
+            row2.pack(side=TOP, fill=X, padx=5, pady=2)
+            lab.pack(side=TOP)
+            bsave.pack(side=LEFT)
+            ent.pack(side=RIGHT, expand=YES, fill=X)
+            var_file = shelve.open('var_file')
+            rules = []
+            try:
+                rules = var_file['spec_col_rules']
+            except KeyError:
+                print('Default rules')
+            var_file.close()
+            for i in rules:
+                row = Frame(self.footer)
+                lab = Label(row, text=i, anchor='w')
+                row.pack(side=TOP, fill=X, padx=5, pady=2)
+                lab.pack(side=LEFT)
+            breset = Button(self.footer, text='Reset List',
+                            command=(lambda e='what this': self.reset_col_list()))
+            breset.pack()
+            self.footer.pack()
+
+            return ('usecols', ent)
+        elif func == 10:
+            IN_TYPES = 'Text', 'Number'
+            row = Frame(root)
+            row2 = Frame(root)
+            self.footer = Frame(root)
+            lab = Label(row2, text='Saved Column/Datatype Rules')
+            ent = Entry(row, width=13)
+            variable = StringVar(row)
+            bsave = Button(row, text='Add Col/Dtype:',
+                           command=(lambda e='nothin': self.col_dtype(ent,variable, root)))
+            variable.set('Click Here')
+            w = OptionMenu(row, variable, *IN_TYPES)
+            row.pack(side=TOP, fill=X, padx=5, pady=2)
+            row2.pack(side=TOP, fill=X, padx=5, pady=2)
+            lab.pack(side=TOP)
+            bsave.pack(side=LEFT)
+            ent.pack(side=LEFT)
+            w.pack(side=LEFT)
+
+            var_file = shelve.open('var_file')
+            rules = []
+            try:
+                rules = var_file['col_dtypes']
+            except KeyError:
+                print('Default rules')
+            var_file.close()
+            for i in rules:
+                row = Frame(self.footer)
+                lab = Label(row, text=i, anchor='w')
+                row.pack(side=TOP, fill=X, padx=5, pady=2)
+                lab.pack(side=LEFT)
+            breset = Button(self.footer, text='Reset List',
+                            command=(lambda e='what this': self.reset_col_list(func=2)))
+            breset.pack()
+
+            self.footer.pack()
+
+            return ('usecols', ent)
     def update_entry(self, root, set_info, field_to_update, func=0):
         if func == 1:
             field_to_update.delete(0, END)
@@ -225,6 +384,15 @@ class MakeForm:
         font.delete(0, END)
         font_size.delete(0, END)
 
+    def opt_rule(self):
+        var_file = shelve.open('var_file')
+        rules = []
+        for entry in self.entries:
+            rules.append((entry[0],entry[1].get()))
+        print(rules)
+        var_file['opt_gen_rules'] = rules
+        var_file.close()
+
     def reset_rules(self,shelf_key):
         var_file = shelve.open('var_file')
         try:
@@ -270,3 +438,123 @@ class MakeForm:
         var1_file = shelve.open('var_file')
         var1_file['rules'] = rules
         var1_file.close()
+
+    def changed(self,*args, widget=None):
+        global opt_footer, opt_window, inp_ents
+        opt_footer.pack_forget()
+        opt_footer.destroy()
+        opt_footer = Frame(opt_window)
+        form3 = MakeForm()
+        if widget.get() == 'General':
+            inp_ents = form3.make(opt_footer, func=8)
+        elif widget.get() == 'Specify Columns':
+            inp_ents = form3.make(opt_footer, func=9)
+        elif widget.get() == 'Set Col DataType':
+            inp_ents = form3.make(opt_footer, func=10)
+        else:
+            print("Where'd that setting come from?")
+        opt_footer.pack()
+
+    def donothing(self):
+        x = 0
+        return x
+
+    def reset_defaults(self):
+        var_file = shelve.open('var_file')
+        try:
+            del var_file['opt_gen_rules']
+        except KeyError:
+            pass
+        try:
+            del var_file['spec_col_rules']
+        except KeyError:
+            pass
+        try:
+            del var_file['col_dtypes']
+        except KeyError:
+            pass
+        var_file.close()
+
+    def return_entries(self, func=0):
+        if func == 1:
+            return self.ents1
+        elif func ==2:
+            return self.entries
+
+    def add_column(self, ent, root):
+        self.footer.pack_forget()
+        self.footer.destroy()
+        self.footer = Frame(root)
+        var_file = shelve.open('var_file')
+        rules = []
+        try:
+            rules = var_file['spec_col_rules']
+        except KeyError:
+            print('Default rules')
+        rules.append(ent.get())
+        rules = list(dict.fromkeys(rules))
+        var_file['spec_col_rules'] = rules
+        var_file.close()
+
+        for i in rules:
+            row = Frame(self.footer)
+            lab = Label(row, text=i, anchor='w')
+            row.pack(side=TOP, fill=X, padx=5, pady=2)
+            lab.pack(side=LEFT)
+        breset = Button(self.footer, text='Reset List',
+                        command=(lambda e='what this': self.reset_col_list()))
+        breset.pack(side=RIGHT)
+        self.footer.pack()
+
+    def col_dtype(self, ent, var, root):
+        self.footer.pack_forget()
+        self.footer.destroy()
+        self.footer = Frame(root)
+        var_file = shelve.open('var_file')
+        rules = {}
+        try:
+            rules = var_file['col_dtypes']
+        except KeyError:
+            print('Default rules')
+        #duplicate = False
+        #for rule in rules:
+        #    if rule[0] == ent.get():
+        #        duplicate = True
+        #if duplicate == False:
+        if ent.get() not in rules:
+            rules[ent.get()] =var.get()
+
+        var_file['col_dtypes'] = rules
+        var_file.close()
+
+        print(rules)
+        for key, value in rules.items():
+            text_var = key + " : " + value
+            row = Frame(self.footer)
+            lab = Label(row, text=text_var, anchor='w')
+            row.pack(side=TOP, fill=X, padx=5, pady=2)
+            lab.pack(side=LEFT)
+        breset = Button(self.footer, text='Reset List',
+                        command=(lambda e='what this': self.reset_col_list(func=2)))
+        breset.pack(side=RIGHT)
+        self.footer.pack()
+
+    def reset_col_list(self, func=1):
+        try:
+            if func == 2:
+                var_file = shelve.open('var_file')
+                del var_file['col_dtypes']
+                var_file.close()
+                self.footer.pack_forget()
+                self.footer.destroy()
+            else:
+                var_file = shelve.open('var_file')
+                del var_file['spec_col_rules']
+                var_file.close()
+                self.footer.pack_forget()
+                self.footer.destroy()
+        except KeyError:
+            print('No settings in list')
+
+    def sortSecond(self,val):
+        return val[0]
