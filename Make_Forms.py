@@ -91,7 +91,7 @@ class MakeForm:
             ent4 = Entry(row, width=3)
             row.pack(side=TOP, fill=X, padx=5, pady=2)
             lab.pack(side=LEFT)
-            ent.pack(side=LEFT)  # , expand=YES, fill=X)
+            ent.pack(side=LEFT)
             lab2.pack(side=LEFT)
             ent2.pack(side=LEFT)
             lab4.pack(side=LEFT)
@@ -159,7 +159,6 @@ class MakeForm:
                 ent2 = Entry(row, width=2)
                 lab.pack(side=LEFT)
                 row.pack(side=TOP, fill=X, padx=5, pady=2)
-                #bx.pack(side=RIGHT)
                 ent2.pack(side=RIGHT)
                 self.entries.append((field, ent2))
             return self.entries
@@ -172,7 +171,7 @@ class MakeForm:
             body = Frame(opt_window)
             opt_footer = Frame(opt_window)
             variable = StringVar(header)
-            variable.set('Click Here')  # IN_OPTIONS[0]) #default value
+            variable.set('Click Here')
             w = OptionMenu(header, variable, *IN_OPTIONS)
             Label(header, text="Input Options").pack()
             row2 = Frame(opt_window)
@@ -211,7 +210,6 @@ class MakeForm:
 
             for opt in gen_opts:
                 row = Frame(root)
-                #if opt != 'Verbose':
                 lab = Label(row, width=12, text=opt, anchor='w')
                 ent = Entry(row, width=3)
                 row.pack(side=TOP, fill=X, padx=5, pady=2)
@@ -223,13 +221,6 @@ class MakeForm:
                 elif opt in gen_def:
                     ent.insert(0,gen_def[opt])
                 self.entries.append((opt, ent))
-                """else:
-                    var1 = IntVar()
-                    ent = Checkbutton(row, text=opt, variable=var1)
-                    row.pack(side=TOP, fill=X, padx=5, pady=2)
-                    ent.pack(side=RIGHT, expand=YES, fill=X)
-                    self.entries.append((opt, var1)) """
-                #self.entries.append((opt, ent))
             last_row = Frame(root)
             bload = Button(last_row, text='Apply Changes',
                            command=(lambda e='dont get lambda': self.opt_rule()))
@@ -294,9 +285,10 @@ class MakeForm:
             except KeyError:
                 print('Default rules')
             var_file.close()
-            for i in rules:
+            for key, value in rules.items():
+                text_var = key.strip() + " : " + value
                 row = Frame(self.footer)
-                lab = Label(row, text=i, anchor='w')
+                lab = Label(row, text=text_var, anchor='w')
                 row.pack(side=TOP, fill=X, padx=5, pady=2)
                 lab.pack(side=LEFT)
             breset = Button(self.footer, text='Reset List',
@@ -336,14 +328,12 @@ class MakeForm:
         footer.pack()
         Label(header, text="The Header").pack()
         Label(footer, text="The Footer").pack()
-        #form3 = MakeForm()
         self.make(headers_window, field, 3,body=body, key=key)
-        # headers_window.mainloop()
 
     def items_in_col(self, key, search_item, search_column):
         data = self.li[self.li_dict[key]]
         count = 0
-        num = data[search_column].values  # == [search_item]]
+        num = data[search_column].values
         for value in num:
             if value == search_item:
                 count += 1
@@ -404,7 +394,6 @@ class MakeForm:
     def print_rules(self,shelf_key):
         var_file = shelve.open('var_file')
         try:
-            #print(var_file[shelf_key])
             for rule in var_file[shelf_key]:
                 print(rule)
         except KeyError:
@@ -416,7 +405,6 @@ class MakeForm:
         try:
             rules = var1_file['rules']
             var1_file['rules_location'] = file.get()
-            #del var1_file[shelf_key]
         except KeyError:
             print('first rule')
             rules = []
@@ -430,7 +418,6 @@ class MakeForm:
         var_file = shelve.open(file.get())
         try:
             rules = var_file['rules']
-            #del var1_file['rules']
         except KeyError:
             print('Error')
             rules = []
@@ -516,11 +503,6 @@ class MakeForm:
             rules = var_file['col_dtypes']
         except KeyError:
             print('Default rules')
-        #duplicate = False
-        #for rule in rules:
-        #    if rule[0] == ent.get():
-        #        duplicate = True
-        #if duplicate == False:
         if ent.get() not in rules:
             rules[ent.get()] =var.get()
 
@@ -529,7 +511,7 @@ class MakeForm:
 
         print(rules)
         for key, value in rules.items():
-            text_var = key + " : " + value
+            text_var = key.strip() + " : " + value
             row = Frame(self.footer)
             lab = Label(row, text=text_var, anchor='w')
             row.pack(side=TOP, fill=X, padx=5, pady=2)
