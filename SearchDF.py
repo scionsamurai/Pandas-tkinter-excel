@@ -14,7 +14,10 @@ class SearchDataFrame:
             except FutureWarning:
                 try:
                     rows_w_matching_crit = data[data[search_column] == float(search_item)]
-                    return rows_w_matching_crit
+                    if len(rows_w_matching_crit.values) >= 1:
+                        return rows_w_matching_crit
+                    else:
+                        print(search_item + ' isn\'t in ' + new_field[:-4])
                 except (KeyError, ValueError) as e:
                     print(str(e)[34:] + ' isn\'t in ' + new_field[:-4])
         else:
@@ -30,6 +33,9 @@ class SearchDataFrame:
             except FutureWarning:
                 try:
                     rows_w_matching_crit = data[data[search_column] == float(search_item)]
-                    return rows_w_matching_crit
+                    if len(rows_w_matching_crit.values) >= 1:
+                        return rows_w_matching_crit
+                    else:
+                        print(search_item + ' isn\'t in ' + new_field[:-4])
                 except (KeyError, ValueError) as e:
                     print(str(e)[34:] + ' isn\'t in ' + new_field[:-4])
