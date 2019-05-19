@@ -1,2 +1,2 @@
 # Pandas-tkinter-excel
-Scripting tool for searching large excel files.
+Tool for snipping large data files. (currently more for CSV)
