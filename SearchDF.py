@@ -1,7 +1,10 @@
 class SearchDataFrame:
     def criteria_by_column(i, search_column, search_item, new_field, int_str, data_frames):
         data = data_frames[i]
-        data[search_column] = data[search_column].str.strip()
+        try:
+            data[search_column] = data[search_column].str.strip()
+        except AttributeError:
+            pass
         if int_str == 1:
             try:
                 try:
