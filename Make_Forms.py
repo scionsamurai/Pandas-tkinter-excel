@@ -282,22 +282,24 @@ class MakeForm:
             rules = []
             try:
                 rules = var_file['col_dtypes']
+                for key, value in rules.items():
+                    text_var = key.strip() + " : " + value
+                    row = Frame(self.footer)
+                    lab = Label(row, text=text_var, anchor='w')
+                    row.pack(side=TOP, fill=X, padx=5, pady=2)
+                    lab.pack(side=LEFT)
+                breset = Button(self.footer, text='Reset List',
+                                command=(lambda e='what this': self.reset_col_list(func=2)))
+                breset.pack()
             except KeyError:
                 print('Default rules')
             var_file.close()
-            for key, value in rules.items():
-                text_var = key.strip() + " : " + value
-                row = Frame(self.footer)
-                lab = Label(row, text=text_var, anchor='w')
-                row.pack(side=TOP, fill=X, padx=5, pady=2)
-                lab.pack(side=LEFT)
-            breset = Button(self.footer, text='Reset List',
-                            command=(lambda e='what this': self.reset_col_list(func=2)))
-            breset.pack()
+
 
             self.footer.pack()
 
             return ('usecols', ent)
+
     def update_entry(self, root, set_info, field_to_update, func=0):
         if func == 1:
             field_to_update.delete(0, END)
@@ -462,12 +464,6 @@ class MakeForm:
             pass
         var_file.close()
 
-    def return_entries(self, func=0):
-        if func == 1:
-            return self.ents1
-        elif func ==2:
-            return self.entries
-
     def add_column(self, ent, root):
         self.footer.pack_forget()
         self.footer.destroy()
@@ -537,6 +533,3 @@ class MakeForm:
                 self.footer.destroy()
         except KeyError:
             print('No settings in list')
-
-    def sortSecond(self,val):
-        return val[0]
