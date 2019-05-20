@@ -70,7 +70,10 @@ class OpenFile:
                 orig_headers = df.values.tolist()
                 stripped_headers = []
                 for item in orig_headers[0]:
-                    stripped_headers.append(item.strip())
+                    try:
+                        stripped_headers.append(item.strip())
+                    except AttributeError:
+                        pass
                 new_dtypes = {}
                 if dtypes != None:
                     for key, value in dtypes.items():
