@@ -19,6 +19,7 @@ class OpenFile:
                 new_dtypes = {}
                 if dtypes != None:
                     for key, value in dtypes.items():
+                        print(orig_headers[0])
                         if key in orig_headers[0]:
                             new_dtypes[key] = value
                         elif key.strip() in orig_headers[0]:
@@ -68,7 +69,7 @@ class OpenFile:
                         print(e)
 
             else:
-                df = pd.read_csv(entry, header=None, nrows=1, low_memory=False)
+                df = pd.read_csv(entry, header=0, nrows=1, low_memory=False)
                 # print(df.values.tolist())
                 orig_headers = df.values.tolist()
                 stripped_headers = []
