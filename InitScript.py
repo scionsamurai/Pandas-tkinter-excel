@@ -213,7 +213,7 @@ def  passive_open_file():
 if __name__ == '__main__':
    root = Tk()
    root.title(".csvDB 1.1")
-   root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
+   #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
    global auto_open_box, ents, footer, form2
 
    header = Frame(root)
