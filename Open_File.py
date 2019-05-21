@@ -8,7 +8,7 @@ class OpenFile:
 
         if entry[-4:] == '.csv':
             if delimiter != None:
-                df = pd.read_csv(entry, sep=delimiter, header=0, nrows=1, low_memory=False)
+                df = pd.read_csv(entry, sep=delimiter, header=None, nrows=1, low_memory=False)
                 orig_headers = df.values.tolist()
                 stripped_headers = []
                 for item in orig_headers[0]:
@@ -69,7 +69,7 @@ class OpenFile:
                         print(e)
 
             else:
-                df = pd.read_csv(entry, header=0, nrows=1, low_memory=False)
+                df = pd.read_csv(entry, header=None, nrows=1, low_memory=False)
                 # print(df.values.tolist())
                 orig_headers = df.values.tolist()
                 stripped_headers = []
