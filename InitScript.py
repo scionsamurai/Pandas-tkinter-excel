@@ -154,7 +154,7 @@ def  passive_open_file():
                     terminator = gen_set[1]
             elif gen_set[0] == 'Header Line':
                 if gen_set[1] == 'DV' or gen_set[1] == '':
-                    header_line = 'infer'
+                    header_line = 0
                 else:
                     header_line = int(gen_set[1])
             elif gen_set[0] == 'Index Column':
@@ -175,7 +175,7 @@ def  passive_open_file():
     except KeyError:
         delimiter = ','
         terminator = None
-        header_line = 'infer'
+        header_line = 0
         index_col = None
         chunk = None
         verbose = True
@@ -213,7 +213,7 @@ def  passive_open_file():
 if __name__ == '__main__':
    root = Tk()
    root.title(".csvDB 1.1")
-   #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
+   root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
    global auto_open_box, ents, footer, form2
 
    header = Frame(root)
