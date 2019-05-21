@@ -1,6 +1,6 @@
 import pandas as pd
 class OpenFile:
-    def open_file(entry, delimiter=None,header_line=0, index_col=0, chunk=None , verbose=True,terminator=None,
+    def open_file(entry, delimiter=None,header_line='infer', index_col=None, chunk=None , verbose=True,terminator=None,
                   only_col=None, dtypes=None):
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
@@ -8,7 +8,7 @@ class OpenFile:
 
         if entry[-4:] == '.csv':
             if delimiter != None:
-                df = pd.read_csv(entry, sep=delimiter, header=None, nrows=1, low_memory=False)
+                df = pd.read_csv(entry, sep=delimiter, header='infer', nrows=1, low_memory=False)
                 orig_headers = df.values.tolist()
                 stripped_headers = []
                 for item in orig_headers[0]:
