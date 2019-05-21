@@ -138,7 +138,7 @@ def open_opt_button(opt_form):
     Cust_files = opt_form.make(func=7)
 
 def  passive_open_file():
-    global answer, footer, ents2#, Cust_files
+    global answer, footer, ents2
     var_file = shelve.open('var_file')
     try:
         for gen_set in var_file['opt_gen_rules']:
@@ -154,7 +154,7 @@ def  passive_open_file():
                     terminator = gen_set[1]
             elif gen_set[0] == 'Header Line':
                 if gen_set[1] == 'DV' or gen_set[1] == '':
-                    header_line = 0
+                    header_line = 'infer'
                 else:
                     header_line = int(gen_set[1])
             elif gen_set[0] == 'Index Column':
@@ -175,7 +175,7 @@ def  passive_open_file():
     except KeyError:
         delimiter = ','
         terminator = None
-        header_line = 0
+        header_line = 'infer'
         index_col = None
         chunk = None
         verbose = True
@@ -213,7 +213,7 @@ def  passive_open_file():
 if __name__ == '__main__':
    root = Tk()
    root.title(".csvDB 1.1")
-   #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
+   root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
    global auto_open_box, ents, footer, form2
 
    header = Frame(root)
