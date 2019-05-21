@@ -1,6 +1,6 @@
 import pandas as pd
 class OpenFile:
-    def open_file(entry, delimiter=None,header_line='infer', index_col=None, chunk=None , verbose=True,terminator=None,
+    def open_file(entry, delimiter=None,header_line=0, index_col=None, chunk=None , verbose=True,terminator=None,
                   only_col=None, dtypes=None):
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
