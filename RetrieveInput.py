@@ -17,11 +17,11 @@ class Retrieve_Input:
             if opened_files[i][2].get() == 1:
                 real_list = Split_Entry.split(input_criteria[1][1].get())
                 if isinstance(real_list, str) == False:
-                    for search_item in real_list:
-                        new_output.append(SearchDataFrame.criteria_by_column(i,
-                                                                             search_column,
-                                                                             search_item,
-                                                                             new_field, 1, data_frames))
+                    #for search_item in real_list:
+                    new_output.append(SearchDataFrame.criteria_by_column(i,
+                                                                         search_column,
+                                                                         real_list,
+                                                                         new_field, 2, data_frames))
                 else:
                     new_output.append(SearchDataFrame.criteria_by_column(i,
                                                                          search_column,
