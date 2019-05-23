@@ -4,7 +4,7 @@ class OpenFile:
                   only_col=None, dtypes=None):
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
-        print('Opening ' + new_field[:-4])
+        print('Opening ' + new_field)
 
         if entry[-4:] == '.csv':
             if delimiter != None:
@@ -129,9 +129,6 @@ class OpenFile:
                     except ValueError as e:
                         print(e)
 
-                #df = pd.read_csv(entry, header=None, nrows=1, low_memory=False)
-                #print(df.values.tolist())
-
         elif (entry[-4:] == 'xlsx') or (entry[-4:] == '.xls') or ((entry[-4:])[:3] == 'xls'):
             data = pd.read_excel(entry, sheet_name=0)
             data.columns = [col.strip() for col in data.columns]
@@ -140,7 +137,8 @@ class OpenFile:
             data = pd.read_hdf(entry,'df')
             return data
         else:
-            print('Not a valid file type...yet.')
+            df_empty = pd.DataFrame({'A':[]})
+            return df_empty
     def map_func(data_frame, indexes):
         new_list = {}
         new_list.update(indexes)
