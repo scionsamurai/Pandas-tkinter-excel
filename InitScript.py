@@ -20,11 +20,13 @@ NORM_FONT = ("Helvetica", 10)
 SMALL_FONT = ("Helvetica", 8)
 
 def fetch(entries):
-   save_var = messagebox.askokcancel("Title", "Do you want to save?")
-   print(save_var)
-   for entry in entries:
-      field = entry#columns.values
-      text  = entry[1].get()#.columns.values
+   #save_var = messagebox.askokcancel("Title", "Do you want to save?")
+   #print(save_var)
+   print(answer)
+   print(li_dict)
+   #for entry in entries:
+   #   field = entry#columns.values
+   #   text  = entry[1].get()#.columns.values
 
 def intro_dialog(tkThang):
    answer = filedialog.askopenfilenames(parent=tkThang,
@@ -87,11 +89,20 @@ def open_more(root):
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
+    del_list = []
     for file in loc_answer:
         if file not in answer:
-            answer.append(file)
-            li.append(OpenFile.open_file(file))
-            li_dict[file] = (len(li) - 1)
+            dataframe = OpenFile.open_file(file)
+            if dataframe.empty != True:
+                li.append(dataframe)
+                answer.append(file)
+                li_dict[file] = (len(li) - 1)
+            else:
+                temp_f = file.split('/')
+                new_f = temp_f[(len(temp_f) - 1)]
+                del_list.append(new_f)
+    for i in del_list:
+        print('Failed to Open :' + i)
     ents2 = form2.make(footer, answer, 2)
     footer.pack()
 
@@ -200,12 +211,22 @@ def  passive_open_file():
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
+    del_list = []
     for file in files_answer:
         if file not in answer:
-            answer.append(file)
-            li.append(OpenFile.open_file(file, delimiter, header_line, index_col, chunk, verbose,
-                                         terminator, only_cols, dtypes))
-            li_dict[file] = (len(li) - 1)
+            dataframe = OpenFile.open_file(file, delimiter, header_line, index_col, chunk, verbose,
+                                             terminator, only_cols, dtypes)
+            if dataframe.empty != True:
+                li.append(dataframe)
+                answer.append(file)
+                li_dict[file] = (len(li) - 1)
+            else:
+                temp_f = file.split('/')
+                new_f = temp_f[(len(temp_f) - 1)]
+                del_list.append(new_f)
+    for i in del_list:
+        print('Failed to Open :' + i)
+
     ents2 = form2.make(footer, answer, 2)
     footer.pack()
     var_file.close()
@@ -218,15 +239,35 @@ if __name__ == '__main__':
 
    header = Frame(root)
    body = Frame(root)
-   footer = Frame(root)
    row = Frame(root)
+   footer = Frame(root)
 
    answer.extend(intro_dialog(root))
    answer = list(filter(bool, answer))
 
+   opt_form = MakeForm()
+   inp = Retrieve_Input()
+
+   del_list = []
+   for i in answer:
+      dataframe = OpenFile.open_file(i)
+      if dataframe.empty != True:
+         li.append(dataframe)
+         li_dict[i] = (len(li) - 1)
+      else:
+         ind = answer.index(i)
+         del_list.append(ind)
+         #del answer[ind]
+   for i in del_list[::-1]:
+       temp_f = answer[i].split('/')
+       new_f = temp_f[(len(temp_f) - 1)]
+       print('Failed to Open :' + new_f)
+       del answer[i]
+
    form1 = MakeForm()
    ents = form1.make(header, fields,1)
    header.pack()
+
    form2= MakeForm(data_frames=li,frame_keys=li_dict, input_box1=ents[0][1],input_box2=ents[1][1])
    ents2 = form2.make(footer, answer,2)
    opt_form = MakeForm(pass_func=passive_open_file)
@@ -256,12 +297,6 @@ if __name__ == '__main__':
 
    root.config(menu=menubar)
 
-   opt_form = MakeForm()
-   inp = Retrieve_Input()
-
-   for i in answer:
-      li.append(OpenFile.open_file(i))
-      li_dict[i] = (len(li) - 1)
 
    root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
    b4 = Button(body, text='Search',
