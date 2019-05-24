@@ -32,8 +32,9 @@ class MakeForm:
                 new_field = 'Search:  ' + temp_field[(len(temp_field) - 1)]
                 row = Frame(root)
                 var1 = IntVar()
+                var1.set(1)
                 ent = Checkbutton(row, text=new_field, variable=var1)
-                bx = Button(row, text='Column Headers',
+                bx = Button(row, text='Headers',
                             command=(lambda e=field: self.headers_option_button(e)))
                 row.pack(side=TOP, fill=X, padx=5, pady=2)
                 ent.pack(side=LEFT)
@@ -269,7 +270,7 @@ class MakeForm:
             variable = StringVar(row)
             bsave = Button(row, text='Add Col/Dtype:',
                            command=(lambda e='nothin': self.col_dtype(ent,variable, root)))
-            variable.set('Click Here')
+            variable.set('Text')
             w = OptionMenu(row, variable, *IN_TYPES)
             row.pack(side=TOP, fill=X, padx=5, pady=2)
             row2.pack(side=TOP, fill=X, padx=5, pady=2)
@@ -430,6 +431,7 @@ class MakeForm:
 
     def changed(self,*args, widget=None):
         global opt_footer, opt_window, inp_ents
+        # might need try except here
         opt_footer.pack_forget()
         opt_footer.destroy()
         opt_footer = Frame(opt_window)
