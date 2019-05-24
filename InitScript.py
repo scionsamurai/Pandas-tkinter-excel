@@ -299,14 +299,16 @@ if __name__ == '__main__':
 
 
    root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
-   b4 = Button(body, text='Search',
+   b4 = Button(body, text=' Search ',
                command=(lambda e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
+   auto_open_box.set(1)
    open_var = Checkbutton(body, text='Auto Open', variable=auto_open_box)
    open_var.pack(side=LEFT)
    b5 = Button(body, text='Sort Files',
                command=(lambda e=root: resort()))
    b5.pack(side=RIGHT, padx=5, pady=5)
+   
    footer.pack()
    root.mainloop()
