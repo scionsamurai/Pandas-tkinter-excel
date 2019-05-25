@@ -16,6 +16,7 @@ class OpenFile:
                         stripped_headers.append(item.strip())
                     except AttributeError:
                         stripped_headers.append(item)
+                print('header checkpoint')
                 new_dtypes = {}
                 if dtypes != None:
                     for key, value in dtypes.items():
@@ -128,9 +129,51 @@ class OpenFile:
                         return data
                     except ValueError as e:
                         print(e)
-
         elif (entry[-4:] == 'xlsx') or (entry[-4:] == '.xls') or ((entry[-4:])[:3] == 'xls'):
-            data = pd.read_excel(entry, sheet_name=0)
+            df = pd.read_excel(entry, sheet_name=0, header=None, nrows=1)
+            orig_headers = df.values.tolist()
+            stripped_headers = []
+            for item in orig_headers[0]:
+                try:
+                    stripped_headers.append(item.strip())
+                except AttributeError:
+                    stripped_headers.append(item)
+            print('header checkpoint')
+            new_only_col = []
+            new_dtypes = {}
+            try:
+                for item in only_col:
+                    if item in orig_headers[0]:
+                        new_only_col.append(item)
+                    elif item.strip() in orig_headers[0]:
+                        new_only_col.append(item.strip())
+                    elif item in stripped_headers:
+                        ind = stripped_headers.index(item)
+                        new_only_col.append(orig_headers[0][ind])
+                    elif item.strip() in stripped_headers:
+                        ind = stripped_headers.index(item.strip())
+                        new_only_col.append(orig_headers[0][ind])
+            except TypeError:
+                new_only_col = None
+            if dtypes != None:
+                for key, value in dtypes.items():
+                    # print(orig_headers[0])
+                    if key in orig_headers[0]:
+                        new_dtypes[key] = value
+                    elif key.strip() in orig_headers[0]:
+                        new_dtypes[key.strip()] = value
+                    elif key in stripped_headers:
+                        ind = stripped_headers.index(key)
+                        new_dtypes[orig_headers[0][ind]] = value
+                    elif key.strip() in stripped_headers:
+                        ind = stripped_headers.index(key.strip())
+                        new_dtypes[orig_headers[0][ind]] = value
+                    else:
+                        print(key + ':not found in ' + new_field)
+            if new_dtypes == {}:
+                new_dtypes = None
+            data = pd.read_excel(entry, sheet_name=0, header=header_line, index_col=index_col,
+                                 usecols=new_only_col, dtype=new_dtypes, verbose=verbose)
             data.columns = [col.strip() for col in data.columns]
             return data
         elif entry[-3:] == '.h5':
