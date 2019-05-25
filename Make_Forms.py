@@ -16,6 +16,8 @@ class MakeForm:
     def make(self, root=None, fields=[], func=0,body=False, key=False, set_info=False):
 
         if func == 1:
+            self.entries = []
+            fields = 'Header To Search', '  Search Item(s)'  # , 'Output Directory'
             for field in fields:
                 row = Frame(root)
                 lab = Label(row, width=15, text=field, anchor='w')
@@ -295,16 +297,37 @@ class MakeForm:
             except KeyError:
                 print('Default rules')
             var_file.close()
-
-
             self.footer.pack()
-
             return ('usecols', ent)
+        elif func == 11:
+            self.entries = []
+            for i in range(fields):
+                row = Frame(root)
+                mid_row = Frame(root)
+                lab = Label(row, width=7, text="Header", anchor='w')
+                ent = Entry(row, width=10)
+                lab2 = Label(row, width=7, text="Item(s)", anchor='w')
+                ent2 = Entry(row, width=10)
+                row.pack(side=TOP, fill=X, padx=5, pady=4)
+                lab.pack(side=LEFT)
+                ent.pack(side=LEFT)
+                lab2.pack(side=LEFT)
+                ent2.pack(side=LEFT)
+                if i < (fields-1):
+                    lab = Label(mid_row, width=7, text="And", anchor='w')
+                    lab.pack(side=LEFT)
+                    mid_row.pack()
+                self.entries.append(('Header To Search', ent))
+                self.entries.append(('  Search Item(s)',ent2))
+            return self.entries
 
     def update_entry(self, root, set_info, field_to_update, func=0):
         if func == 1:
-            field_to_update.delete(0, END)
-            field_to_update.insert(0, (str(set_info)))
+            try:
+                field_to_update.delete(0, END)
+                field_to_update.insert(0, (str(set_info)))
+            except:
+                print('error at update_entry')
             root.destroy()
         elif func == 2:
             field_to_update.delete(0, END)
