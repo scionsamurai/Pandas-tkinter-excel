@@ -1,9 +1,10 @@
 from tkinter import *
 from tkinter import messagebox
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 import os, warnings, tables, shelve
 import pandas as pd
 from RetrieveInput import Retrieve_Input
+from functools import partial
 from Open_File import OpenFile
 from Make_Forms import MakeForm
 warnings.filterwarnings("error")
@@ -22,11 +23,50 @@ SMALL_FONT = ("Helvetica", 8)
 def fetch(entries):
    #save_var = messagebox.askokcancel("Title", "Do you want to save?")
    #print(save_var)
-   print(answer)
-   print(li_dict)
+   global answer
+   item_list = simpledialog.askstring("Input", "What value(s) would you like to search?", parent=root)
+   search_header = simpledialog.askstring("Input", "Under what Header are we searching the value(s)?", parent=root)
+
+   directory = filedialog.askdirectory(parent=root,
+                                        initialdir=os.getcwd(),
+                                        title="Please select Directory:")
+   for path, subdirs, files in os.walk(directory):
+       for name in files:
+           if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.csv') or\
+                   (name[-4:] == '.xls') or (name[-3:] == '.h5'):
+               file = path + '/' + name
+               #file = os.path.join(path, name)
+               dataframe = OpenFile.open_file(file)
+               if dataframe.empty != True:
+                   li.append(dataframe)
+                   answer.append(file)
+                   li_dict[file] = (len(li) - 1)
+
+   #print(answer)
+   #print(li_dict)
    #for entry in entries:
    #   field = entry#columns.values
    #   text  = entry[1].get()#.columns.values
+
+
+def changed(*args, widget=None):
+    global header, footer, ents, ents2, form1, form2
+    header.pack_forget()
+    header.destroy()
+    footer.pack_forget()
+    footer.destroy()
+    header = Frame(root)
+    footer = Frame(root)
+    if widget.get() > 1:
+        ents4 = form1.make(header, widget.get(), 11)
+    else:
+        ents = form1.make(header, fields, 1)
+    ents2 = form2.make(footer, answer, 2)
+    #input_box1 = ents[0][1], input_box2 = ents[1][1]
+    form2.ents1 = ents[0][1]
+    form2.ents2 = ents[1][1]
+    header.pack()
+    footer.pack()
 
 def intro_dialog(tkThang):
    answer = filedialog.askopenfilenames(parent=tkThang,
@@ -45,6 +85,7 @@ def popupmsg(msg):
    popup.mainloop()
 
 def df_to_hdf():
+   global ents2
    new_output = []
    answer = filedialog.asksaveasfilename(initialdir=os.getcwd(),
                                          title="Please select save location and name:",
@@ -52,7 +93,8 @@ def df_to_hdf():
                                          defaultextension='.h5')
 
    for i in range(0, len(li)):
-      new_output.append(li[i])
+      if ents2[i][2].get() == 1:
+         new_output.append(li[i])
    new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
    if answer[-3:] == '.h5':
       new_new_output.to_hdf(answer, key='df', mode='w')
@@ -81,10 +123,74 @@ def close_files(root):
         ents2 = form2.make(footer, answer, 2)
         footer.pack()
 
-def open_more(root):
-    global answer, footer, ents2
+def open_more(root, func=0):
+    global answer, header, footer, ents, ents2
+    var_file = shelve.open('var_file')
+    try:
+        for gen_set in var_file['opt_gen_rules']:
+            if gen_set[0] == 'Delimiter':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    delimiter = ','
+                else:
+                    delimiter = gen_set[1]
+            elif gen_set[0] == 'Terminator':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    terminator = None
+                else:
+                    terminator = gen_set[1]
+            elif gen_set[0] == 'Header Line':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    header_line = 0
+                else:
+                    header_line = int(gen_set[1])
+            elif gen_set[0] == 'Index Column':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    index_col = None
+                else:
+                    index_col = int(gen_set[1])
+            elif gen_set[0] == 'Chunk':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    chunk = None
+                else:
+                    chunk = int(gen_set[1])
+            elif gen_set[0] == 'Verbose':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    verbose = True
+                else:
+                    verbose = gen_set[1]
+    except KeyError:
+        delimiter = ','
+        terminator = None
+        header_line = 0
+        index_col = None
+        chunk = None
+        verbose = True
+    try:
+        only_cols = var_file['spec_col_rules']
+    except KeyError:
+        only_cols = None
+    try:
+        dtypes = var_file['col_dtypes']
+        for key, value in dtypes.items():
+            if value == 'Text':
+                dtypes[key] = str
+            elif value == 'Number':
+                dtypes[key] = float
+    except KeyError:
+        dtypes = None
+
     loc_answer = []
-    loc_answer.extend(intro_dialog(root))
+    if func == 1:
+        directory = filedialog.askdirectory(parent=root,
+                                            initialdir=os.getcwd(),
+                                            title="Please select Directory:")
+        for path, subdirs, files in os.walk(directory):
+            for name in files:
+                if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.csv') or \
+                        (name[-4:] == '.xls') or (name[-3:] == '.h5'):
+                    loc_answer.append((path + '/' + name))
+    else:
+        loc_answer.extend(intro_dialog(root))
     loc_answer = list(filter(bool, loc_answer))
     footer.pack_forget()
     footer.destroy()
@@ -92,19 +198,24 @@ def open_more(root):
     del_list = []
     for file in loc_answer:
         if file not in answer:
-            dataframe = OpenFile.open_file(file)
-            if dataframe.empty != True:
-                li.append(dataframe)
-                answer.append(file)
-                li_dict[file] = (len(li) - 1)
-            else:
-                temp_f = file.split('/')
-                new_f = temp_f[(len(temp_f) - 1)]
-                del_list.append(new_f)
+            try:
+                dataframe = OpenFile.open_file(file, delimiter, header_line, index_col, chunk, verbose,
+                                               terminator, only_cols, dtypes)
+                if dataframe.empty != True:
+                    li.append(dataframe)
+                    answer.append(file)
+                    li_dict[file] = (len(li) - 1)
+                else:
+                    temp_f = file.split('/')
+                    new_f = temp_f[(len(temp_f) - 1)]
+                    del_list.append(new_f)
+            except PermissionError as e:
+                print(e)
     for i in del_list:
         print('Failed to Open :' + i)
     ents2 = form2.make(footer, answer, 2)
     footer.pack()
+    var_file.close()
 
 def resort():
     global answer, footer, ents2
@@ -149,7 +260,7 @@ def open_opt_button(opt_form):
     Cust_files = opt_form.make(func=7)
 
 def  passive_open_file():
-    global answer, footer, ents2
+    global answer, header, footer, ents, ents2
     var_file = shelve.open('var_file')
     try:
         for gen_set in var_file['opt_gen_rules']:
@@ -235,16 +346,16 @@ if __name__ == '__main__':
    root = Tk()
    root.title(".csvDB 1.1")
    #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
-   global auto_open_box, ents, footer, form2
+   global auto_open_box, ents,header, body, footer, form1, form2
 
    header = Frame(root)
    body = Frame(root)
    row = Frame(root)
    footer = Frame(root)
 
-   answer.extend(intro_dialog(root))
-   answer = list(filter(bool, answer))
-
+   #answer.extend(intro_dialog(root))
+   #answer = list(filter(bool, answer))
+   answer = []
    opt_form = MakeForm()
    inp = Retrieve_Input()
 
@@ -257,7 +368,6 @@ if __name__ == '__main__':
       else:
          ind = answer.index(i)
          del_list.append(ind)
-         #del answer[ind]
    for i in del_list[::-1]:
        temp_f = answer[i].split('/')
        new_f = temp_f[(len(temp_f) - 1)]
@@ -266,23 +376,22 @@ if __name__ == '__main__':
 
    form1 = MakeForm()
    ents = form1.make(header, fields,1)
-   header.pack()
+
 
    form2= MakeForm(data_frames=li,frame_keys=li_dict, input_box1=ents[0][1],input_box2=ents[1][1])
    ents2 = form2.make(footer, answer,2)
    opt_form = MakeForm(pass_func=passive_open_file)
-   body.pack()
+
 
 
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root)
    subsubmenu = Menu(root)
-   submenu.add_command(label="Full/Default", command=(lambda e='no value': open_more(root)))
-   subsubmenu.add_command(label="Change Settings", command=(lambda e=ents: open_opt_button(opt_form)))
-   subsubmenu.add_command(label="Select File", command=(lambda e=ents: passive_open_file()))
-   submenu.add_cascade(label="CSV Custom", menu=subsubmenu)
-   filemenu.add_command(label="Save HDF File", command=(lambda e='no value': df_to_hdf()))
+   submenu.add_command(label="Input Settings", command=(lambda e=ents: open_opt_button(opt_form)))
+   submenu.add_command(label="Select File", command=(lambda e=ents: passive_open_file()))
+   submenu.add_command(label="All in Dir", command=(lambda e='no value': open_more(root,1)))
+   filemenu.add_command(label="Save Selected", command=(lambda e='no value': df_to_hdf()))
    filemenu.add_cascade(label="Open", menu=submenu)
    filemenu.add_command(label="Output Options", command=(lambda e=ents: opt_form.make(func=5)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
@@ -292,13 +401,13 @@ if __name__ == '__main__':
 
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=donothing())
-   helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(ents)))
+   helpmenu.add_command(label="Fetch", command=(lambda e=ents: donothing()))# fetch(ents)))
    menubar.add_cascade(label="Help", menu=helpmenu)
 
    root.config(menu=menubar)
-
-
    root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
+
+
    b4 = Button(body, text=' Search ',
                command=(lambda e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
    b4.pack(side=LEFT, padx=5, pady=5)
@@ -308,7 +417,14 @@ if __name__ == '__main__':
    open_var.pack(side=LEFT)
    b5 = Button(body, text='Sort Files',
                command=(lambda e=root: resort()))
-   b5.pack(side=RIGHT, padx=5, pady=5)
-   
+   b5.pack(side=LEFT, padx=5, pady=5)
+   and_var = IntVar(body)
+   and_var.set(1)
+   a = OptionMenu(body,and_var, *range(1,5))
+   and_var.trace("w", partial(changed, widget=and_var))
+   #a.pack(side=RIGHT)
+   body.pack()
+   header.pack()
    footer.pack()
+
    root.mainloop()
