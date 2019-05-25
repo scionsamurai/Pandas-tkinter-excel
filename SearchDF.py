@@ -6,8 +6,9 @@ class SearchDataFrame:
         data = data_frames[i]
         try:
             data[search_column] = data[search_column].str.strip()
-        except AttributeError:
+        except (AttributeError, KeyError):
             pass
+            #print(search_column + ' Header isn\'t in ' + new_field)
         if int_str == 1:
             try:
                 try:
@@ -16,9 +17,9 @@ class SearchDataFrame:
                         return rows_w_matching_crit
                     else:
                         # print('1')
-                        print(search_item + ' isn\'t in ' + new_field[:-4])
+                        print(search_item + ' isn\'t in ' + new_field)
                 except KeyError:
-                    print(search_column + ' Header isn\'t in ' + new_field[:-4])
+                    print(search_column + ' Header isn\'t in ' + new_field)
             except FutureWarning:
                 #"""
                 try:
@@ -27,23 +28,23 @@ class SearchDataFrame:
                         return rows_w_matching_crit
                     else:
                         # print('2')
-                        print(search_item + ' isn\'t in ' + new_field[:-4])
+                        print(search_item + ' isn\'t in ' + new_field)
                 except (KeyError, ValueError) as e:
                     # print('3')
-                    print(str(e)[34:] + ' isn\'t in ' + new_field[:-4])
+                    print(str(e)[34:] + ' isn\'t in ' + new_field)
                     #"""
         else:
             try:
+                ## failing when a value error is thrown
                 try:
                     rows_w_matching_crit = data.loc[data[search_column].isin(search_item)]
-                    #rows_w_matching_crit = data[data[search_column] == str(search_item)]
                     if len(rows_w_matching_crit.values) >= 1:
                         return rows_w_matching_crit
                     else:
-                        # print('4')
-                        print('List item isn\'t in ' + new_field[:-4])
+                        print('4')
+                        print('List item isn\'t in ' + new_field)
                 except KeyError:
-                    print(search_column + ' Header isn\'t in ' + new_field[:-4])
+                    print(search_column + ' Header isn\'t in ' + new_field)
             except (FutureWarning, TypeError):
                 try:
                     num_list = []
@@ -61,9 +62,9 @@ class SearchDataFrame:
                     if len(rows_w_matching_crit.values) >= 1:
                         return rows_w_matching_crit
                     else:
-                        # print('5')
-                        print('List item isn\'t in ' + new_field[:-4])
+                        print('5')
+                        print('List item isn\'t in ' + new_field)
                 except (KeyError, ValueError) as e:
                     # print('6')
-                    print(str(e)[34:] + ' isn\'t in ' + new_field[:-4])
+                    print(str(e)[34:] + ' isn\'t in ' + new_field)
 
