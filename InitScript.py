@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+from multiprocessing import Pool
 from tkinter import filedialog, simpledialog
 import os, warnings, tables, shelve
 import pandas as pd
@@ -123,7 +124,57 @@ def close_files(root):
         ents2 = form2.make(footer, answer, 2)
         footer.pack()
 
-def open_more(root, func=0):
+def read_csv(filename):
+    new_only_col = []
+    var_file = shelve.open('var_file')
+    try:
+        for gen_set in var_file['opt_gen_rules']:
+            if gen_set[0] == 'Header Line':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    header_line = 0
+                else:
+                    header_line = int(gen_set[1])
+            elif gen_set[0] == 'Index Column':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    index_col = None
+                else:
+                    index_col = int(gen_set[1])
+            elif gen_set[0] == 'Verbose':
+                if gen_set[1] == 'DV' or gen_set[1] == '':
+                    verbose = True
+                else:
+                    verbose = gen_set[1]
+    except KeyError:
+        header_line = 0
+        index_col = None
+        verbose = True
+    try:
+        only_cols = var_file['spec_col_rules']
+    except KeyError:
+        only_cols = None
+    try:
+        dtypes = var_file['col_dtypes']
+        for key, value in dtypes.items():
+            if value == 'Text':
+                dtypes[key] = str
+            elif value == 'Number':
+                dtypes[key] = float
+    except KeyError:
+        dtypes = None
+    'converts a filename to a pandas dataframe'
+    return pd.read_excel(filename, sheet_name=0, header=header_line, index_col=index_col,
+                                 usecols=only_cols, dtype=dtypes, verbose=verbose)
+
+def main(file_list):
+    pool = Pool(processes=4)
+    df_list = pool.map(read_csv, file_list)
+    for i in range(len(file_list)):
+        if file_list[i] not in answer:
+            li.append(df_list[i])
+            answer.append(file_list[i])
+            li_dict[file_list[i]] = (len(li) - 1)
+
+def all_in_dir(root, func=0):
     global answer, header, footer, ents, ents2
     var_file = shelve.open('var_file')
     try:
@@ -180,15 +231,18 @@ def open_more(root, func=0):
         dtypes = None
 
     loc_answer = []
+    excel_files = []
     if func == 1:
         directory = filedialog.askdirectory(parent=root,
                                             initialdir=os.getcwd(),
                                             title="Please select Directory:")
         for path, subdirs, files in os.walk(directory):
             for name in files:
-                if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.csv') or \
-                        (name[-4:] == '.xls') or (name[-3:] == '.h5'):
+                if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
+                    excel_files.append((path + '/' + name))
+                elif (name[-4:] == '.csv') or (name[-3:] == '.h5'):
                     loc_answer.append((path + '/' + name))
+        main(excel_files)
     else:
         loc_answer.extend(intro_dialog(root))
     loc_answer = list(filter(bool, loc_answer))
@@ -390,7 +444,7 @@ if __name__ == '__main__':
    subsubmenu = Menu(root)
    submenu.add_command(label="Input Settings", command=(lambda e=ents: open_opt_button(opt_form)))
    submenu.add_command(label="Select File", command=(lambda e=ents: passive_open_file()))
-   submenu.add_command(label="All in Dir", command=(lambda e='no value': open_more(root,1)))
+   submenu.add_command(label="All in Dir", command=(lambda e='no value': all_in_dir(root,1)))
    filemenu.add_command(label="Save Selected", command=(lambda e='no value': df_to_hdf()))
    filemenu.add_cascade(label="Open", menu=submenu)
    filemenu.add_command(label="Output Options", command=(lambda e=ents: opt_form.make(func=5)))
@@ -401,7 +455,7 @@ if __name__ == '__main__':
 
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=donothing())
-   helpmenu.add_command(label="Fetch", command=(lambda e=ents: donothing()))# fetch(ents)))
+   helpmenu.add_command(label="Fetch", command=(lambda e=ents: main()))# fetch(ents)))
    menubar.add_cascade(label="Help", menu=helpmenu)
 
    root.config(menu=menubar)
