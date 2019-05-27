@@ -29,10 +29,6 @@ class Retrieve_Input:
                                                                          new_field, 1, data_frames))
 
         try:
-            #try:
-            #    output_dir = list(filter(bool, (input_criteria[2][1].get()).splitlines()))[0]
-            #except IndexError:
-            #    print(input_criteria[2][1].get() + " isn't a valid output name/type. Please end name with .csv")
             if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
                 if len(Split_Entry.split(input_criteria[1][1].get())) > 1:
                     output_dir = search_column + "(" + str(len(Split_Entry.split(input_criteria[1][1].get()))) + ")." + output_type
@@ -40,19 +36,31 @@ class Retrieve_Input:
                     output_dir = Split_Entry.split(input_criteria[1][1].get()) + "." + output_type
             else:
                 output_dir = Split_Entry.split(input_criteria[1][1].get()) + "." + output_type
+            var_file = shelve.open('var_file')
+            try:
+                rules = var_file['rules']
+            except KeyError:
+                print('No Rules to assign')
+                rules = []
+            try:
+                output_path = var_file['dir_location']
+                output_directory = os.path.join(output_path,output_dir)
+            except:
+                output_directory = output_dir
+                print('saving to default directory')
+            var_file.close()
             try:
                 new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
                 if output_type == 'csv':
-                    new_new_output.to_csv(output_dir, index=False)
+                    new_new_output.to_csv(output_directory, index=False)
                 elif output_type == 'xlsx':
-                    writer_orig = pd.ExcelWriter(output_dir, engine='xlsxwriter')
+                    writer_orig = pd.ExcelWriter(output_directory, engine='xlsxwriter')
                     new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput')
                     workbook = writer_orig.book
                     worksheet = writer_orig.sheets['SearchOutput']
 
-                    var_file = shelve.open('var_file')
-                    try:
-                        for rule in var_file['rules']:
+                    if len(rules) > 0:
+                        for rule in rules:
                             if rule[2] == '':
                                 num_format = None
                             else:
@@ -65,12 +73,10 @@ class Retrieve_Input:
 
 
 
-                    except KeyError:
-                        print('No Rules to assign')
-                    var_file.close()
+
                     writer_orig.save()
                 if auto_open_var.get() == 1:
-                    os.startfile(output_dir, 'open')
+                    os.startfile(output_directory, 'open')
                 else:
                     print('done')
             except ValueError as e:
