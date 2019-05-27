@@ -80,8 +80,8 @@ class MakeForm:
             root.mainloop()
             return self.entries2
         elif func == 5:
-            headers_window = Tk()
-            headers_window.wm_title('Output File Options')
+            headers_window = Toplevel()
+            headers_window.title('Output File Options')
             header = Frame(headers_window)
             body = Frame(headers_window)
             footer = Frame(headers_window)
@@ -134,10 +134,14 @@ class MakeForm:
                 last_loc = var_file['rules_location']
             except KeyError:
                 last_loc = ''
+            try:
+                dir_loc = var_file['dir_location']
+            except KeyError:
+                dir_loc = ''
             var_file.close()
             row5 = Frame(footer)
-            lab5 = Label(row5, width=10, text='Directory')
-            ent5 = Entry(row5, width=15)
+            lab5 = Label(row5, width=10, text='Rules Dir')
+            ent5 = Entry(row5)
             lab5.pack(side=LEFT)
             ent5.pack(side=LEFT)
             ent5.insert(0, last_loc)
@@ -150,6 +154,18 @@ class MakeForm:
             rprint = Button(row6, text='Save Rule(s)',
                             command=(lambda e='what this': self.save_rules(ent5)))
             rprint.pack(side=RIGHT)
+            row7 = Frame(footer)
+            lab7 = Label(row7, width=10, text='Output Dir')
+            ent7 = Entry(row7)
+            lab7.pack(side=LEFT)
+            ent7.pack(side=LEFT)
+            ent7.insert(0, dir_loc)
+            row7.pack(fill=X, padx=5, pady=2)
+            row8 = Frame(footer)
+            row8.pack(fill=X, padx=5, pady=2)
+            breset = Button(row8, text='Save Output Dir',
+                            command=(lambda e='dont get lambda': self.save_dir(ent7)))
+            breset.pack(side=RIGHT)
 
             headers_window.mainloop()
         elif func == 6:
@@ -168,8 +184,8 @@ class MakeForm:
         elif func == 7:
             global opt_footer, opt_window
             IN_OPTIONS = 'General', 'Specify Columns', 'Set Col DataType'
-            opt_window = Tk()
-            opt_window.wm_title(".csvDB 1.1")
+            opt_window = Toplevel()
+            opt_window.title("File Snipper 1.0")
             header = Frame(opt_window)
             body = Frame(opt_window)
             opt_footer = Frame(opt_window)
@@ -188,9 +204,10 @@ class MakeForm:
             body.pack()
             opt_window.mainloop()
         elif func == 8:
-            gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'Verbose'
+            gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'Verbose',\
+                       'Error_dialog'
             gen_def = {'Delimiter':',','Terminator':'DV', 'Header Line':'DV', 'Index Column':'DV',
-                       'Chunk':'DV', 'Verbose':'DV'}
+                       'Chunk':'DV', 'Verbose':0, 'Error_dialog':0}
             var_file = shelve.open('var_file')
             temp_dict ={}
             try:
@@ -208,28 +225,45 @@ class MakeForm:
                         temp_dict['Chunk'] = gen_set[1]
                     elif gen_set[0] == 'Verbose':
                         temp_dict['Verbose'] = gen_set[1]
+                    elif gen_set[0] == 'Error_dialog':
+                        temp_dict['Error_dialog'] = gen_set[1]
             except KeyError:
                 print('Default rules')
 
+            var_file.close()
             for opt in gen_opts:
-                row = Frame(root)
-                lab = Label(row, width=12, text=opt, anchor='w')
-                ent = Entry(row, width=3)
-                row.pack(side=TOP, fill=X, padx=5, pady=2)
-                lab.pack(side=LEFT)
-                ent.pack(side=RIGHT, expand=YES, fill=X)
+                if (opt != 'Verbose') and (opt != 'Error_dialog'):
+                    row = Frame(root)
+                    lab = Label(row, width=12, text=opt, anchor='w')
+                    ent = Entry(row, width=3)
+                    row.pack(side=TOP, fill=X, padx=5, pady=2)
+                    lab.pack(side=LEFT)
+                    ent.pack(side=RIGHT, expand=YES, fill=X)
 
-                if opt in temp_dict:
-                    ent.insert(0,temp_dict[opt])
-                elif opt in gen_def:
-                    ent.insert(0,gen_def[opt])
-                self.entries.append((opt, ent))
+                    if opt in temp_dict:
+                        ent.insert(0, temp_dict[opt])
+                    elif opt in gen_def:
+                        ent.insert(0, gen_def[opt])
+                    self.entries.append((opt, ent))
+                else:
+                    row = Frame(root)
+                    var1 = IntVar()
+                    #var1.set(1)
+                    ent = Checkbutton(row, text=opt, variable=var1)
+                    if opt in temp_dict:
+                        var1.set(temp_dict[opt])
+                    elif opt in gen_def:
+                        var1.set(gen_def[opt])
+                    row.pack(side=TOP, fill=X, padx=5, pady=2)
+                    ent.pack(side=RIGHT)
+
+                    self.entries.append((opt, (var1)))
+
             last_row = Frame(root)
             bload = Button(last_row, text='Apply Changes',
                            command=(lambda e='dont get lambda': self.opt_rule()))
             bload.pack(side=RIGHT)
             last_row.pack()
-            var_file.close()
             return self.entries
         elif func == 9:
             row = Frame(root)
@@ -344,8 +378,8 @@ class MakeForm:
 
     def headers_option_button(self, key):
         field = (self.li[self.li_dict[key]]).columns.values
-        headers_window = Tk()
-        headers_window.wm_title(key)
+        headers_window = Toplevel()
+        headers_window.title(key)
         header = Frame(headers_window)
         body = Frame(headers_window)
         footer = Frame(headers_window)
@@ -366,8 +400,8 @@ class MakeForm:
         return count
 
     def header_results(self, key, set_info, header_text, footer_text):
-        headers_window = Tk()
-        headers_window.wm_title(key)
+        headers_window = Toplevel()
+        headers_window.title(key)
         results = (self.li[self.li_dict[key]][set_info]).values
         new_string = list(dict.fromkeys(results))
         header = Frame(headers_window)
@@ -405,8 +439,8 @@ class MakeForm:
         rules = []
         for entry in self.entries:
             rules.append((entry[0],entry[1].get()))
-        print(rules)
         var_file['opt_gen_rules'] = rules
+
         var_file.close()
 
     def reset_rules(self,shelf_key):
@@ -439,6 +473,11 @@ class MakeForm:
         var_file['rules'] = rules
         print('rule set')
         var_file.close()
+
+    def save_dir(self, file):
+        var1_file = shelve.open('var_file')
+        var1_file['dir_location'] = file.get()
+        var1_file.close()
 
     def get_rules(self, file):
         var_file = shelve.open(file.get())
