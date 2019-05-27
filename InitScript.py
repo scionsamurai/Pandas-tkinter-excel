@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+import multiprocessing
 from multiprocessing import Pool
 from tkinter import filedialog, simpledialog
 import os, warnings, tables, shelve
@@ -21,28 +22,24 @@ LARGE_FONT= ("Verdana", 12)
 NORM_FONT = ("Helvetica", 10)
 SMALL_FONT = ("Helvetica", 8)
 
-def fetch(entries):
+def fetch():
    #save_var = messagebox.askokcancel("Title", "Do you want to save?")
    #print(save_var)
-   global answer
+   new_list = ''
+   for item in answer:
+      if answer.index(item) != len(answer):
+         new_list += item+'\n'
+      else:
+          new_list += item
+   popupmsg(new_list)
+   """
    item_list = simpledialog.askstring("Input", "What value(s) would you like to search?", parent=root)
    search_header = simpledialog.askstring("Input", "Under what Header are we searching the value(s)?", parent=root)
 
    directory = filedialog.askdirectory(parent=root,
                                         initialdir=os.getcwd(),
                                         title="Please select Directory:")
-   for path, subdirs, files in os.walk(directory):
-       for name in files:
-           if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.csv') or\
-                   (name[-4:] == '.xls') or (name[-3:] == '.h5'):
-               file = path + '/' + name
-               #file = os.path.join(path, name)
-               dataframe = OpenFile.open_file(file)
-               if dataframe.empty != True:
-                   li.append(dataframe)
-                   answer.append(file)
-                   li_dict[file] = (len(li) - 1)
-
+"""
    #print(answer)
    #print(li_dict)
    #for entry in entries:
@@ -77,8 +74,8 @@ def intro_dialog(tkThang):
    return answer
 
 def popupmsg(msg):
-   popup = Tk()
-   popup.wm_title("!")
+   popup = Toplevel()
+   popup.title("!")
    label = Label(popup, text=msg, font=NORM_FONT)
    label.pack(side="top", fill="x", pady=10)
    B1 = Button(popup, text="Okay", command=popup.destroy)
@@ -109,7 +106,7 @@ def donothing():
 
 def close_files(root):
     global answer, footer, ents2, li, li_dict
-    close_var = messagebox.askyesno(".csvDB 1.1", "Do you want to close checked files?")
+    close_var = messagebox.askyesno("File Snipper 1.0", "Do you want to close checked files?")
     if close_var == True:
         for file in answer[::-1]:
             if ents2[li_dict[file]][2].get() == 1:
@@ -140,14 +137,14 @@ def read_csv(filename):
                 else:
                     index_col = int(gen_set[1])
             elif gen_set[0] == 'Verbose':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    verbose = True
+                if gen_set[1] == 0:
+                    verbose = False
                 else:
-                    verbose = gen_set[1]
+                    verbose = True
     except KeyError:
         header_line = 0
         index_col = None
-        verbose = True
+        verbose = False
     try:
         only_cols = var_file['spec_col_rules']
     except KeyError:
@@ -161,18 +158,23 @@ def read_csv(filename):
                 dtypes[key] = float
     except KeyError:
         dtypes = None
-    'converts a filename to a pandas dataframe'
-    return pd.read_excel(filename, sheet_name=0, header=header_line, index_col=index_col,
-                                 usecols=only_cols, dtype=dtypes, verbose=verbose)
+    try:
+        return (pd.read_excel(filename, sheet_name=0, header=header_line, index_col=index_col,
+                             usecols=only_cols, dtype=dtypes, verbose=verbose), (filename))
+    except PermissionError as e:
+        print(e)
 
 def main(file_list):
     pool = Pool(processes=4)
-    df_list = pool.map(read_csv, file_list)
-    for i in range(len(file_list)):
-        if file_list[i] not in answer:
-            li.append(df_list[i])
-            answer.append(file_list[i])
-            li_dict[file_list[i]] = (len(li) - 1)
+    new_list = []
+    for x in file_list:
+        if x not in answer:
+            new_list.append(x)
+    df_list = pool.map(read_csv, new_list)
+    for i in range(len(new_list)):
+        li.append(df_list[i][0])
+        answer.append(df_list[i][1])
+        li_dict[df_list[i][1]] = (len(li) - 1)
 
 def all_in_dir(root, func=0):
     global answer, header, footer, ents, ents2
@@ -205,17 +207,17 @@ def all_in_dir(root, func=0):
                 else:
                     chunk = int(gen_set[1])
             elif gen_set[0] == 'Verbose':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    verbose = True
+                if gen_set[1] == 0:
+                    verbose = False
                 else:
-                    verbose = gen_set[1]
+                    verbose = True
     except KeyError:
         delimiter = ','
         terminator = None
         header_line = 0
         index_col = None
         chunk = None
-        verbose = True
+        verbose = False
     try:
         only_cols = var_file['spec_col_rules']
     except KeyError:
@@ -232,16 +234,30 @@ def all_in_dir(root, func=0):
 
     loc_answer = []
     excel_files = []
+    check_name_temp = messagebox.askyesno("File Snipper 1.0", "Do you want to specify the first characters?")
+    if check_name_temp == True:
+        name_str = simpledialog.askstring("File Snipper 1.0",
+                                           "First part of name for the files you want to open?",
+                                           parent=root)
     if func == 1:
         directory = filedialog.askdirectory(parent=root,
                                             initialdir=os.getcwd(),
                                             title="Please select Directory:")
         for path, subdirs, files in os.walk(directory):
             for name in files:
-                if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
-                    excel_files.append((path + '/' + name))
-                elif (name[-4:] == '.csv') or (name[-3:] == '.h5'):
-                    loc_answer.append((path + '/' + name))
+                if check_name_temp == True:
+                    if name[:len(name_str)] == name_str:
+                        if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
+                            if name[:2] != '~$':
+                                excel_files.append((path + '/' + name))
+                        elif (name[-4:] == '.csv') or (name[-3:] == '.h5'):
+                            loc_answer.append((path + '/' + name))
+                else:
+                    if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
+                        if name[:2] != '~$':
+                            excel_files.append((path + '/' + name))
+                    elif (name[-4:] == '.csv') or (name[-3:] == '.h5'):
+                        loc_answer.append((path + '/' + name))
         main(excel_files)
     else:
         loc_answer.extend(intro_dialog(root))
@@ -344,10 +360,10 @@ def  passive_open_file():
                 else:
                     chunk = int(gen_set[1])
             elif gen_set[0] == 'Verbose':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    verbose = True
+                if gen_set[1] == 0:
+                    verbose = False
                 else:
-                    verbose = gen_set[1]
+                    verbose = True
     except KeyError:
         delimiter = ','
         terminator = None
@@ -397,8 +413,9 @@ def  passive_open_file():
     var_file.close()
 
 if __name__ == '__main__':
+   multiprocessing.freeze_support()
    root = Tk()
-   root.title(".csvDB 1.1")
+   root.title("File Snipper 1.0")
    #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
    global auto_open_box, ents,header, body, footer, form1, form2
 
@@ -440,9 +457,8 @@ if __name__ == '__main__':
 
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
-   submenu = Menu(root)
-   subsubmenu = Menu(root)
-   submenu.add_command(label="Input Settings", command=(lambda e=ents: open_opt_button(opt_form)))
+   submenu = Menu(root, tearoff=0)
+   submenu.add_command(label="Input Options", command=(lambda e=ents: open_opt_button(opt_form)))
    submenu.add_command(label="Select File", command=(lambda e=ents: passive_open_file()))
    submenu.add_command(label="All in Dir", command=(lambda e='no value': all_in_dir(root,1)))
    filemenu.add_command(label="Save Selected", command=(lambda e='no value': df_to_hdf()))
@@ -455,7 +471,7 @@ if __name__ == '__main__':
 
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=donothing())
-   helpmenu.add_command(label="Fetch", command=(lambda e=ents: main()))# fetch(ents)))
+   helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch()))
    menubar.add_cascade(label="Help", menu=helpmenu)
 
    root.config(menu=menubar)
