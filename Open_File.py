@@ -1,10 +1,12 @@
 import pandas as pd
+import time
 class OpenFile:
-    def open_file(entry, delimiter=None,header_line=0, index_col=None, chunk=None , verbose=True,terminator=None,
+    def open_file(entry, delimiter=None,header_line=0, index_col=None, chunk=None , verbose=False,terminator=None,
                   only_col=None, dtypes=None):
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
         print('Opening ' + new_field)
+        start = time.time()
 
         if entry[-4:] == '.csv':
             if delimiter != None:
@@ -16,23 +18,26 @@ class OpenFile:
                         stripped_headers.append(item.strip())
                     except AttributeError:
                         stripped_headers.append(item)
-                print('header checkpoint')
                 new_dtypes = {}
                 if dtypes != None:
-                    for key, value in dtypes.items():
-                        #print(orig_headers[0])
-                        if key in orig_headers[0]:
-                            new_dtypes[key] = value
-                        elif key.strip() in orig_headers[0]:
-                            new_dtypes[key.strip()] = value
-                        elif key in stripped_headers:
-                            ind = stripped_headers.index(key)
-                            new_dtypes[orig_headers[0][ind]] = value
-                        elif key.strip() in stripped_headers:
-                            ind = stripped_headers.index(key.strip())
-                            new_dtypes[orig_headers[0][ind]] = value
-                        else:
-                            print(key + ':not found in ' + new_field)
+                    if 'ALL' in dtypes:
+                        if dtypes['ALL'] == 'Text':
+                            new_dtypes = str
+                    else:
+                        for key, value in dtypes.items():
+                            # print(orig_headers[0])
+                            if key in orig_headers[0]:
+                                new_dtypes[key] = value
+                            elif key.strip() in orig_headers[0]:
+                                new_dtypes[key.strip()] = value
+                            elif key in stripped_headers:
+                                ind = stripped_headers.index(key)
+                                new_dtypes[orig_headers[0][ind]] = value
+                            elif key.strip() in stripped_headers:
+                                ind = stripped_headers.index(key.strip())
+                                new_dtypes[orig_headers[0][ind]] = value
+                            else:
+                                print(key + ':not found in ' + new_field)
                     if new_dtypes == {}:
                         new_dtypes = None
                 if only_col != None:
@@ -65,6 +70,8 @@ class OpenFile:
                                            dtype=new_dtypes, verbose=verbose, lineterminator=terminator,
                                            low_memory=False)
                         data.columns = [col.strip() for col in data.columns]
+                        end = time.time()
+                        print('-------'+ str(end-start) +'-------')
                         return data
                     except ValueError as e:
                         print(e)
@@ -156,31 +163,41 @@ class OpenFile:
             except TypeError:
                 new_only_col = None
             if dtypes != None:
-                for key, value in dtypes.items():
-                    # print(orig_headers[0])
-                    if key in orig_headers[0]:
-                        new_dtypes[key] = value
-                    elif key.strip() in orig_headers[0]:
-                        new_dtypes[key.strip()] = value
-                    elif key in stripped_headers:
-                        ind = stripped_headers.index(key)
-                        new_dtypes[orig_headers[0][ind]] = value
-                    elif key.strip() in stripped_headers:
-                        ind = stripped_headers.index(key.strip())
-                        new_dtypes[orig_headers[0][ind]] = value
-                    else:
-                        print(key + ':not found in ' + new_field)
+                if 'ALL' in dtypes:
+                    if dtypes['ALL'] == 'Text':
+                        new_dtypes = str
+                else:
+                    for key, value in dtypes.items():
+                        # print(orig_headers[0])
+                        if key in orig_headers[0]:
+                            new_dtypes[key] = value
+                        elif key.strip() in orig_headers[0]:
+                            new_dtypes[key.strip()] = value
+                        elif key in stripped_headers:
+                            ind = stripped_headers.index(key)
+                            new_dtypes[orig_headers[0][ind]] = value
+                        elif key.strip() in stripped_headers:
+                            ind = stripped_headers.index(key.strip())
+                            new_dtypes[orig_headers[0][ind]] = value
+                        else:
+                            print(key + ':not found in ' + new_field)
             if new_dtypes == {}:
                 new_dtypes = None
             data = pd.read_excel(entry, sheet_name=0, header=header_line, index_col=index_col,
                                  usecols=new_only_col, dtype=new_dtypes, verbose=verbose)
             data.columns = [col.strip() for col in data.columns]
+            end = time.time()
+            print('-------'+ str(end-start) +'-------')
             return data
         elif entry[-3:] == '.h5':
             data = pd.read_hdf(entry,'df')
+            end = time.time()
+            print('-------'+ str(end-start) +'-------')
             return data
         else:
             df_empty = pd.DataFrame({'A':[]})
+            end = time.time()
+            print('-------'+ str(end-start) +'-------')
             return df_empty
     def map_func(data_frame, indexes):
         new_list = {}
