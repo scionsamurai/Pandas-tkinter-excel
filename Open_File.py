@@ -3,12 +3,13 @@ import time, shelve
 class OpenFile:
     def open_file(entry):#, delimiter=None,header_line=0, index_col=None, chunk=None , verbose=False,terminator=None,
                   #only_col=None, dtypes=None):
+        var_file = shelve.open('var_file')
+        
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
         print('Opening ' + new_field)
         start = time.time()
 
-        var_file = shelve.open('var_file')
         try:
             for gen_set in var_file['opt_gen_rules']:
                 if gen_set[0] == 'Delimiter':
@@ -61,7 +62,6 @@ class OpenFile:
                     dtypes[key] = float
         except KeyError:
             dtypes = None
-
         var_file.close()
         if entry[-4:] == '.csv':
             if delimiter != None:
