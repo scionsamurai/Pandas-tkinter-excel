@@ -19,6 +19,7 @@ fields = 'Header To Search', '  Search Item(s)'#, 'Output Directory'
 li = []
 li_dict = {}
 answer = []
+err_dial_pressed = False
 LARGE_FONT= ("Verdana", 12)
 NORM_FONT = ("Helvetica", 10)
 SMALL_FONT = ("Helvetica", 8)
@@ -164,6 +165,14 @@ def all_in_dir(root, func=0):
             li_dict[df_list[i][1]] = (len(li) - 1)
         else:
             print(df_list[i][1] + ' didn\'t have the certian input requirements.')
+    #if err_dial_pressed == True:
+    #    var_file = shelve.open('var_file')
+    #    try:
+    #        print(var_file['print_variable'])
+    #        del var_file['print_variable']
+    #    except:
+    #        pass
+    #    var_file.close()
     for i in del_list:
         print('Failed to Open :' + i)
     ents2 = form2.make(footer, answer, 2)
@@ -236,6 +245,14 @@ def  passive_open_file():
             li_dict[df_list[i][1]] = (len(li) - 1)
         else:
             print(df_list[i][1] + ' didn\'t have the certian input requirements.')
+    #if err_dial_pressed == True:
+    #    var_file = shelve.open('var_file')
+    #    try:
+    #        print(var_file['print_variable'])
+    #        del var_file['print_variable']
+    #    except:
+    #        pass
+    #    var_file.close()
     for i in del_list:
         print('Failed to Open :' + i)
 
@@ -243,12 +260,14 @@ def  passive_open_file():
     footer.pack()
 
 def err_dialog():
+    global err_dial_pressed
     err_window = Toplevel()
     err_window.title("Error Dialog")
     t = Text(err_window)
     t.pack()
     p1 = PrintLogger(t)
     sys.stdout = p1
+    err_dial_pressed = True
 
 if __name__ == '__main__':
    multiprocessing.freeze_support()
