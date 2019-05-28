@@ -126,7 +126,7 @@ def all_in_dir(root, func=0):
     global answer, header, footer, ents, ents2
     loc_answer = []
     new_list = []
-    pool = Pool(processes=4)
+    pool = Pool(processes=2)
     check_name_temp = messagebox.askyesno("File Snipper 1.0", "Do you want to specify the first characters?")
     if check_name_temp == True:
         name_str = simpledialog.askstring("File Snipper 1.0",
@@ -231,7 +231,7 @@ def  passive_open_file():
     footer = Frame(root)
     del_list = []
     new_list = []
-    pool = Pool(processes=4)
+    pool = Pool(processes=2)
     for file in files_answer:
         if file not in answer:
             if ((file[-4:])[:3] == 'xls') or (file[-4:] == '.xls') or (file[-4:] == '.csv') or (file[-3:] == '.h5'):
