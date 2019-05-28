@@ -1,13 +1,68 @@
 import pandas as pd
-import time
+import time, shelve
 class OpenFile:
-    def open_file(entry, delimiter=None,header_line=0, index_col=None, chunk=None , verbose=False,terminator=None,
-                  only_col=None, dtypes=None):
+    def open_file(entry):#, delimiter=None,header_line=0, index_col=None, chunk=None , verbose=False,terminator=None,
+                  #only_col=None, dtypes=None):
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
         print('Opening ' + new_field)
         start = time.time()
 
+        var_file = shelve.open('var_file')
+        try:
+            for gen_set in var_file['opt_gen_rules']:
+                if gen_set[0] == 'Delimiter':
+                    if gen_set[1] == 'DV' or gen_set[1] == '':
+                        delimiter = ','
+                    else:
+                        delimiter = gen_set[1]
+                elif gen_set[0] == 'Terminator':
+                    if gen_set[1] == 'DV' or gen_set[1] == '':
+                        terminator = None
+                    else:
+                        terminator = gen_set[1]
+                elif gen_set[0] == 'Header Line':
+                    if gen_set[1] == 'DV' or gen_set[1] == '':
+                        header_line = 0
+                    else:
+                        header_line = int(gen_set[1])
+                elif gen_set[0] == 'Index Column':
+                    if gen_set[1] == 'DV' or gen_set[1] == '':
+                        index_col = None
+                    else:
+                        index_col = int(gen_set[1])
+                elif gen_set[0] == 'Chunk':
+                    if gen_set[1] == 'DV' or gen_set[1] == '':
+                        chunk = None
+                    else:
+                        chunk = int(gen_set[1])
+                elif gen_set[0] == 'Verbose':
+                    if gen_set[1] == 0:
+                        verbose = False
+                    else:
+                        verbose = True
+        except KeyError:
+            delimiter = ','
+            terminator = None
+            header_line = 0
+            index_col = None
+            chunk = None
+            verbose = True
+        try:
+            only_cols = var_file['spec_col_rules']
+        except KeyError:
+            only_cols = None
+        try:
+            dtypes = var_file['col_dtypes']
+            for key, value in dtypes.items():
+                if value == 'Text':
+                    dtypes[key] = str
+                elif value == 'Number':
+                    dtypes[key] = float
+        except KeyError:
+            dtypes = None
+
+        var_file.close()
         if entry[-4:] == '.csv':
             if delimiter != None:
                 df = pd.read_csv(entry, sep=delimiter, header=None, nrows=1, low_memory=False)
@@ -40,28 +95,28 @@ class OpenFile:
                                 print(key + ':not found in ' + new_field)
                     if new_dtypes == {}:
                         new_dtypes = None
-                if only_col != None:
-                    new_only_col = []
-                    for item in only_col:
+                if only_cols != None:
+                    new_only_cols = []
+                    for item in only_cols:
                         if item in orig_headers[0]:
-                            new_only_col.append(item)
+                            new_only_cols.append(item)
                         elif item.strip() in orig_headers[0]:
-                            new_only_col.append(item.strip())
+                            new_only_cols.append(item.strip())
                         elif item in stripped_headers:
                             ind = stripped_headers.index(item)
-                            new_only_col.append(orig_headers[0][ind])
+                            new_only_cols.append(orig_headers[0][ind])
                         elif item.strip() in stripped_headers:
                             ind = stripped_headers.index(item.strip())
-                            new_only_col.append(orig_headers[0][ind])
+                            new_only_cols.append(orig_headers[0][ind])
                         else:
                             print(item + ':not found in ' + new_field)
 
                     try:
                         data = pd.read_csv(entry, sep=delimiter, header=header_line, index_col=index_col,
-                                           usecols=new_only_col, dtype=new_dtypes, verbose=verbose,
+                                           usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
                                            lineterminator=terminator, low_memory=False)
                         data.columns = [col.strip() for col in data.columns]
-                        return data
+                        return ((data), (entry))
                     except ValueError as e:
                         print(e)
                 else:
@@ -72,7 +127,7 @@ class OpenFile:
                         data.columns = [col.strip() for col in data.columns]
                         end = time.time()
                         print('-------'+ str(end-start) +'-------')
-                        return data
+                        return ((data), (entry))
                     except ValueError as e:
                         print(e)
 
@@ -103,28 +158,28 @@ class OpenFile:
                             print(key + ':not found in ' + new_field)
                     if new_dtypes == {}:
                         new_dtypes = None
-                if only_col != None:
-                    new_only_col = []
-                    for item in only_col:
+                if only_cols != None:
+                    new_only_cols = []
+                    for item in only_cols:
                         if item in orig_headers[0]:
-                            new_only_col.append(item)
+                            new_only_cols.append(item)
                         elif item.strip() in orig_headers[0]:
-                            new_only_col.append(item.strip())
+                            new_only_cols.append(item.strip())
                         elif item in stripped_headers:
                             ind = stripped_headers.index(item)
-                            new_only_col.append(orig_headers[0][ind])
+                            new_only_cols.append(orig_headers[0][ind])
                         elif item.strip() in stripped_headers:
                             ind = stripped_headers.index(item.strip())
-                            new_only_col.append(orig_headers[0][ind])
+                            new_only_cols.append(orig_headers[0][ind])
                         else:
                             print(item + ':not found in ' + new_field)
 
                     try:
                         data = pd.read_csv(entry, header=header_line, chunksize=chunk, index_col=index_col,
-                                           usecols=new_only_col, dtype=new_dtypes, verbose=verbose,
+                                           usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
                                            lineterminator=terminator, low_memory=False)
                         data.columns = [col.strip() for col in data.columns]
-                        return data
+                        return ((data), (entry))
                     except ValueError as e:
                         print(e)
                 else:
@@ -133,7 +188,7 @@ class OpenFile:
                                            dtype=new_dtypes, verbose=verbose, lineterminator=terminator,
                                            low_memory=False)
                         data.columns = [col.strip() for col in data.columns]
-                        return data
+                        return ((data), (entry))
                     except ValueError as e:
                         print(e)
         elif (entry[-4:] == 'xlsx') or (entry[-4:] == '.xls') or ((entry[-4:])[:3] == 'xls'):
@@ -145,23 +200,22 @@ class OpenFile:
                     stripped_headers.append(item.strip())
                 except AttributeError:
                     stripped_headers.append(item)
-            print('header checkpoint')
-            new_only_col = []
+            new_only_cols = []
             new_dtypes = {}
             try:
-                for item in only_col:
+                for item in only_cols:
                     if item in orig_headers[0]:
-                        new_only_col.append(item)
+                        new_only_cols.append(item)
                     elif item.strip() in orig_headers[0]:
-                        new_only_col.append(item.strip())
+                        new_only_cols.append(item.strip())
                     elif item in stripped_headers:
                         ind = stripped_headers.index(item)
-                        new_only_col.append(orig_headers[0][ind])
+                        new_only_cols.append(orig_headers[0][ind])
                     elif item.strip() in stripped_headers:
                         ind = stripped_headers.index(item.strip())
-                        new_only_col.append(orig_headers[0][ind])
+                        new_only_cols.append(orig_headers[0][ind])
             except TypeError:
-                new_only_col = None
+                new_only_cols = None
             if dtypes != None:
                 if 'ALL' in dtypes:
                     if dtypes['ALL'] == 'Text':
@@ -184,16 +238,16 @@ class OpenFile:
             if new_dtypes == {}:
                 new_dtypes = None
             data = pd.read_excel(entry, sheet_name=0, header=header_line, index_col=index_col,
-                                 usecols=new_only_col, dtype=new_dtypes, verbose=verbose)
+                                 usecols=new_only_cols, dtype=new_dtypes, verbose=verbose)
             data.columns = [col.strip() for col in data.columns]
             end = time.time()
             print('-------'+ str(end-start) +'-------')
-            return data
+            return ((data), (entry))
         elif entry[-3:] == '.h5':
             data = pd.read_hdf(entry,'df')
             end = time.time()
             print('-------'+ str(end-start) +'-------')
-            return data
+            return ((data), (entry))
         else:
             df_empty = pd.DataFrame({'A':[]})
             end = time.time()
