@@ -204,10 +204,9 @@ class MakeForm:
             body.pack()
             opt_window.mainloop()
         elif func == 8:
-            gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'Verbose',\
-                       'Error_dialog'
+            gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'Verbose'
             gen_def = {'Delimiter':',','Terminator':'DV', 'Header Line':'DV', 'Index Column':'DV',
-                       'Chunk':'DV', 'Verbose':0, 'Error_dialog':0}
+                       'Chunk':'DV', 'Verbose':0}
             var_file = shelve.open('var_file')
             temp_dict ={}
             try:
@@ -225,14 +224,12 @@ class MakeForm:
                         temp_dict['Chunk'] = gen_set[1]
                     elif gen_set[0] == 'Verbose':
                         temp_dict['Verbose'] = gen_set[1]
-                    elif gen_set[0] == 'Error_dialog':
-                        temp_dict['Error_dialog'] = gen_set[1]
             except KeyError:
                 print('Default rules')
 
             var_file.close()
             for opt in gen_opts:
-                if (opt != 'Verbose') and (opt != 'Error_dialog'):
+                if (opt != 'Verbose'):
                     row = Frame(root)
                     lab = Label(row, width=12, text=opt, anchor='w')
                     ent = Entry(row, width=3)
