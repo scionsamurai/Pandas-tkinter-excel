@@ -9,6 +9,7 @@ from RetrieveInput import Retrieve_Input
 from functools import partial
 from Open_File import OpenFile
 from Make_Forms import MakeForm
+from PLogger import PrintLogger
 warnings.filterwarnings("error")
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
@@ -45,7 +46,6 @@ def fetch():
    #for entry in entries:
    #   field = entry#columns.values
    #   text  = entry[1].get()#.columns.values
-
 
 def changed(*args, widget=None):
     global header, footer, ents, ents2, form1, form2
@@ -121,119 +121,11 @@ def close_files(root):
         ents2 = form2.make(footer, answer, 2)
         footer.pack()
 
-def read_csv(filename):
-    new_only_col = []
-    var_file = shelve.open('var_file')
-    try:
-        for gen_set in var_file['opt_gen_rules']:
-            if gen_set[0] == 'Header Line':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    header_line = 0
-                else:
-                    header_line = int(gen_set[1])
-            elif gen_set[0] == 'Index Column':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    index_col = None
-                else:
-                    index_col = int(gen_set[1])
-            elif gen_set[0] == 'Verbose':
-                if gen_set[1] == 0:
-                    verbose = False
-                else:
-                    verbose = True
-    except KeyError:
-        header_line = 0
-        index_col = None
-        verbose = False
-    try:
-        only_cols = var_file['spec_col_rules']
-    except KeyError:
-        only_cols = None
-    try:
-        dtypes = var_file['col_dtypes']
-        for key, value in dtypes.items():
-            if value == 'Text':
-                dtypes[key] = str
-            elif value == 'Number':
-                dtypes[key] = float
-    except KeyError:
-        dtypes = None
-    try:
-        return (pd.read_excel(filename, sheet_name=0, header=header_line, index_col=index_col,
-                             usecols=only_cols, dtype=dtypes, verbose=verbose), (filename))
-    except PermissionError as e:
-        print(e)
-
-def main(file_list):
-    pool = Pool(processes=4)
-    new_list = []
-    for x in file_list:
-        if x not in answer:
-            new_list.append(x)
-    df_list = pool.map(read_csv, new_list)
-    for i in range(len(new_list)):
-        li.append(df_list[i][0])
-        answer.append(df_list[i][1])
-        li_dict[df_list[i][1]] = (len(li) - 1)
-
 def all_in_dir(root, func=0):
     global answer, header, footer, ents, ents2
-    var_file = shelve.open('var_file')
-    try:
-        for gen_set in var_file['opt_gen_rules']:
-            if gen_set[0] == 'Delimiter':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    delimiter = ','
-                else:
-                    delimiter = gen_set[1]
-            elif gen_set[0] == 'Terminator':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    terminator = None
-                else:
-                    terminator = gen_set[1]
-            elif gen_set[0] == 'Header Line':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    header_line = 0
-                else:
-                    header_line = int(gen_set[1])
-            elif gen_set[0] == 'Index Column':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    index_col = None
-                else:
-                    index_col = int(gen_set[1])
-            elif gen_set[0] == 'Chunk':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    chunk = None
-                else:
-                    chunk = int(gen_set[1])
-            elif gen_set[0] == 'Verbose':
-                if gen_set[1] == 0:
-                    verbose = False
-                else:
-                    verbose = True
-    except KeyError:
-        delimiter = ','
-        terminator = None
-        header_line = 0
-        index_col = None
-        chunk = None
-        verbose = False
-    try:
-        only_cols = var_file['spec_col_rules']
-    except KeyError:
-        only_cols = None
-    try:
-        dtypes = var_file['col_dtypes']
-        for key, value in dtypes.items():
-            if value == 'Text':
-                dtypes[key] = str
-            elif value == 'Number':
-                dtypes[key] = float
-    except KeyError:
-        dtypes = None
-
     loc_answer = []
-    excel_files = []
+    new_list = []
+    pool = Pool(processes=4)
     check_name_temp = messagebox.askyesno("File Snipper 1.0", "Do you want to specify the first characters?")
     if check_name_temp == True:
         name_str = simpledialog.askstring("File Snipper 1.0",
@@ -247,18 +139,13 @@ def all_in_dir(root, func=0):
             for name in files:
                 if check_name_temp == True:
                     if name[:len(name_str)] == name_str:
-                        if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
+                        if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls') or (name[-4:] == '.csv') or (name[-3:] == '.h5'):
                             if name[:2] != '~$':
-                                excel_files.append((path + '/' + name))
-                        elif (name[-4:] == '.csv') or (name[-3:] == '.h5'):
-                            loc_answer.append((path + '/' + name))
+                                loc_answer.append((path + '/' + name))
                 else:
-                    if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
+                    if ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls') or (name[-4:] == '.csv') or (name[-3:] == '.h5'):
                         if name[:2] != '~$':
-                            excel_files.append((path + '/' + name))
-                    elif (name[-4:] == '.csv') or (name[-3:] == '.h5'):
-                        loc_answer.append((path + '/' + name))
-        main(excel_files)
+                            loc_answer.append((path + '/' + name))
     else:
         loc_answer.extend(intro_dialog(root))
     loc_answer = list(filter(bool, loc_answer))
@@ -268,24 +155,19 @@ def all_in_dir(root, func=0):
     del_list = []
     for file in loc_answer:
         if file not in answer:
-            try:
-                dataframe = OpenFile.open_file(file, delimiter, header_line, index_col, chunk, verbose,
-                                               terminator, only_cols, dtypes)
-                if dataframe.empty != True:
-                    li.append(dataframe)
-                    answer.append(file)
-                    li_dict[file] = (len(li) - 1)
-                else:
-                    temp_f = file.split('/')
-                    new_f = temp_f[(len(temp_f) - 1)]
-                    del_list.append(new_f)
-            except PermissionError as e:
-                print(e)
+            new_list.append(file)
+    df_list = pool.map(OpenFile.open_file, new_list)
+    for i in range(len(new_list)):
+        if df_list[i][0].empty != True:
+            li.append(df_list[i][0])
+            answer.append(df_list[i][1])
+            li_dict[df_list[i][1]] = (len(li) - 1)
+        else:
+            print(df_list[i][1] + ' didn\'t have the certian input requirements.')
     for i in del_list:
         print('Failed to Open :' + i)
     ents2 = form2.make(footer, answer, 2)
     footer.pack()
-    var_file.close()
 
 def resort():
     global answer, footer, ents2
@@ -331,60 +213,6 @@ def open_opt_button(opt_form):
 
 def  passive_open_file():
     global answer, header, footer, ents, ents2
-    var_file = shelve.open('var_file')
-    try:
-        for gen_set in var_file['opt_gen_rules']:
-            if gen_set[0] == 'Delimiter':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    delimiter = ','
-                else:
-                    delimiter = gen_set[1]
-            elif gen_set[0] == 'Terminator':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    terminator = None
-                else:
-                    terminator = gen_set[1]
-            elif gen_set[0] == 'Header Line':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    header_line = 0
-                else:
-                    header_line = int(gen_set[1])
-            elif gen_set[0] == 'Index Column':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    index_col = None
-                else:
-                    index_col = int(gen_set[1])
-            elif gen_set[0] == 'Chunk':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    chunk = None
-                else:
-                    chunk = int(gen_set[1])
-            elif gen_set[0] == 'Verbose':
-                if gen_set[1] == 0:
-                    verbose = False
-                else:
-                    verbose = True
-    except KeyError:
-        delimiter = ','
-        terminator = None
-        header_line = 0
-        index_col = None
-        chunk = None
-        verbose = True
-    try:
-        only_cols =  var_file['spec_col_rules']
-    except KeyError:
-        only_cols = None
-    try:
-        dtypes =  var_file['col_dtypes']
-        for key, value in dtypes.items():
-            if value == 'Text':
-                dtypes[key] = str
-            elif value == 'Number':
-                dtypes[key] = float
-    except KeyError:
-        dtypes = None
-
     files_answer = filedialog.askopenfilenames(parent=footer,
                                          initialdir=os.getcwd(),
                                          title="Please select one or more files:",
@@ -393,24 +221,34 @@ def  passive_open_file():
     footer.destroy()
     footer = Frame(root)
     del_list = []
+    new_list = []
+    pool = Pool(processes=4)
     for file in files_answer:
         if file not in answer:
-            dataframe = OpenFile.open_file(file, delimiter, header_line, index_col, chunk, verbose,
-                                             terminator, only_cols, dtypes)
-            if dataframe.empty != True:
-                li.append(dataframe)
-                answer.append(file)
-                li_dict[file] = (len(li) - 1)
-            else:
-                temp_f = file.split('/')
-                new_f = temp_f[(len(temp_f) - 1)]
-                del_list.append(new_f)
+            if ((file[-4:])[:3] == 'xls') or (file[-4:] == '.xls') or (file[-4:] == '.csv') or (file[-3:] == '.h5'):
+                if file[:2] != '~$':
+                    new_list.append(file)
+    df_list = pool.map(OpenFile.open_file, new_list)
+    for i in range(len(new_list)):
+        if df_list[i][0].empty != True:
+            li.append(df_list[i][0])
+            answer.append(df_list[i][1])
+            li_dict[df_list[i][1]] = (len(li) - 1)
+        else:
+            print(df_list[i][1] + ' didn\'t have the certian input requirements.')
     for i in del_list:
         print('Failed to Open :' + i)
 
     ents2 = form2.make(footer, answer, 2)
     footer.pack()
-    var_file.close()
+
+def err_dialog():
+    err_window = Toplevel()
+    err_window.title("Error Dialog")
+    t = Text(err_window)
+    t.pack()
+    p1 = PrintLogger(t)
+    sys.stdout = p1
 
 if __name__ == '__main__':
    multiprocessing.freeze_support()
@@ -424,26 +262,9 @@ if __name__ == '__main__':
    row = Frame(root)
    footer = Frame(root)
 
-   #answer.extend(intro_dialog(root))
-   #answer = list(filter(bool, answer))
    answer = []
    opt_form = MakeForm()
    inp = Retrieve_Input()
-
-   del_list = []
-   for i in answer:
-      dataframe = OpenFile.open_file(i)
-      if dataframe.empty != True:
-         li.append(dataframe)
-         li_dict[i] = (len(li) - 1)
-      else:
-         ind = answer.index(i)
-         del_list.append(ind)
-   for i in del_list[::-1]:
-       temp_f = answer[i].split('/')
-       new_f = temp_f[(len(temp_f) - 1)]
-       print('Failed to Open :' + new_f)
-       del answer[i]
 
    form1 = MakeForm()
    ents = form1.make(header, fields,1)
@@ -471,6 +292,7 @@ if __name__ == '__main__':
 
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=donothing())
+   helpmenu.add_command(label="Error Dialog", command=(lambda e=ents2: err_dialog()))
    helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch()))
    menubar.add_cascade(label="Help", menu=helpmenu)
 
@@ -496,5 +318,4 @@ if __name__ == '__main__':
    body.pack()
    header.pack()
    footer.pack()
-
    root.mainloop()
