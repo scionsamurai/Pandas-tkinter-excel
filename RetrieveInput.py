@@ -1,13 +1,13 @@
 from SplitEntry import Split_Entry
 from SearchDF import SearchDataFrame
 import pandas as pd
-import shelve
-import os
+import shelve, os, time
 import xlsxwriter
 class Retrieve_Input:
     def __init__(self):
         self.no_value = 0
     def row_frames(self,input_criteria, opened_files, data_frames, auto_open_var, output_type):
+        start = time.time()
         new_output = []
         print('Searching:\n' + input_criteria[1][1].get())
         search_column = (input_criteria[0][1].get()).strip()
@@ -77,7 +77,11 @@ class Retrieve_Input:
                     writer_orig.save()
                 if auto_open_var.get() == 1:
                     os.startfile(output_directory, 'open')
+                    end = time.time()
+                    print('-------' + str(end - start) + '-------')
                 else:
+                    end = time.time()
+                    print('-------' + str(end - start) + '-------')
                     print('done')
             except ValueError as e:
                 print(e) #"No Matches")
