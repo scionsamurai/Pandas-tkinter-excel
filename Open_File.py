@@ -1,68 +1,22 @@
 import pandas as pd
-import time, shelve
+import time
 class OpenFile:
-    def open_file(entry):#, delimiter=None,header_line=0, index_col=None, chunk=None , verbose=False,terminator=None,
-                  #only_col=None, dtypes=None):
-        var_file = shelve.open('var_file')
-        
+    def open_file(entry, inp_options):
+        gen_rules = inp_options[0]
+        delimiter = gen_rules['Delimiter']
+        terminator = gen_rules['Terminator']
+        header_line = gen_rules['Header Line']
+        index_col = gen_rules['Index Column']
+        chunk = gen_rules['Chunk']
+        verbose = gen_rules['Verbose']
+
+        only_cols = inp_options[1]
+        dtypes = inp_options[2]
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
         print('Opening ' + new_field)
         start = time.time()
 
-        try:
-            for gen_set in var_file['opt_gen_rules']:
-                if gen_set[0] == 'Delimiter':
-                    if gen_set[1] == 'DV' or gen_set[1] == '':
-                        delimiter = ','
-                    else:
-                        delimiter = gen_set[1]
-                elif gen_set[0] == 'Terminator':
-                    if gen_set[1] == 'DV' or gen_set[1] == '':
-                        terminator = None
-                    else:
-                        terminator = gen_set[1]
-                elif gen_set[0] == 'Header Line':
-                    if gen_set[1] == 'DV' or gen_set[1] == '':
-                        header_line = 0
-                    else:
-                        header_line = int(gen_set[1])
-                elif gen_set[0] == 'Index Column':
-                    if gen_set[1] == 'DV' or gen_set[1] == '':
-                        index_col = None
-                    else:
-                        index_col = int(gen_set[1])
-                elif gen_set[0] == 'Chunk':
-                    if gen_set[1] == 'DV' or gen_set[1] == '':
-                        chunk = None
-                    else:
-                        chunk = int(gen_set[1])
-                elif gen_set[0] == 'Verbose':
-                    if gen_set[1] == 0:
-                        verbose = False
-                    else:
-                        verbose = True
-        except KeyError:
-            delimiter = ','
-            terminator = None
-            header_line = 0
-            index_col = None
-            chunk = None
-            verbose = True
-        try:
-            only_cols = var_file['spec_col_rules']
-        except KeyError:
-            only_cols = None
-        try:
-            dtypes = var_file['col_dtypes']
-            for key, value in dtypes.items():
-                if value == 'Text':
-                    dtypes[key] = str
-                elif value == 'Number':
-                    dtypes[key] = float
-        except KeyError:
-            dtypes = None
-        var_file.close()
         if entry[-4:] == '.csv':
             if delimiter != None:
                 df = pd.read_csv(entry, sep=delimiter, header=None, nrows=1, low_memory=False)
