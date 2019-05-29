@@ -3,14 +3,13 @@ from scrollbarClass import Scrollable
 import shelve, os
 from functools import partial
 class MakeForm:
-    def __init__(self, data_frames=[], frame_keys={},input_box1=False, input_box2=False, pass_func=False):
+    def __init__(self, data_frames=[], frame_keys={},input_box1=False, input_box2=False):
         self.entries = []
         self.entries2 = {}
         self.li = data_frames
         self.li_dict = frame_keys
         self.ents1 = input_box1
         self.ents2 = input_box2
-        self.pass_func=pass_func
         self.footer = False
 
     def make(self, root=None, fields=[], func=0,body=False, key=False, set_info=False):
@@ -204,9 +203,9 @@ class MakeForm:
             body.pack()
             opt_window.mainloop()
         elif func == 8:
-            gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'Verbose'
+            gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'CPU Cores', 'Verbose'
             gen_def = {'Delimiter':',','Terminator':'DV', 'Header Line':'DV', 'Index Column':'DV',
-                       'Chunk':'DV', 'Verbose':0}
+                       'Chunk':'DV', 'CPU Cores':1, 'Verbose':0}
             var_file = shelve.open('var_file')
             temp_dict ={}
             try:
@@ -222,6 +221,8 @@ class MakeForm:
                         temp_dict['Index Column'] = gen_set[1]
                     elif gen_set[0] == 'Chunk':
                         temp_dict['Chunk'] = gen_set[1]
+                    elif gen_set[0] == 'CPU Cores':
+                        temp_dict['CPU Cores'] = gen_set[1]
                     elif gen_set[0] == 'Verbose':
                         temp_dict['Verbose'] = gen_set[1]
             except KeyError:
@@ -229,7 +230,7 @@ class MakeForm:
 
             var_file.close()
             for opt in gen_opts:
-                if (opt != 'Verbose'):
+                if opt != 'Verbose':
                     row = Frame(root)
                     lab = Label(row, width=12, text=opt, anchor='w')
                     ent = Entry(row, width=3)
@@ -504,10 +505,6 @@ class MakeForm:
         else:
             print("Where'd that setting come from?")
         opt_footer.pack()
-
-    def donothing(self):
-        x = 0
-        return x
 
     def reset_defaults(self):
         var_file = shelve.open('var_file')
