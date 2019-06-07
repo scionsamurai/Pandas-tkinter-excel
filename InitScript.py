@@ -24,16 +24,16 @@ LARGE_FONT= ("Verdana", 12)
 NORM_FONT = ("Helvetica", 10)
 SMALL_FONT = ("Helvetica", 8)
 
-def fetch():
+def fetch(pandas_obj):
    #save_var = messagebox.askokcancel("Title", "Do you want to save?")
    #print(save_var)
-   new_list = ''
-   for item in answer:
-      if answer.index(item) != len(answer):
-         new_list += item+'\n'
-      else:
-          new_list += item
-   popupmsg(new_list)
+   if isinstance(pandas_obj, pd.DataFrame):
+       usage_b = pandas_obj.memory_usage(deep=True).sum()
+   else:
+       usage_b = pandas_obj.memory_usage(deep=True)
+   usage_mb = usage_b / 1024 ** 2 # convert bytes to megabytes
+   print("{:03.2f} MB".format(usage_mb))
+   print(pandas_obj.info(verbose=True))
 
 def changed(*args, widget=None):
     global header, footer, ents, ents2, form1, form2
@@ -53,13 +53,6 @@ def changed(*args, widget=None):
     form2.ents2 = ents[1][1]
     header.pack()
     footer.pack()
-
-def intro_dialog(tkThang):
-   answer = filedialog.askopenfilenames(parent=tkThang,
-                                        initialdir=os.getcwd(),
-                                        title="Please select one or more files:",
-                                        filetypes=my_filetypes)
-   return answer
 
 def popupmsg(msg):
    popup = Toplevel()
@@ -161,10 +154,11 @@ def open_files(func=1):
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
+    open = OpenFile()
 
     if (len(new_list) > 1) and (inp_opts[3] > 1):
         pool = Pool(processes=inp_opts[3])
-        df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts), new_list)
+        df_list = pool.map(partial(open.open_file, inp_options=inp_opts), new_list)
         for i in range(len(new_list)):
             if df_list[i][0].empty != True:
                 li.append(df_list[i][0])
@@ -177,7 +171,7 @@ def open_files(func=1):
     for file in loc_answer:
         if file not in answer:
             try:
-                dataframe = OpenFile.open_file(file, inp_opts)
+                dataframe = open.open_file(file, inp_opts)
                 if dataframe[0].empty != True:
                     li.append(dataframe[0])
                     answer.append(file)
@@ -190,6 +184,7 @@ def open_files(func=1):
                 print(e)
     ents2 = form2.make(footer, answer, 2)
     footer.pack()
+
 def resort():
     global answer, footer, ents2
     footer.pack_forget()
@@ -342,7 +337,7 @@ if __name__ == '__main__':
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=donothing())
    helpmenu.add_command(label="Error Dialog", command=(lambda e=ents2: err_dialog()))
-   helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch()))
+   helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0])))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
    root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
