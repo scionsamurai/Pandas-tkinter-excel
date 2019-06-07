@@ -82,9 +82,9 @@ class OpenFile:
                         print(e)
 
             else:
-                df = pd.read_csv(entry, header=None, nrows=1, low_memory=False)
+                df = pd.read_csv(entry, nrows=50, low_memory=False)
                 # print(df.values.tolist())
-                orig_headers = df.values.tolist()
+                orig_headers = df.columns.values.tolist()
                 stripped_headers = []
                 for item in orig_headers[0]:
                     try:
