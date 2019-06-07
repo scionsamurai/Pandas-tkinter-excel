@@ -84,7 +84,8 @@ class MakeForm:
             header = Frame(headers_window)
             body = Frame(headers_window)
             footer = Frame(headers_window)
-            row = Frame(headers_window)
+            row = Frame(header)
+            Label(header, text=' --- Text Rule --- ').pack()
             lab = Label(row, width=10, text='Column(s)')
             ent = Entry(row, width=3)
             lab2 = Label(row, width=9, text='Col Width')
@@ -100,26 +101,28 @@ class MakeForm:
             ent4.pack(side=LEFT)
             header.pack()
             body.pack()
-            Label(header, text='Num Formatting').pack()
-            Label(footer, text='Text Formatting').pack()
-            row2 = Frame(body)
 
             footer.pack()
-            row2.pack(fill=X, padx=5, pady=2)
-
-            lab3 = Label(row2, width=10, text='Num Format')
-            ent3 = Entry(row2, width=13)
-            lab3.pack(side=LEFT)
-            ent3.pack(side=LEFT)
-            row3 = Frame(footer)
+            row3 = Frame(body)
             lab6 = Label(row3, width=10, text='Font Style')
             ent6 = Entry(row3, width=13)
             row3.pack(fill=X, padx=5, pady=2)
+            row2 = Frame(body)
+            Label(body, text=' --- Leading Zeros Rule --- ').pack()
+            lab3 = Label(row2, width=10, text='Col Header')
+            ent3 = Entry(row2, width=13)
+            lab3_1 = Label(row2, width=8, text='Total #s')
+            ent3_1 = Entry(row2, width=2)
+            lab3.pack(side=LEFT)
+            ent3.pack(side=LEFT)
+            lab3_1.pack(side=LEFT)
+            ent3_1.pack(side=LEFT)
+            row2.pack(fill=X, padx=5, pady=2)
             lab6.pack(side=LEFT)
             ent6.pack(side=LEFT)
             row4 = Frame(footer)
             b1 = Button(row4, text='Add Rule',
-                        command=(lambda e='nothin': self.add_rule('rules', ent, ent2, ent3, ent6, ent4)))
+                        command=(lambda e='nothin': self.add_rule('rules', ent, ent2, ent3, ent6, ent4, ent3_1)))
             row4.pack(fill=X, padx=5, pady=2)
             breset = Button(row4, text='Reset Rule(s)',
                         command=(lambda e='dont get lambda': self.reset_rules('rules')))
@@ -415,7 +418,7 @@ class MakeForm:
                   new_string,4, body=body, key=key,
                   set_info=set_info)
 
-    def add_rule(self,shelf_key,col,width,rule,font,font_size):
+    def add_rule(self,shelf_key,col,width,rule,font,font_size,rule_digits):
         var_file = shelve.open('var_file')
         try:
             rules = var_file[shelf_key]
@@ -423,7 +426,8 @@ class MakeForm:
         except KeyError:
             print('first rule')
             rules = []
-        rules.append([col.get(),width.get(),rule.get(),font.get(),font_size.get()])
+        rule_get = (rule.get()).strip()
+        rules.append([col.get(),width.get(),rule_get,font.get(),font_size.get(),rule_digits.get()])
         var_file[shelf_key] = rules
         var_file.close()
         col.delete(0, END)
@@ -431,6 +435,7 @@ class MakeForm:
         rule.delete(0, END)
         font.delete(0, END)
         font_size.delete(0, END)
+        rule_digits.delete(0, END)
 
     def opt_rule(self):
         var_file = shelve.open('var_file')
