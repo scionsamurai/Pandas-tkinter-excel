@@ -210,6 +210,9 @@ class OpenFile:
         return new_list
 
     def df_to_dtypes_dict(self, df):
+        for col in df.columns.values:
+            if df[col].empty == True:
+                df.drop(col, axis=1)
         df_int = df.select_dtypes(include=['int64'])
         converted_int2 = df_int.apply(pd.to_numeric,downcast='unsigned')
         converted_int = converted_int2.apply(pd.to_numeric,downcast='signed')
