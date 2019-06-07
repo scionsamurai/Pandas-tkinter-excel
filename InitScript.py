@@ -172,14 +172,17 @@ def open_files(func=1):
         if file not in answer:
             try:
                 dataframe = open.open_file(file, inp_opts)
-                if dataframe[0].empty != True:
-                    li.append(dataframe[0])
-                    answer.append(file)
-                    li_dict[file] = (len(li) - 1)
-                else:
-                    temp_f = file.split('/')
-                    new_f = temp_f[(len(temp_f) - 1)]
-                    del_list.append(new_f)
+                try:
+                    if dataframe[0].empty != True:
+                        li.append(dataframe[0])
+                        answer.append(file)
+                        li_dict[file] = (len(li) - 1)
+                    else:
+                        temp_f = file.split('/')
+                        new_f = temp_f[(len(temp_f) - 1)]
+                        del_list.append(new_f)
+                except TypeError as e:
+                    print(e)
             except PermissionError as e:
                 print(e)
     ents2 = form2.make(footer, answer, 2)
