@@ -212,7 +212,7 @@ class OpenFile:
         print("Memory usage of properties dataframe is :", start_mem_usg, " MB")
         NAlist = []  # Keeps track of columns that have missing values filled in.
         for col in props.columns:
-            if props[col].dtype != object:  # Exclude strings
+            if props[col].dtype != object and props[col].dtype != 'datetime64[ns]':  # Exclude strings and dates
 
                 # Print current column type
                 print("******************************")
@@ -229,7 +229,7 @@ class OpenFile:
                     NAlist.append(col)
                     props[col].fillna(0, inplace=True)
 
-                    # test if column can be converted to an integer
+                # test if column can be converted to an integer
                 asint = props[col].fillna(0).astype(np.int64)
                 result = (props[col] - asint)
                 result = result.sum()
