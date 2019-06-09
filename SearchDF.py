@@ -1,9 +1,9 @@
 class SearchDataFrame:
-    def criteria_by_column(i, search_column, search_item, new_field, int_str, data_frames):
+    def criteria_by_column(search_column, search_item, new_field, int_str, data_frames):
         ## if i replace instances of data_frames[i]
         # - will it effect original dataframe?
         # - will it speed up the time it takes to search in general?
-        data = data_frames[i]
+        data = data_frames
         try:
             data[search_column] = data[search_column].str.strip()
         except (AttributeError, KeyError):
