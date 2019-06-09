@@ -17,15 +17,13 @@ class Retrieve_Input:
             if opened_files[i][2].get() == 1:
                 real_list = Split_Entry.split(input_criteria[1][1].get())
                 if isinstance(real_list, str) == False:
-                    new_output.append(SearchDataFrame.criteria_by_column(i,
-                                                                         search_column,
+                    new_output.append(SearchDataFrame.criteria_by_column(search_column,
                                                                          real_list,
-                                                                         new_field, 2, data_frames))
+                                                                         new_field, 2, data_frames[i]))
                 else:
-                    new_output.append(SearchDataFrame.criteria_by_column(i,
-                                                                         search_column,
+                    new_output.append(SearchDataFrame.criteria_by_column(search_column,
                                                                          real_list,
-                                                                         new_field, 1, data_frames))
+                                                                         new_field, 1, data_frames[i]))
 
         try:
             if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
@@ -103,3 +101,22 @@ class Retrieve_Input:
 
         except PermissionError as e:
             print(str(e)[:28] + ": Close File Before Searching")
+
+    def result_frames(self, data_frame, search_column, real_list, file_name):
+        new_output = []
+        temp_field = file_name.split('/')
+        new_field = temp_field[(len(temp_field) - 1)]
+        if isinstance(real_list, str) == False:
+            new_output.append(SearchDataFrame.criteria_by_column(search_column,
+                                                                 real_list,
+                                                                 new_field, 2, data_frame))
+        else:
+            new_output.append(SearchDataFrame.criteria_by_column(search_column,
+                                                                 real_list,
+                                                                 new_field, 1, data_frame))
+        try:
+            if new_output == [None]:
+                new_output2 =pd.DataFrame({'A': []})
+        except ValueError:
+            new_output2 = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+        return new_output2
