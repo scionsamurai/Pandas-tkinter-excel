@@ -9,6 +9,7 @@ from RetrieveInput import Retrieve_Input
 from functools import partial
 from Open_File import OpenFile
 from Make_Forms import MakeForm
+from SplitEntry import Split_Entry
 from PLogger import PrintLogger
 warnings.filterwarnings("error")
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
@@ -87,7 +88,7 @@ def donothing():
 
 def close_files(root):
     global answer, footer, ents2, li, li_dict
-    close_var = messagebox.askyesno("File Snipper 1.0", "Do you want to close checked files?")
+    close_var = messagebox.askyesno("File_Pal_1.0", "Do you want to close checked files?")
     if close_var == True:
         for file in answer[::-1]:
             if ents2[li_dict[file]][2].get() == 1:
@@ -103,29 +104,35 @@ def close_files(root):
         footer.pack()
 
 def open_files(func=1):
-    global answer, footer, ents2
+    global answer, footer,ents, ents2
     del_list = []
     new_list = []
     inp_opts = get_inp_opts()
     loc_answer = []
     if func==1:
+        results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
         files_answer = filedialog.askopenfilenames(parent=footer,
                                                    initialdir=os.getcwd(),
                                                    title="Please select one or more files:",
                                                    filetypes=my_filetypes)
-        for file in files_answer:
-            if file not in answer:
-                if ((file[-4:])[:3] == 'xls') or (file[-4:] == '.xls'):
-                    if file[:2] != '~$':
-                        new_list.append(file)
-                elif (file[-4:] == '.csv') or (file[-3:] == '.h5'):
-                    loc_answer.append(file)
+        if len(files_answer) > 0:
+            try:
+                for file in files_answer:
+                    if file not in answer:
+                        if ((file[-4:])[:3] == 'xls') or (file[-4:] == '.xls'):
+                            if file[:2] != '~$':
+                                new_list.append(file)
+                        elif (file[-4:] == '.csv') or (file[-3:] == '.h5'):
+                            loc_answer.append(file)
+            except KeyboardInterrupt as e:
+                print(e)
     elif func==2:
-        check_name_temp = messagebox.askyesno("File Snipper 1.0", "Do you want to specify the first characters?")
+        check_name_temp = messagebox.askyesno("File_Pal_1.0", "Do you want to specify the first characters?")
         if check_name_temp == True:
-            name_str = simpledialog.askstring("File Snipper 1.0",
+            name_str = simpledialog.askstring("File_Pal_1.0",
                                               "First part of name for the files you want to open?",
                                               parent=root)
+        results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
         directory = filedialog.askdirectory(parent=root,
                                             initialdir=os.getcwd(),
                                             title="Please select Directory:")
@@ -133,7 +140,7 @@ def open_files(func=1):
             for name in files:
                 if check_name_temp == True:
                     if (name[-4:] == '.csv') or (name[-3:] == '.h5'):
-                            if name[:len(name_str)] == name_str:
+                            if name[:len(name_str)].lower() == name_str.lower():
                                 if name not in answer:
                                     loc_answer.append((path + '/' + name))
                     elif ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
@@ -150,43 +157,49 @@ def open_files(func=1):
                         if name[:2] != '~$':
                             if name not in answer:
                                 new_list.append((path + '/' + name))
+    if (len(loc_answer) + len(new_list)) > 0:
+        if results_only == True:
+            temp_opts = list(inp_opts)
+            search_column = (ents[0][1].get()).strip()
+            real_list = Split_Entry.split(ents[1][1].get())
+            temp_opts.extend((search_column, real_list))
+            inp_opts = temp_opts
 
-    footer.pack_forget()
-    footer.destroy()
-    footer = Frame(root)
-    open = OpenFile()
-
-    if (len(new_list) > 1) and (inp_opts[3] > 1):
-        pool = Pool(processes=inp_opts[3])
-        df_list = pool.map(partial(open.open_file, inp_options=inp_opts), new_list)
-        for i in range(len(new_list)):
-            if df_list[i][0].empty != True:
-                li.append(df_list[i][0])
-                answer.append(df_list[i][1])
-                li_dict[df_list[i][1]] = (len(li) - 1)
-            else:
-                print(df_list[i][1] + ' didn\'t have the certian input requirements.')
-    else:
-        loc_answer.extend(new_list)
-    for file in loc_answer:
-        if file not in answer:
-            try:
-                dataframe = open.open_file(file, inp_opts)
-                try:
-                    if dataframe[0].empty != True:
-                        li.append(dataframe[0])
-                        answer.append(file)
-                        li_dict[file] = (len(li) - 1)
-                    else:
-                        temp_f = file.split('/')
-                        new_f = temp_f[(len(temp_f) - 1)]
-                        del_list.append(new_f)
-                except TypeError as e:
-                    print(e)
-            except PermissionError as e:
-                print(e)
-    ents2 = form2.make(footer, answer, 2)
-    footer.pack()
+        footer.pack_forget()
+        footer.destroy()
+        footer = Frame(root)
+        open = OpenFile()
+        if (len(new_list) > 1) and (inp_opts[0]['CPU Cores'] > 1):
+            pool = Pool(processes=inp_opts[0]['CPU Cores'])
+            df_list = pool.map(partial(open.open_file, inp_options=inp_opts), new_list)
+            for i in range(len(new_list)):
+                if df_list[i][0].empty != True:
+                    li.append(df_list[i][0])
+                    answer.append(df_list[i][1])
+                    li_dict[df_list[i][1]] = (len(li) - 1)
+                else:
+                    print(df_list[i][1] + ' didn\'t have the certian input requirements.')
+        else:
+            loc_answer.extend(new_list)
+        try:
+            for file in loc_answer:
+                if file not in answer:
+                    try:
+                        dataframe = open.open_file(file, inp_opts)
+                        if dataframe[0].empty != True:
+                            li.append(dataframe[0])
+                            answer.append(file)
+                            li_dict[file] = (len(li) - 1)
+                        else:
+                            temp_f = file.split('/')
+                            new_f = temp_f[(len(temp_f) - 1)]
+                            del_list.append(new_f)
+                    except PermissionError as e:
+                        print(e)
+        except KeyboardInterrupt as e:
+            print(e)
+        ents2 = form2.make(footer, answer, 2)
+        footer.pack()
 
 def resort():
     global answer, footer, ents2
@@ -269,13 +282,20 @@ def get_inp_opts():
                     gen_rules['Verbose'] = False
                 else:
                     gen_rules['Verbose'] = True
+            elif gen_set[0] == 'Header Func':
+                if gen_set[1] == 0:
+                    gen_rules['Header Func'] = False
+                else:
+                    gen_rules['Header Func'] = True
     except KeyError:
         gen_rules['Delimiter'] = ','
         gen_rules['Terminator'] = None
         gen_rules['Header Line'] = 0
         gen_rules['Index Column'] = None
         gen_rules['Chunk'] = None
+        gen_rules['CPU Cores'] = 1
         gen_rules['Verbose'] = False
+        gen_rules['Header Func'] = False
         tcores = 1
     try:
         only_cols = var_file['spec_col_rules']
@@ -290,23 +310,28 @@ def get_inp_opts():
                 dtypes[key] = float
     except KeyError:
         dtypes = None
+    try:
+        head_func_dtypes = var_file['head_func_types']
+    except KeyError:
+        head_func_dtypes = None
     var_file.close()
-    return (gen_rules,only_cols,dtypes,tcores)
+    return (gen_rules,only_cols,dtypes,head_func_dtypes)
 
 def err_dialog():
     global err_dial_pressed
     err_window = Toplevel()
-    err_window.title("Error Dialog")
+    err_window.title("Info Dialog")
     t = Text(err_window)
     t.pack()
     p1 = PrintLogger(t)
+    t.see('end')
     sys.stdout = p1
     err_dial_pressed = True
 
 if __name__ == '__main__':
    multiprocessing.freeze_support()
    root = Tk()
-   root.title("File Snipper 1.0")
+   root.title("File_Pal_1.0")
    #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
    global auto_open_box, ents,header, body, footer, form1, form2
 
@@ -339,7 +364,7 @@ if __name__ == '__main__':
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=donothing())
-   helpmenu.add_command(label="Error Dialog", command=(lambda e=ents2: err_dialog()))
+   helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
    helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0])))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
