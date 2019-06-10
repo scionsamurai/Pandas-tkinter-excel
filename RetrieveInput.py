@@ -52,7 +52,8 @@ class Retrieve_Input:
                     if rule[2] != '':
                         try:
                             temp_str = '{0:0>' + str(rule[5]) + '}'
-                            if str(new_new_output[rule[2]].dtype)[:3] == 'int' or\
+                            if str(new_new_output[rule[2]].dtype)[:3] == 'int' or \
+                                    str(new_new_output[rule[2]].dtype)[:3] == 'uin' or \
                                     str(new_new_output[rule[2]].dtype)[:5] == 'float':
                                 new_new_output[rule[2]] = new_new_output[rule[2]].apply(lambda x: temp_str.format(x))
                             else:
