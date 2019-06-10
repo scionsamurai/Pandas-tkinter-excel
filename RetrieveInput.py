@@ -56,7 +56,10 @@ class Retrieve_Input:
                                     str(new_new_output[rule[2]].dtype)[:5] == 'float':
                                 new_new_output[rule[2]] = new_new_output[rule[2]].apply(lambda x: temp_str.format(x))
                             else:
-                                new_new_output[rule[2]] = new_new_output[rule[2]].str.zfill(int(rule[5]))
+                                try:
+                                    new_new_output[rule[2]] = new_new_output[rule[2]].str.zfill(int(rule[5]))
+                                except AttributeError:
+                                    pass
                         except KeyError:
                             print(rule[2] + ' isn\'t in output.')
                         #rules.remove(rule)
