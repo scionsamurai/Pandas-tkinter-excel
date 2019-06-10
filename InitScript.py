@@ -186,6 +186,7 @@ def open_files(func=1):
                 if file not in answer:
                     try:
                         dataframe = open.open_file(file, inp_opts)
+                        #print(dataframe[0])
                         if dataframe[0].empty != True:
                             li.append(dataframe[0])
                             answer.append(file)
