@@ -5,268 +5,24 @@ from RetrieveInput import Retrieve_Input
 class OpenFile:
     def __init__(self):
         self.var = ''
-    def open_file(self, entry, inp_options, ):
-        gen_rules = inp_options[0]
-        delimiter = gen_rules['Delimiter']
-        terminator = gen_rules['Terminator']
-        header_line = gen_rules['Header Line']
-        index_col = gen_rules['Index Column']
-        chunk = gen_rules['Chunk']
-        verbose = gen_rules['Verbose']
-        header_func = gen_rules['Header Func']
-        skip_rows = None
-        skip_cols = 0
-        name = None
-        self.var = verbose
-
-        only_cols = inp_options[1]
-        dtypes = inp_options[2]
-        head_func_dtypes = inp_options[3]
-        if len(inp_options) > 5:
-            search_col = inp_options[4]
-            real_l = inp_options[5]
-            filter_results = True
-            inp = Retrieve_Input()
-        else:
-            filter_results = False
+    def open_file(self, entry, inp_options):
         temp_field = entry.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
         print('Opening ' + new_field)
         start = time.time()
 
         if entry[-4:] == '.csv':
-            if delimiter != None:
-                df = pd.read_csv(entry, sep=delimiter, nrows=50, low_memory=False)
-                if header_func:
-                    skip_rows, skip_cols, name = self.col_check(df,head_func_dtypes)
-                orig_headers = df.columns.values.tolist()
-                stripped_headers = []
-                for item in orig_headers[0]:
-                    try:
-                        stripped_headers.append(item.strip())
-                    except AttributeError:
-                        stripped_headers.append(item)
-                new_dtypes = {}
-                if dtypes != None:
-                    for key, value in dtypes.items():
-                        if key in orig_headers[0]:
-                            new_dtypes[key] = value
-                        elif key.strip() in orig_headers[0]:
-                            new_dtypes[key.strip()] = value
-                        elif key in stripped_headers:
-                            ind = stripped_headers.index(key)
-                            new_dtypes[orig_headers[0][ind]] = value
-                        elif key.strip() in stripped_headers:
-                            ind = stripped_headers.index(key.strip())
-                            new_dtypes[orig_headers[0][ind]] = value
-                        else:
-                            print(key + ':not found in ' + new_field)
-                if new_dtypes == {}:
-                    new_dtypes = None
-                if only_cols != None:
-                    new_only_cols = []
-                    for item in only_cols:
-                        if item in orig_headers[0]:
-                            new_only_cols.append(item)
-                        elif item.strip() in orig_headers[0]:
-                            new_only_cols.append(item.strip())
-                        elif item in stripped_headers:
-                            ind = stripped_headers.index(item)
-                            new_only_cols.append(orig_headers[0][ind])
-                        elif item.strip() in stripped_headers:
-                            ind = stripped_headers.index(item.strip())
-                            new_only_cols.append(orig_headers[0][ind])
-                        else:
-                            print(item + ':not found in ' + new_field)
-
-                    try:
-                        if name != None:
-                            header_line = 0
-                        data = pd.read_csv(entry, sep=delimiter, header=header_line, index_col=index_col,
-                                           usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
-                        data.columns = [col.strip() for col in data.columns]
-                        if filter_results:
-                            data = inp.result_frames(data,search_col, real_l,entry)
-                        if not data.empty:
-                            data = self.reduce_mem_usage(data)[0]
-                        else:
-                            print('no results in x')
-                        return ((data), (entry))
-                    except ValueError as e:
-                        print(e)
-                else:
-                    try:
-                        if name != None:
-                            header_line = 0
-                        data = pd.read_csv(entry, sep=delimiter, header=header_line, names=name, index_col=index_col,
-                                           dtype=new_dtypes, skiprows=skip_rows, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
-                        if skip_cols > 0:
-                            for i in range(skip_cols):
-                                data.drop(data.columns[1],axis=1)
-                        data.columns = [col.strip() for col in data.columns]
-                        if filter_results:
-                            data = inp.result_frames(data,search_col, real_l,entry)
-                        #print(data)
-                        if not data.empty:
-                            data = self.reduce_mem_usage(data)[0]
-                        else:
-                            print('no results in x')
-
-                        end = time.time()
-                        print('-------' + str(end - start) + '-------')
-                        return ((data), (entry))
-
-                    except ValueError as e:
-                        print(e)
-
+            if inp_options[0]['Delimiter'] != ',':
+                df = pd.read_csv(entry, sep=inp_options[0]['Delimiter'], nrows=50, low_memory=False)
+                data, entry = self.open_func(entry, df, inp_options, start)
+                return ((data), (entry))
             else:
                 df = pd.read_csv(entry, nrows=50, low_memory=False)
-                if header_func:
-                    skip_rows, skip_cols, name = self.col_check(df,head_func_dtypes)
-                orig_headers = df.columns.values.tolist()
-                stripped_headers = []
-                for item in orig_headers[0]:
-                    try:
-                        stripped_headers.append(item.strip())
-                    except AttributeError:
-                        stripped_headers.append(item)
-                new_dtypes = {}
-                if dtypes != None:
-                    for key, value in dtypes.items():
-                        if key in orig_headers[0]:
-                            new_dtypes[key] = value
-                        elif key.strip() in orig_headers[0]:
-                            new_dtypes[key.strip()] = value
-                        elif key in stripped_headers:
-                            ind = stripped_headers.index(key)
-                            new_dtypes[orig_headers[0][ind]] = value
-                        elif key.strip() in stripped_headers:
-                            ind = stripped_headers.index(key.strip())
-                            new_dtypes[orig_headers[0][ind]] = value
-                        else:
-                            print(key + ':not found in ' + new_field)
-                if new_dtypes == {}:
-                    new_dtypes = None
-                if only_cols != None:
-                    new_only_cols = []
-                    for item in only_cols:
-                        if item in orig_headers[0]:
-                            new_only_cols.append(item)
-                        elif item.strip() in orig_headers[0]:
-                            new_only_cols.append(item.strip())
-                        elif item in stripped_headers:
-                            ind = stripped_headers.index(item)
-                            new_only_cols.append(orig_headers[0][ind])
-                        elif item.strip() in stripped_headers:
-                            ind = stripped_headers.index(item.strip())
-                            new_only_cols.append(orig_headers[0][ind])
-                        else:
-                            print(item + ':not found in ' + new_field)
-
-                    try:
-                        if name != None:
-                            header_line = 0
-                        data = pd.read_csv(entry, header=header_line, chunksize=chunk, index_col=index_col,
-                                           usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
-                        if skip_cols > 0:
-                            for i in range(skip_cols):
-                                data.drop(data.columns[1],axis=1)
-                        data.columns = [col.strip() for col in data.columns]
-                        if filter_results:
-                            data = inp.result_frames(data,search_col, real_l,entry)
-                        if not data.empty:
-                            data = self.reduce_mem_usage(data)[0]
-                        else:
-                            print('no results in x')
-                        return ((data), (entry))
-                    except ValueError as e:
-                        print(e)
-                else:
-                    try:
-                        if name != None:
-                            header_line = 0
-                        data = pd.read_csv(entry, header=header_line, names=name, chunksize=chunk, index_col=index_col,
-                                           dtype=new_dtypes, skiprows=skip_rows, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
-                        if skip_cols > 0:
-                            for i in range(skip_cols):
-                                data.drop(data.columns[1],axis=1)
-                        data.columns = [col.strip() for col in data.columns]
-                        if filter_results:
-                            data = inp.result_frames(data,search_col, real_l,entry)
-                        if not data.empty:
-                            data = self.reduce_mem_usage(data)[0]
-                        else:
-                            print('no results in x')
-                        return ((data), (entry))
-                    except ValueError as e:
-                        print(e)
+                data, entry = self.open_func(entry, df, inp_options, start, func=1)
+                return ((data), (entry))
         elif (entry[-4:] == 'xlsx') or (entry[-4:] == '.xls') or ((entry[-4:])[:3] == 'xls'):
             df = pd.read_excel(entry, sheet_name=0, nrows=50)
-            if header_func:
-                skip_rows, skip_cols, name = self.col_check(df, head_func_dtypes)
-            orig_headers = list(df.columns.values)#.tolist()
-            stripped_headers = []
-            for item in orig_headers[0]:
-                try:
-                    stripped_headers.append(item.strip())
-                except AttributeError:
-                    stripped_headers.append(item)
-            new_only_cols = []
-            try:
-                for item in only_cols:
-                    if item in orig_headers[0]:
-                        new_only_cols.append(item)
-                    elif item.strip() in orig_headers[0]:
-                        new_only_cols.append(item.strip())
-                    elif item in stripped_headers:
-                        ind = stripped_headers.index(item)
-                        new_only_cols.append(orig_headers[0][ind])
-                    elif item.strip() in stripped_headers:
-                        ind = stripped_headers.index(item.strip())
-                        new_only_cols.append(orig_headers[0][ind])
-            except TypeError:
-                new_only_cols = None
-            new_dtypes = {}
-            if dtypes != None:
-                for key, value in dtypes.items():
-                        if key in orig_headers[0]:
-                            new_dtypes[key] = value
-                        elif key.strip() in orig_headers[0]:
-                            new_dtypes[key.strip()] = value
-                        elif key in stripped_headers:
-                            ind = stripped_headers.index(key)
-                            new_dtypes[orig_headers[0][ind]] = value
-                        elif key.strip() in stripped_headers:
-                            ind = stripped_headers.index(key.strip())
-                            new_dtypes[orig_headers[0][ind]] = value
-                        else:
-                            print(key + ':not found in ' + new_field)
-            if new_dtypes == {}:
-                new_dtypes = None
-
-            if name != None:
-                header_line = 0
-            data = pd.read_excel(entry, sheet_name=0, header=header_line, names=name, index_col=index_col,
-                                 usecols=new_only_cols, dtype=new_dtypes, skiprows=skip_rows, verbose=verbose)
-            if skip_cols > 0:
-                for i in range(skip_cols):
-                    data = data.drop(data.columns[0], axis=1)
-            try:
-                data.columns = [col.strip() for col in data.columns]
-            except AttributeError: #'int'object has no attribute 'strip'  < - files with int headers
-                pass
-            if filter_results:
-                data = inp.result_frames(data, search_col, real_l, entry)
-            if not data.empty:
-                data = self.reduce_mem_usage(data)[0]
-            else:
-                print('no results in x')
-            end = time.time()
-            print('-------'+ str(end-start) +'-------')
+            data, entry = self.open_func(entry, df, inp_options, start, func=2)
             return ((data), (entry))
         elif entry[-3:] == '.h5':
             data = pd.read_hdf(entry,'df')
@@ -275,7 +31,7 @@ class OpenFile:
             if not data.empty:
                 data = self.reduce_mem_usage(data)[0]
             else:
-                print('no results in x')
+                print('no results in 6')
             end = time.time()
             print('-------'+ str(end-start) +'-------')
             return ((data), (entry))
@@ -283,7 +39,7 @@ class OpenFile:
             df_empty = pd.DataFrame({'A':[]})
             end = time.time()
             print('-------'+ str(end-start) +'-------')
-            return df_empty
+            return df_empty, 'non_val'
 
     def reduce_mem_usage(self,props):
         start_mem_usg = props.memory_usage().sum() / 1024 ** 2
@@ -380,7 +136,7 @@ class OpenFile:
             dict_key_list.append(key)
         first_header = dict_key_list[0]
         if first_header == slice_key_list[0]:            #first col header matches
-            return None, 0, None
+            return 0, 0, None
             #print('first col header matches')
             #for col in slice_dict:
             #    if col in func_dict:
@@ -397,16 +153,17 @@ class OpenFile:
                 current_col += 1
                 if i > 0:
                     found_col.append(current_col)
+                    print('col match ' + str(current_col))
             if len(found_col) > 0: #if one of the columns has the first func_dict header
                 found_col_series = frame_slice.iloc[:, found_col[0]] #list of values from row that has first f_d header
                 series_count = 0
-                found_row = 0
+                found_row = []
                 for i in found_col_series: #finding what row has the func_dict header
                     series_count += 1
                     if i == first_header:
-                        found_row = series_count
-                        break
-                return found_row, found_col[0], None
+                        found_row.append(series_count)
+                        print('row match ' + str(series_count))
+                return found_row[0], found_col[0], None
             else:
                 name = []
                 if len(slice_dict) == len(func_dict):
@@ -414,3 +171,148 @@ class OpenFile:
                         name.append(key)
 
                 return None, 0, name
+
+    def open_func(self,entry, df, inp_options, start, func=0):
+        gen_rules = inp_options[0]
+        delimiter = gen_rules['Delimiter']
+        terminator = gen_rules['Terminator']
+        header_line = gen_rules['Header Line']
+        index_col = gen_rules['Index Column']
+        chunk = gen_rules['Chunk']
+        verbose = gen_rules['Verbose']
+        header_func = gen_rules['Header Func']
+        skip_rows = None
+        skip_cols = 0
+        name = None
+        self.var = verbose
+
+        only_cols = inp_options[1]
+        dtypes = inp_options[2]
+        head_func_dtypes = inp_options[3]
+        if len(inp_options) > 5:
+            search_col = inp_options[4]
+            real_l = inp_options[5]
+            filter_results = True
+            inp = Retrieve_Input()
+        else:
+            filter_results = False
+        temp_field = entry.split('/')
+        new_field = temp_field[(len(temp_field) - 1)]
+
+
+        if header_func:
+            skip_rows, skip_cols, name = self.col_check(df, head_func_dtypes)
+        if skip_cols > 0:
+            for i in range(skip_cols):
+                df = df.drop(df.columns[1], axis=1)
+        if skip_rows != None:
+            if skip_rows > 0:
+                tem_list = range(skip_rows - 1)
+                df = df.drop(df.index[tem_list])
+                df.columns = df.loc[(skip_rows - 1), :]
+        # print(df.columns.values.tolist())
+        orig_headers = df.columns.values.tolist()
+        stripped_headers = []
+        for item in orig_headers:
+            try:
+                stripped_headers.append(item.strip())
+            except AttributeError:
+                stripped_headers.append(item)
+        new_dtypes = {}
+        if dtypes != None:
+            for key, value in dtypes.items():
+                if key in orig_headers:
+                    new_dtypes[key] = value
+                elif key.strip() in orig_headers:
+                    new_dtypes[key.strip()] = value
+                elif key in stripped_headers:
+                    ind = stripped_headers.index(key)
+                    new_dtypes[orig_headers[ind]] = value
+                elif key.strip() in stripped_headers:
+                    ind = stripped_headers.index(key.strip())
+                    new_dtypes[orig_headers[ind]] = value
+                else:
+                    print(key + ':not found in ' + new_field)
+        if new_dtypes == {}:
+            new_dtypes = None
+        new_only_cols = []
+        if only_cols != None:
+            for item in only_cols:
+                if item in orig_headers:
+                    new_only_cols.append(item)
+                elif item.strip() in orig_headers:
+                    new_only_cols.append(item.strip())
+                elif item in stripped_headers:
+                    ind = stripped_headers.index(item)
+                    new_only_cols.append(orig_headers[ind])
+                elif item.strip() in stripped_headers:
+                    ind = stripped_headers.index(item.strip())
+                    new_only_cols.append(orig_headers[ind])
+                else:
+                    print(item + ':not found in ' + new_field)
+        if only_cols != None and name == None:
+            try:
+                header_line = skip_rows
+                if func == 0:
+                    data = pd.read_csv(entry, sep=delimiter, header=header_line, index_col=index_col,
+                                       usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
+                                       lineterminator=terminator, low_memory=False)
+                elif func == 1:
+                    data = pd.read_csv(entry, header=header_line, chunksize=chunk, index_col=index_col,
+                                       usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
+                                       lineterminator=terminator, low_memory=False)
+                elif func == 2:
+                    data = pd.read_excel(entry, sheet_name=0, header=header_line, index_col=index_col,
+                                         usecols=new_only_cols, dtype=new_dtypes, skiprows=skip_rows, verbose=verbose)
+                try:
+                    data.columns = [col.strip() for col in data.columns]
+                except AttributeError:  # 'int'object has no attribute 'strip'  < - files with int headers
+                    pass
+                if filter_results:
+                    data = inp.result_frames(data, search_col, real_l, entry)
+                if not data.empty:
+                    data = self.reduce_mem_usage(data)[0]
+                else:
+                    print('no results in 1')
+                return data, entry
+            except ValueError as e:
+                print(e)
+        else:
+            try:
+                if name != None:
+                    header_line = 0
+                if func == 0:
+                    data = pd.read_csv(entry, sep=delimiter, header=header_line, names=name, index_col=index_col,
+                                       dtype=new_dtypes, skiprows=skip_rows, verbose=verbose,
+                                       lineterminator=terminator, low_memory=False)
+                elif func == 1:
+                    data = pd.read_csv(entry, header=header_line, names=name, chunksize=chunk, index_col=index_col,
+                                       dtype=new_dtypes, skiprows=skip_rows, verbose=verbose,
+                                       lineterminator=terminator, low_memory=False)
+                elif func == 2:
+                    data = pd.read_excel(entry, sheet_name=0, header=header_line, names=name, index_col=index_col,
+                                         dtype=new_dtypes, skiprows=skip_rows, verbose=verbose)
+                if skip_cols > 0:
+                    for i in range(skip_cols):
+                        data.drop(data.columns[1], axis=1)
+                if name != None and len(new_only_cols) > 0:
+                    data = data[new_only_cols]
+                try:
+                    data.columns = [col.strip() for col in data.columns]
+                except AttributeError:  # 'int'object has no attribute 'strip'  < - files with int headers
+                    pass
+                if filter_results:
+                    data = inp.result_frames(data, search_col, real_l, entry)
+                print(data)
+                if not data.empty:
+                    data = self.reduce_mem_usage(data)[0]
+                else:
+                    print('no results in 2')
+
+                end = time.time()
+                print('-------' + str(end - start) + '-------')
+                return data, entry
+
+            except ValueError as e:
+                print(e)
+
