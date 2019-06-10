@@ -380,7 +380,7 @@ class OpenFile:
             dict_key_list.append(key)
         first_header = dict_key_list[0]
         if first_header == slice_key_list[0]:            #first col header matches
-            pass
+            return None, 0, None
             #print('first col header matches')
             #for col in slice_dict:
             #    if col in func_dict:
