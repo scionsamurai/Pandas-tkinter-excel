@@ -1,12 +1,13 @@
 from SplitEntry import Split_Entry
 from SearchDF import SearchDataFrame
 import pandas as pd
+import numpy as np
 import shelve, os, time
 import xlsxwriter
 class Retrieve_Input:
     def __init__(self):
         self.no_value = 0
-    def row_frames(self,input_criteria, opened_files, data_frames, auto_open_var, output_type):
+    def row_frames(self,input_criteria, opened_files, data_frames, auto_open_var, output_type, NA_head_dict):
         start = time.time()
         new_output = []
         print('Searching:\n' + input_criteria[1][1].get())
@@ -16,14 +17,27 @@ class Retrieve_Input:
             new_field = temp_field[(len(temp_field) - 1)]
             if opened_files[i][2].get() == 1:
                 real_list = Split_Entry.split(input_criteria[1][1].get())
+                temp_output = pd.DataFrame({'A':[]})
                 if isinstance(real_list, str) == False:
-                    new_output.append(SearchDataFrame.criteria_by_column(search_column,
-                                                                         real_list,
-                                                                         new_field, 2, data_frames[i]))
+                    try:
+                        temp_output = SearchDataFrame.criteria_by_column(search_column,real_list, new_field, 2,
+                                                                             data_frames[i]).copy()
+                        for col in NA_head_dict[opened_files[i][0]]:
+                            temp_output[col].replace(NA_head_dict[opened_files[i][0]][col], np.NaN, inplace=True)
+                        if not temp_output.empty:
+                            new_output.append(temp_output)
+                    except AttributeError:
+                        return pd.DataFrame({'A':[]}), None
                 else:
-                    new_output.append(SearchDataFrame.criteria_by_column(search_column,
-                                                                         real_list,
-                                                                         new_field, 1, data_frames[i]))
+                    try:
+                        temp_output = SearchDataFrame.criteria_by_column(search_column, real_list, new_field, 1,
+                                                                         data_frames[i]).copy()
+                        for col in NA_head_dict[opened_files[i][0]]:
+                            temp_output[col].replace(NA_head_dict[opened_files[i][0]][col], np.NaN, inplace=True)
+                        if not temp_output.empty:
+                            new_output.append(temp_output)
+                    except AttributeError:
+                        return pd.DataFrame({'A':[]}), None
 
         try:
             if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
