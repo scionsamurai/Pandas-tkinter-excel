@@ -14,9 +14,9 @@ class MakeForm:
         self.footer = False
         self.header_dtypes = {}
         self.my_filetypes = [('all files', '.*'), ('CSV files', '.csv'),('HD5', '.h5'),('xls','.xls')]
+        self.NA_dict = {}
 
-    def make(self, root=None, fields=[], func=0,body=False, key=False, set_info=False):
-
+    def make(self, root=None, fields=[], func=0,body=False, key=False, set_info=False, NAdict={}):
         if func == 1:
             self.entries = []
             fields = 'Header To Search', '  Search Item(s)'  # , 'Output Directory'
@@ -30,6 +30,7 @@ class MakeForm:
                 self.entries.append((field, ent))
             return self.entries
         elif func == 2:
+            self.NA_dict = NAdict
             self.entries = []
             for field in fields:
                 temp_field = field.split('/')
@@ -78,14 +79,25 @@ class MakeForm:
                     count_dict[value] += 1
                 except KeyError:
                     count_dict[value] = 1
-            for key, value in sorted(count_dict.items(), key=lambda item: item[1])[::-1]:
-                slimmed_list.append(key)
+            for key1, value in sorted(count_dict.items(), key=lambda item: item[1])[::-1]:
+                slimmed_list.append(key1)
                 count += 1
                 if count > 50:
                     break
             for field in slimmed_list:
+                if set_info in self.NA_dict[key]: #if (column) in
+                    if field == self.NA_dict[key][set_info]:
+                        new_field = 'Blank'
+                    else:
+                        new_field = field
+                else:
+                    if pd.isnull(field):
+                        new_field = 'Blank'
+                    else:
+                        new_field = field
+
                 row1 = len(self.entries2)
-                b1 = Button(scrollable_body, text=field,
+                b1 = Button(scrollable_body, text=new_field,
                             command=(lambda e=field: self.update_entry(root, e, self.ents2))).grid(row=row1, column=1,
                                                                                                 padx=1)
                 Label(scrollable_body, width=15,
@@ -100,11 +112,10 @@ class MakeForm:
         elif func == 5:
             global headers_window
             try:
-                if Toplevel.winfo_exists(headers_window) == 1:
-                    pass
-                else:
-                    raise NameError('Output Options')
+                win_exists_var = Toplevel.winfo_exists(headers_window)
             except NameError:
+                win_exists_var = 0
+            if win_exists_var != 1:
                 headers_window = Toplevel()
                 headers_window.title('Output File Options')
                 header = Frame(headers_window)
@@ -213,11 +224,11 @@ class MakeForm:
             global opt_footer, opt_window
             IN_OPTIONS = 'General', 'Specify Columns', 'Set Col DataType'
             try:
-                if Toplevel.winfo_exists(opt_window) == 1:
-                    pass
-                else:
-                    raise NameError('Input Options')
+                win_exists_var = Toplevel.winfo_exists(opt_window)
             except NameError:
+                win_exists_var = 0
+
+            if win_exists_var != 1:
                 opt_window = Toplevel()
                 opt_window.title("File_Pal_1.0")
                 header = Frame(opt_window)
