@@ -14,27 +14,27 @@ class OpenFile:
         if entry[-4:] == '.csv':
             if inp_options[0]['Delimiter'] != ',':
                 df = pd.read_csv(entry, sep=inp_options[0]['Delimiter'], nrows=50, low_memory=False)
-                data, entry = self.open_func(entry, df, inp_options, start)
-                return ((data), (entry))
+                data, NA_list = self.open_func(entry, df, inp_options, start)
+                return data, entry, NA_list
             else:
                 df = pd.read_csv(entry, nrows=50, low_memory=False)
-                data, entry = self.open_func(entry, df, inp_options, start, func=1)
-                return ((data), (entry))
+                data, NA_list = self.open_func(entry, df, inp_options, start, func=1)
+                return data, entry, NA_list
         elif (entry[-4:] == 'xlsx') or (entry[-4:] == '.xls') or ((entry[-4:])[:3] == 'xls'):
             df = pd.read_excel(entry, sheet_name=0, nrows=50)
-            data, entry = self.open_func(entry, df, inp_options, start, func=2)
-            return ((data), (entry))
+            data, NA_list = self.open_func(entry, df, inp_options, start, func=2)
+            return data, entry, NA_list
         elif entry[-3:] == '.h5':
             data = pd.read_hdf(entry,'df')
             if filter_results:
                 data = inp.result_frames(data, search_col, real_l, entry)
             if not data.empty:
-                data = self.reduce_mem_usage(data)[0]
+                data, NA_list = self.reduce_mem_usage(data)#[0]
             else:
                 print('no results in 6')
             end = time.time()
             print('-------'+ str(end-start) +'-------')
-            return ((data), (entry))
+            return data, entry, NA_list
         else:
             df_empty = pd.DataFrame({'A':[]})
             end = time.time()
@@ -44,7 +44,7 @@ class OpenFile:
     def reduce_mem_usage(self,props):
         start_mem_usg = props.memory_usage().sum() / 1024 ** 2
         self.verb_print(("Memory usage of properties dataframe is :", start_mem_usg, " MB"))
-        NAlist = []  # Keeps track of columns that have missing values filled in.
+        NAlist = {}  # Keeps track of columns that have missing values filled in.
         for col in props.columns:
             if props[col].dtype != object and props[col].dtype != 'datetime64[ns]':  # Exclude strings and dates
 
@@ -60,8 +60,14 @@ class OpenFile:
 
                 # Integer does not support NA, therefore, NA needs to be filled
                 if not np.isfinite(props[col]).all():
-                    NAlist.append(col)
-                    props[col].fillna(0, inplace=True)
+                    #NAlist.append(col)
+                    fill_val = 0
+                    for i in range(int(mx)):
+                        if i not in np.unique(props[col].values):
+                            fill_val = i
+                            NAlist[col] = fill_val
+                            break
+                    props[col].fillna(fill_val, inplace=True)
 
                 # test if column can be converted to an integer
                 asint = props[col].fillna(0).astype(np.int64)
@@ -271,10 +277,10 @@ class OpenFile:
                 if filter_results:
                     data = inp.result_frames(data, search_col, real_l, entry)
                 if not data.empty:
-                    data = self.reduce_mem_usage(data)[0]
+                    data, NA_list = self.reduce_mem_usage(data)#[0]
                 else:
                     print('no results in 1')
-                return data, entry
+                return data, NA_list
             except ValueError as e:
                 print(e)
         else:
@@ -303,15 +309,14 @@ class OpenFile:
                     pass
                 if filter_results:
                     data = inp.result_frames(data, search_col, real_l, entry)
-                print(data)
                 if not data.empty:
-                    data = self.reduce_mem_usage(data)[0]
+                    data, NA_list = self.reduce_mem_usage(data)#[0]
                 else:
                     print('no results in 2')
 
                 end = time.time()
                 print('-------' + str(end - start) + '-------')
-                return data, entry
+                return data, NA_list
 
             except ValueError as e:
                 print(e)
