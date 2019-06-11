@@ -19,6 +19,7 @@ output_filetypes = [('HD5', '.h5'), ('CSV files', '.csv')]
 fields = 'Header To Search', '  Search Item(s)'#, 'Output Directory'
 li = []
 li_dict = {}
+NA_head_dict = {}
 answer = []
 err_dial_pressed = False
 LARGE_FONT= ("Verdana", 12)
@@ -35,6 +36,8 @@ def fetch(pandas_obj):
    usage_mb = usage_b / 1024 ** 2 # convert bytes to megabytes
    print("{:03.2f} MB".format(usage_mb))
    print(pandas_obj.info(verbose=True))
+   print('----header_W/filler_value : filler_value----')
+   print(NA_head_dict[answer[0]])
 
 def changed(*args, widget=None):
     global header, footer, ents, ents2, form1, form2
@@ -177,6 +180,7 @@ def open_files(func=1):
                     li.append(df_list[i][0])
                     answer.append(df_list[i][1])
                     li_dict[df_list[i][1]] = (len(li) - 1)
+                    NA_head_dict[df_list[i][1]] = df_list[i][2]
                 else:
                     print(df_list[i][1] + ' didn\'t have the certian input requirements.')
         else:
@@ -191,6 +195,7 @@ def open_files(func=1):
                             li.append(dataframe[0])
                             answer.append(file)
                             li_dict[file] = (len(li) - 1)
+                            NA_head_dict[dataframe[1]] = dataframe[2]
                         else:
                             temp_f = file.split('/')
                             new_f = temp_f[(len(temp_f) - 1)]
@@ -199,7 +204,7 @@ def open_files(func=1):
                         print(e)
         except KeyboardInterrupt as e:
             print(e)
-        ents2 = form2.make(footer, answer, 2)
+        ents2 = form2.make(footer, answer, 2, NAdict=NA_head_dict)
         footer.pack()
 
 def resort():
@@ -369,9 +374,9 @@ if __name__ == '__main__':
    helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0])))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
-   root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
+   root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx', NA_head_dict)))
    b4 = Button(body, text=' Search ',
-               command=(lambda e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx')))
+               command=(lambda e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx', NA_head_dict)))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
    auto_open_box.set(1)
