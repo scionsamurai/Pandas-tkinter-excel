@@ -27,7 +27,8 @@ class Retrieve_Input:
                         if not temp_output.empty:
                             new_output.append(temp_output)
                     except AttributeError:
-                        return pd.DataFrame({'A':[]}), None
+                        pass
+                        #return pd.DataFrame({'A':[]}), None
                 else:
                     try:
                         temp_output = SearchDataFrame.criteria_by_column(search_column, real_list, new_field, 1,
@@ -37,7 +38,8 @@ class Retrieve_Input:
                         if not temp_output.empty:
                             new_output.append(temp_output)
                     except AttributeError:
-                        return pd.DataFrame({'A':[]}), None
+                        pass
+                        #return pd.DataFrame({'A':[]}), None
 
         try:
             if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
