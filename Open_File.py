@@ -62,7 +62,7 @@ class OpenFile:
                 if not np.isfinite(props[col]).all():
                     #NAlist.append(col)
                     fill_val = 0
-                    for i in range(int(mx)):
+                    for i in range(10000):
                         if i not in np.unique(props[col].values):
                             fill_val = i
                             NAlist[col] = fill_val
