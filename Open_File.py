@@ -26,6 +26,9 @@ class OpenFile:
             return data, entry, NA_list
         elif entry[-3:] == '.h5':
             data = pd.read_hdf(entry,'df')
+            filter_results = False
+            if len(inp_options) > 5:
+                filter_results = True
             if filter_results:
                 data = inp.result_frames(data, search_col, real_l, entry)
             if not data.empty:
@@ -60,9 +63,8 @@ class OpenFile:
 
                 # Integer does not support NA, therefore, NA needs to be filled
                 if not np.isfinite(props[col]).all():
-                    #NAlist.append(col)
                     fill_val = 0
-                    for i in range(10000):
+                    for i in range(1,10000,3):
                         if i not in np.unique(props[col].values):
                             fill_val = i
                             NAlist[col] = fill_val
@@ -312,7 +314,8 @@ class OpenFile:
                 if not data.empty:
                     data, NA_list = self.reduce_mem_usage(data)#[0]
                 else:
-                    print('no results in 2')
+                    print('no results due to header func criteria')
+                    NA_list = {}
 
                 end = time.time()
                 print('-------' + str(end - start) + '-------')
