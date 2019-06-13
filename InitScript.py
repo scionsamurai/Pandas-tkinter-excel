@@ -74,7 +74,6 @@ def df_to_hdf():
                                          title="Please select save location and name:",
                                          filetypes=output_filetypes,
                                          defaultextension='.h5')
-
    for i in range(0, len(li)):
       if ents2[i][2].get() == 1:
          new_output.append(li[i])
@@ -302,7 +301,6 @@ def get_inp_opts():
         gen_rules['CPU Cores'] = 1
         gen_rules['Verbose'] = False
         gen_rules['Header Func'] = False
-        tcores = 1
     try:
         only_cols = var_file['spec_col_rules']
     except KeyError:
@@ -358,12 +356,12 @@ if __name__ == '__main__':
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root, tearoff=0)
-   submenu.add_command(label="Input Options", command=(lambda e=ents: opt_form.make(func=7)))
+   #submenu.add_command(label="Input Options", command=(lambda e=ents: opt_form.make(func=7)))
    submenu.add_command(label="Select File", command=(lambda e=ents: open_files()))
    submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
    filemenu.add_command(label="Save Selected", command=(lambda e='no value': df_to_hdf()))
    filemenu.add_cascade(label="Open", menu=submenu)
-   filemenu.add_command(label="Output Options", command=(lambda e=ents: opt_form.make(func=5)))
+   filemenu.add_command(label="Options", command=(lambda e=ents: opt_form.make(func=7)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
    filemenu.add_separator()
    filemenu.add_command(label="Exit", command=root.quit)
