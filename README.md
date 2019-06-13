@@ -1,2 +1,2 @@
 # Pandas-tkinter-excel
-Tool for snipping large data files. (currently more for CSV)
+Tool for snipping large data files.
