@@ -678,8 +678,8 @@ class MakeForm:
                 pass
             try:
                 font_rules = var_file['font_rules']
-                rule_list.append('font_rules' + '::::' + list(font_rules.values())[0] + '::::' +
-                                 str(list(font_rules.keys())[0]) + '\n')
+                rule_list.append('font_rules' + '::::' + list(font_rules.keys())[0] + '::::' +
+                                 str(list(font_rules.values())[0]) + '\n')
             except KeyError:
                 pass
             setting_file.writelines(rule_list)
