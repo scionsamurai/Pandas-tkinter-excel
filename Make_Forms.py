@@ -109,104 +109,6 @@ class MakeForm:
             scrollable_body.update()
             root.mainloop()
             return self.entries2
-        elif func == 5:
-            global headers_window
-            try:
-                win_exists_var = Toplevel.winfo_exists(headers_window)
-            except NameError:
-                win_exists_var = 0
-            if win_exists_var != 1:
-                headers_window = Toplevel()
-                headers_window.title('Output File Options')
-                header = Frame(headers_window)
-                body = Frame(headers_window)
-                footer = Frame(headers_window)
-                row = Frame(header)
-                Label(header, text=' --- Text Rule --- ').pack()
-                lab = Label(row, width=10, text='Column(s)')
-                ent = Entry(row, width=3)
-                lab2 = Label(row, width=9, text='Col Width')
-                ent2 = Entry(row, width=2)
-                lab4 = Label(row, width=5, text='Size')
-                ent4 = Entry(row, width=3)
-                row.pack(side=TOP, fill=X, padx=5, pady=2)
-                lab.pack(side=LEFT)
-                ent.pack(side=LEFT)
-                lab2.pack(side=LEFT)
-                ent2.pack(side=LEFT)
-                lab4.pack(side=LEFT)
-                ent4.pack(side=LEFT)
-                header.pack()
-                body.pack()
-
-                footer.pack()
-                row3 = Frame(body)
-                lab6 = Label(row3, width=10, text='Font Style')
-                ent6 = Entry(row3, width=13)
-                row3.pack(fill=X, padx=5, pady=2)
-                row2 = Frame(body)
-                Label(body, text=' --- Leading Zeros Rule --- ').pack()
-                lab3 = Label(row2, width=10, text='Col Header')
-                ent3 = Entry(row2, width=13)
-                lab3_1 = Label(row2, width=8, text='Total #s')
-                ent3_1 = Entry(row2, width=2)
-                lab3.pack(side=LEFT)
-                ent3.pack(side=LEFT)
-                lab3_1.pack(side=LEFT)
-                ent3_1.pack(side=LEFT)
-                row2.pack(fill=X, padx=5, pady=2)
-                lab6.pack(side=LEFT)
-                ent6.pack(side=LEFT)
-                row4 = Frame(footer)
-                b1 = Button(row4, text='Add Rule',
-                            command=(lambda e='nothin': self.add_rule('rules', ent, ent2, ent3, ent6, ent4, ent3_1)))
-                row4.pack(fill=X, padx=5, pady=2)
-                breset = Button(row4, text='Reset Rule(s)',
-                                command=(lambda e='dont get lambda': self.reset_rules('rules')))
-                breset.pack(side=RIGHT)
-                rprint = Button(row4, text='Print Rule(s)',
-                                command=(lambda e='what this': self.print_rules('rules')))
-                rprint.pack(side=RIGHT)
-                b1.pack(side=LEFT)
-                var_file = shelve.open('var_file')
-                try:
-                    last_loc = var_file['rules_location']
-                except KeyError:
-                    last_loc = ''
-                try:
-                    dir_loc = var_file['dir_location']
-                except KeyError:
-                    dir_loc = ''
-                var_file.close()
-                row5 = Frame(footer)
-                lab5 = Label(row5, width=10, text='Rules Dir')
-                ent5 = Entry(row5)
-                lab5.pack(side=LEFT)
-                ent5.pack(side=LEFT)
-                ent5.insert(0, last_loc)
-                row5.pack(fill=X, padx=5, pady=2)
-                row6 = Frame(footer)
-                row6.pack(fill=X, padx=5, pady=2)
-                breset = Button(row6, text='Open Rule(s)',
-                                command=(lambda e='dont get lambda': self.get_rules(ent5)))
-                breset.pack(side=RIGHT)
-                rprint = Button(row6, text='Save Rule(s)',
-                                command=(lambda e='what this': self.save_rules(ent5)))
-                rprint.pack(side=RIGHT)
-                row7 = Frame(footer)
-                lab7 = Label(row7, width=10, text='Output Dir')
-                ent7 = Entry(row7)
-                lab7.pack(side=LEFT)
-                ent7.pack(side=LEFT)
-                ent7.insert(0, dir_loc)
-                row7.pack(fill=X, padx=5, pady=2)
-                row8 = Frame(footer)
-                row8.pack(fill=X, padx=5, pady=2)
-                breset = Button(row8, text='Save Output Dir',
-                                command=(lambda e='dont get lambda': self.save_dir(ent7)))
-                breset.pack(side=RIGHT)
-
-                headers_window.mainloop()
         elif func == 6:
             self.entries = []
             for field in fields:
@@ -221,8 +123,8 @@ class MakeForm:
                 self.entries.append((field, ent2))
             return self.entries
         elif func == 7:
-            global opt_footer, opt_window
-            IN_OPTIONS = 'General', 'Specify Columns', 'Set Col DataType'
+            global  opt_window, footer_1, opt_footer
+            IN_or_OUT = 'File Input', 'Search Output'
             try:
                 win_exists_var = Toplevel.winfo_exists(opt_window)
             except NameError:
@@ -233,22 +135,18 @@ class MakeForm:
                 opt_window.title("File_Pal_1.0")
                 header = Frame(opt_window)
                 body = Frame(opt_window)
-                opt_footer = Frame(opt_window)
+                footer_1 = Frame(opt_window)
                 variable = StringVar(header)
                 variable.set('Click Here')
-                w = OptionMenu(header, variable, *IN_OPTIONS)
-                Label(header, text="Input Options").pack()
-                row2 = Frame(opt_window)
-                breset = Button(row2, text='Default Value\'s',
-                                command=(lambda e='what this': self.reset_defaults()))
-                breset.pack(side=RIGHT)
-                row2.pack(padx=20)
+                w = OptionMenu(header, variable, *IN_or_OUT)
                 header.pack()
-                variable.trace("w", partial(self.changed, widget=variable))
-                w.pack()
+                variable.trace("w", partial(self.changed_1, widget=variable))
+                w.pack(padx=20)
+                Label(body, text=' --- Options --- ').pack()
                 body.pack()
                 opt_window.mainloop()
         elif func == 8:
+            self.entries = []
             gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'CPU Cores', 'Verbose',\
                        'Header Func'
             gen_def = {'Delimiter':',','Terminator':'DV', 'Header Line':'DV', 'Index Column':'DV',
@@ -275,12 +173,12 @@ class MakeForm:
                     elif gen_set[0] == 'Header Func':
                         temp_dict['Header Func'] = gen_set[1]
             except KeyError:
-                print('Default rules')
+                pass
 
             var_file.close()
             for opt in gen_opts:
                 if opt != 'Verbose' and opt != 'Header Func':
-                    row = Frame(root)
+                    row = Frame(opt_footer)
                     lab = Label(row, width=12, text=opt, anchor='w')
                     ent = Entry(row, width=3)
                     row.pack(side=TOP, fill=X, padx=5, pady=2)
@@ -293,10 +191,10 @@ class MakeForm:
                         ent.insert(0, gen_def[opt])
                     self.entries.append((opt, ent))
                 else:
-                    row = Frame(root)
+                    row = Frame(opt_footer)
                     var1 = IntVar()
                     if opt == 'Header Func':
-                        var1.trace("w", partial(self.changed2,root=root, var=var1))
+                        var1.trace("w", partial(self.changed_4,root=opt_footer, var=var1))
                     ent = Checkbutton(row, text=opt, variable=var1)
                     if opt in temp_dict:
                         var1.set(temp_dict[opt])
@@ -307,80 +205,17 @@ class MakeForm:
 
                     self.entries.append((opt, (var1)))
 
-            last_row = Frame(root)
+            last_row = Frame(opt_footer)
+            sec_last_row = Frame(opt_footer)
             bload = Button(last_row, text='Save Changes',
                            command=(lambda e='dont get lambda': self.opt_rule()))
             bload.pack(side=RIGHT)
+            breset = Button(sec_last_row, text='Reset',
+                           command=(lambda e='dont get lambda': self.opt_rule(2)))
+            breset.pack(side=RIGHT)
+            sec_last_row.pack()
             last_row.pack()
             return self.entries
-        elif func == 9:
-            row = Frame(root)
-            row2 = Frame(root)
-            self.footer = Frame(root)
-            lab = Label(row2, text='Load only columns with the headers ')
-            ent = Entry(row, width=25)
-            bsave = Button(row, text='Add Column: ',
-                           command=(lambda e='nothin': self.add_column(ent, root)))
-            row.pack(side=TOP, fill=X, padx=5, pady=2)
-            row2.pack(side=TOP, fill=X, padx=5, pady=2)
-            lab.pack(side=TOP)
-            bsave.pack(side=LEFT)
-            ent.pack(side=RIGHT, expand=YES, fill=X)
-            var_file = shelve.open('var_file')
-            rules = []
-            try:
-                rules = var_file['spec_col_rules']
-            except KeyError:
-                print('Default rules')
-            var_file.close()
-            for i in rules:
-                row = Frame(self.footer)
-                lab = Label(row, text=i, anchor='w')
-                row.pack(side=TOP, fill=X, padx=5, pady=2)
-                lab.pack(side=LEFT)
-            breset = Button(self.footer, text='Reset List',
-                            command=(lambda e='what this': self.reset_col_list()))
-            breset.pack()
-            self.footer.pack()
-
-            return ('usecols', ent)
-        elif func == 10:
-            IN_TYPES = 'Text', 'Number'
-            row = Frame(root)
-            row2 = Frame(root)
-            self.footer = Frame(root)
-            lab = Label(row2, text='Saved Column/Datatype Rules')
-            ent = Entry(row, width=13)
-            variable = StringVar(row)
-            bsave = Button(row, text='Add Col/Dtype:',
-                           command=(lambda e='nothin': self.col_dtype(ent,variable, root)))
-            variable.set('Text')
-            w = OptionMenu(row, variable, *IN_TYPES)
-            row.pack(side=TOP, fill=X, padx=5, pady=2)
-            row2.pack(side=TOP, fill=X, padx=5, pady=2)
-            lab.pack(side=TOP)
-            bsave.pack(side=LEFT)
-            ent.pack(side=LEFT)
-            w.pack(side=LEFT)
-
-            var_file = shelve.open('var_file')
-            rules = []
-            try:
-                rules = var_file['col_dtypes']
-                for key, value in rules.items():
-                    text_var = key.strip() + " : " + value
-                    row = Frame(self.footer)
-                    lab = Label(row, text=text_var, anchor='w')
-                    row.pack(side=TOP, fill=X, padx=5, pady=2)
-                    lab.pack(side=LEFT)
-                breset = Button(self.footer, text='Reset List',
-                                command=(lambda e='what this': self.reset_col_list(func=2)))
-                breset.pack()
-            except KeyError:
-                print('Default rules')
-            var_file.close()
-            self.footer.pack()
-            return ('usecols', ent)
         elif func == 11:
             self.entries = []
             for i in range(fields):
@@ -402,6 +237,95 @@ class MakeForm:
                 self.entries.append(('Header To Search', ent))
                 self.entries.append(('  Search Item(s)',ent2))
             return self.entries
+        elif func == 9:
+            IN_OPTIONS = NAdict['in_list']
+            header = Frame(footer_1)
+            body = Frame(footer_1)
+            opt_footer = Frame(footer_1)
+            variable = StringVar(header)
+            variable.set('Click Here')
+            w = OptionMenu(header, variable, *IN_OPTIONS)
+            header.pack()
+            variable.trace("w", partial(NAdict['change_func'], widget=variable))
+            w.pack()
+            body.pack()
+        elif func == 10:
+            var_file = shelve.open('var_file')
+            try:
+                dir_loc = var_file['dir_location']
+            except KeyError:
+                dir_loc = os.getcwd()
+            try:
+                font_type_size = var_file['font_rules']
+            except KeyError:
+                font_type_size = {}
+            var_file.close()
+            row1 = Frame(opt_footer)
+            lab = Label(row1, width=8, text='Font Style', anchor='w')
+            ent = Entry(row1, width=12)
+            lab.pack(side=LEFT)
+            ent.pack(side=LEFT)
+            lab1 = Label(row1, width=7, text='Font Size', anchor='w')
+            ent1 = Entry(row1, width=4)
+            lab1.pack(side=LEFT)
+            ent1.pack(side=LEFT)
+            row1.pack(side=TOP, padx=5, pady=2)
+            bsave = Button(row1, text='Save Changes',
+                           command=(lambda e='dont get lambda': self.save_font(ent, ent1)))
+            bsave.pack(side=LEFT)
+            if font_type_size != {}:
+                ent.insert(0,(str(list(font_type_size.keys())[0])))
+                ent1.insert(0,(str(list(font_type_size.values())[0])))
+            row2 = Frame(opt_footer)
+            bexport = Button(row2, text='Export Settings',
+                           command=(lambda e='dont get lambda': self.exp_imp_sets(row2,dir_loc,2)))
+            bexport.pack(side=LEFT)
+            bimport = Button(row2, text='Import Settings',
+                           command=(lambda e='dont get lambda': self.exp_imp_sets(row2,dir_loc)))
+            bimport.pack(side=LEFT)
+            row2.pack()
+
+            last_row = Frame(opt_footer)
+            bchange_dir = Button(last_row, text='Output Dir',
+                           command=(lambda e='dont get lambda': self.update_dir(last_row,opt_footer)))
+            bchange_dir.pack(side=LEFT)
+
+            Label(last_row, text=dir_loc, anchor='w').pack()
+            last_row.pack(fill=X)
+
+        elif func == 14:
+            row = Frame(opt_footer)
+            row2 = Frame(opt_footer)
+            self.footer = Frame(opt_footer)
+            lab = Label(row2, text=NAdict['label'])
+            ent = Entry(row, width=13)
+            variable = StringVar(row)
+            bsave = Button(row, text=NAdict['but_name'],
+                           command=(lambda e='nothin': self.but_func(ent, opt_footer, NAdict['dict/list'],
+                                                                          NAdict['reset_l_func'],variable)))
+            row.pack(side=TOP, fill=X, padx=5, pady=2)
+            row2.pack(side=TOP, fill=X, padx=5, pady=2)
+            lab.pack(side=TOP)
+            bsave.pack(side=LEFT)
+            ent.pack(side=LEFT)
+            if NAdict['list_opts'] != []:
+                variable.set(NAdict['list_opts'][0])
+                w = OptionMenu(row, variable, *NAdict['list_opts'])
+                w.pack(side=LEFT)
+
+            var_file = shelve.open('var_file')
+            try:
+                rules = var_file[NAdict['dict/list']]
+                self.print_lab(rules, func=NAdict['reset_l_func'])
+                breset = Button(self.footer, text='Reset List',
+                                command=(lambda e='what this': self.reset_col_list(func=NAdict['reset_l_func'])))
+                breset.pack()
+            except KeyError:
+                pass
+                #print('Default rules')
+            var_file.close()
+            self.footer.pack()
+            return 'usecols', ent
 
     def update_entry(self, root, set_info, field_to_update, func=0):
         if func == 1:
@@ -417,136 +341,144 @@ class MakeForm:
             field_to_update.insert(0, (str(set_info) + "\t"))
 
     def update_column_win(self, root, set_info, key):
+        global opt_window
         self.ents1.delete(0, END)
         self.ents1.insert(0, (str(set_info)))
         self.ents2.delete(0, END)
         root.destroy()
         self.entries2 = {}
-        headers_window = Toplevel()
-        headers_window.title(key)
-        results = (self.li[self.li_dict[key]][set_info]).values
-        new_string = list(dict.fromkeys(results))
-        header = Frame(headers_window)
-        body = Frame(headers_window)
-        footer = Frame(headers_window)
-        header.pack()
-        body.pack()
-        footer.pack()
-        Label(header, text="Results").pack()
-        Label(footer, text="Results Footer").pack()
+        try:
+            win_exists_var = Toplevel.winfo_exists(opt_window)
+        except NameError:
+            win_exists_var = 0
+        if win_exists_var != 1:
+            opt_window = Toplevel()
+            opt_window.title(key)
+            results = (self.li[self.li_dict[key]][set_info]).values
+            new_string = list(dict.fromkeys(results))
+            header = Frame(opt_window)
+            body = Frame(opt_window)
+            footer = Frame(opt_window)
+            header.pack()
+            body.pack()
+            footer.pack()
+            Label(header, text="Results").pack()
+            Label(footer, text="Results Footer").pack()
 
-        self.make(headers_window,
-                  new_string, 4, body=body, key=key,
-                  set_info=set_info)
+            self.make(opt_window,
+                      new_string, 4, body=body, key=key,
+                      set_info=set_info)
 
     def headers_option_button(self, key):
+        global opt_window
         field = (self.li[self.li_dict[key]]).columns.values
-        headers_window = Toplevel()
-        headers_window.title(key)
-        header = Frame(headers_window)
-        body = Frame(headers_window)
-        footer = Frame(headers_window)
-        header.pack()
-        body.pack()
-        footer.pack()
-        Label(header, text="The Header").pack()
-        Label(footer, text="The Footer").pack()
-        self.make(headers_window, field, 3,body=body, key=key)
-
-    def add_rule(self,shelf_key,col,width,rule,font,font_size,rule_digits):
-        var_file = shelve.open('var_file')
         try:
-            rules = var_file[shelf_key]
-            del var_file[shelf_key]
-        except KeyError:
-            print('first rule')
-            rules = []
-        rule_get = (rule.get()).strip()
-        rules.append([col.get(),width.get(),rule_get,font.get(),font_size.get(),rule_digits.get()])
-        var_file[shelf_key] = rules
-        var_file.close()
-        col.delete(0, END)
-        width.delete(0, END)
-        rule.delete(0, END)
-        font.delete(0, END)
-        font_size.delete(0, END)
-        rule_digits.delete(0, END)
+            win_exists_var = Toplevel.winfo_exists(opt_window)
+        except NameError:
+            win_exists_var = 0
+        if win_exists_var != 1:
+            opt_window = Toplevel()
+            opt_window.title(key)
+            header = Frame(opt_window)
+            body = Frame(opt_window)
+            footer = Frame(opt_window)
+            header.pack()
+            body.pack()
+            footer.pack()
+            Label(header, text="The Header").pack()
+            Label(footer, text="The Footer").pack()
+            self.make(opt_window, field, 3, body=body, key=key)
 
-    def opt_rule(self):
+    def opt_rule(self, func=1):
         var_file = shelve.open('var_file')
         rules = []
-        for entry in self.entries:
-            rules.append((entry[0],entry[1].get()))
-        var_file['opt_gen_rules'] = rules
-
+        if func == 1:
+            for entry in self.entries:
+                rules.append((entry[0],entry[1].get()))
+            var_file['opt_gen_rules'] = rules
+        else:
+            try:
+                del var_file['opt_gen_rules']
+            except KeyError:
+                print('Already set to defaults.')
         var_file.close()
 
-    def reset_rules(self,shelf_key):
-        var_file = shelve.open('var_file')
+    def changed_1(self,*args, widget=None):
+        global footer_1, opt_window, inp_ents, opt_footer
+        # might need try except here
+        footer_1.pack_forget()
+        footer_1.destroy()
+        footer_1 = Frame(opt_window)
         try:
-            del var_file[shelf_key]
-        except KeyError:
-            print('No Rules to Reset')
-        var_file.close()
+            opt_footer.pack_forget()
+            opt_footer.destroy()
+            opt_footer = Frame(opt_window)
+        except NameError:
+            pass
+        supply_dict = {}
+        if widget.get() == 'File Input':
+            supply_dict['in_list'] = 'General', 'Specify Columns', 'Set Col DataType'
+            supply_dict['change_func'] = self.changed_2
+            inp_ents = self.make(footer_1, func=9, NAdict=supply_dict)
+        elif widget.get() == 'Search Output':
+            supply_dict['in_list'] = 'General', 'Column Lead Zeros', 'Column Spacing'
+            supply_dict['change_func'] = self.changed_3
+            inp_ents = self.make(footer_1, func=9, NAdict=supply_dict)
+        footer_1.pack()
 
-    def print_rules(self,shelf_key):
-        var_file = shelve.open('var_file')
-        try:
-            for rule in var_file[shelf_key]:
-                print(rule)
-        except KeyError:
-            print('No Rules to Print')
-        var_file.close()
-
-    def save_rules(self, file):
-        var1_file = shelve.open('var_file')
-        try:
-            rules = var1_file['rules']
-            var1_file['rules_location'] = file.get()
-        except KeyError:
-            print('first rule')
-            rules = []
-        var1_file.close()
-        var_file = shelve.open(file.get())
-        var_file['rules'] = rules
-        print('rule set')
-        var_file.close()
-
-    def save_dir(self, file):
-        var1_file = shelve.open('var_file')
-        var1_file['dir_location'] = file.get()
-        var1_file.close()
-
-    def get_rules(self, file):
-        var_file = shelve.open(file.get())
-        try:
-            rules = var_file['rules']
-        except KeyError:
-            print('Error')
-            rules = []
-        var_file.close()
-        var1_file = shelve.open('var_file')
-        var1_file['rules'] = rules
-        var1_file.close()
-
-    def changed(self,*args, widget=None):
+    def changed_2(self,*args, widget=None):
         global opt_footer, opt_window, inp_ents
         # might need try except here
         opt_footer.pack_forget()
         opt_footer.destroy()
         opt_footer = Frame(opt_window)
-        form3 = MakeForm()
         if widget.get() == 'General':
-            inp_ents = form3.make(opt_footer, func=8)
-        elif widget.get() == 'Specify Columns':
-            inp_ents = form3.make(opt_footer, func=9)
+            inp_ents = self.make(opt_footer, func=8)
+        elif widget.get() == 'Specify Columns': #
+            supply_dict = {}
+            supply_dict['label'] = 'Load only columns with the headers'
+            supply_dict['but_name'] = 'Add Column: '
+            supply_dict['list_opts'] = []
+            supply_dict['dict/list'] = 'spec_col_rules'
+            supply_dict['reset_l_func'] = 1
+            inp_ents = self.make(opt_footer, func=14, NAdict=supply_dict)
         elif widget.get() == 'Set Col DataType':
-            inp_ents = form3.make(opt_footer, func=10)
-        else:
-            print("Where'd that setting come from?")
+            supply_dict = {}
+            supply_dict['label'] = 'Saved Column/Datatype Rules'
+            supply_dict['but_name'] = 'Add Col/Dtype:'
+            supply_dict['list_opts'] = 'Text', 'Number'
+            supply_dict['dict/list'] = 'col_dtypes'
+            supply_dict['reset_l_func'] = 2
+            inp_ents = self.make(opt_footer, func=14, NAdict=supply_dict)
         opt_footer.pack()
 
-    def changed2(self,*args,root=None, var=None):
+    def changed_3(self,*args, widget=None):
+        global opt_footer, opt_window, inp_ents
+        # might need try except here
+        opt_footer.pack_forget()
+        opt_footer.destroy()
+        opt_footer = Frame(opt_window)
+        if widget.get() == 'General':
+            inp_ents = self.make(opt_footer, func=10)
+        elif widget.get() == 'Column Lead Zeros':
+            supply_dict = {}
+            supply_dict['label'] = 'Saved Column/Lead Zero Rules'
+            supply_dict['but_name'] = 'Add Col/#of 0\'s'
+            supply_dict['list_opts'] = list(range(25))
+            supply_dict['dict/list'] = 'lead_zeroes'
+            supply_dict['reset_l_func'] = 4
+            inp_ents = self.make(opt_footer, func=14, NAdict=supply_dict)
+        elif widget.get() == 'Column Spacing':
+            supply_dict = {}
+            supply_dict['label'] = 'Saved Column/Width Rules'
+            supply_dict['but_name'] = 'Col Index/Width'
+            supply_dict['list_opts'] = list(range(25))
+            supply_dict['dict/list'] = 'col_spacing'
+            supply_dict['reset_l_func'] = 3
+            inp_ents = self.make(opt_footer, func=14, NAdict=supply_dict)
+        opt_footer.pack()
+
+    def changed_4(self,*args,root=None, var=None):
         self.footer = Frame(root)
         var_file = shelve.open('var_file')
         try:
@@ -604,84 +536,153 @@ class MakeForm:
             del var_file['opt_gen_rules']
         except KeyError:
             pass
-        try:
-            del var_file['spec_col_rules']
-        except KeyError:
-            pass
-        try:
-            del var_file['col_dtypes']
-        except KeyError:
-            pass
+        #try:
+        #    del var_file['spec_col_rules']
+        #except KeyError:
+        #    pass
         var_file.close()
 
-    def add_column(self, ent, root):
+    def but_func(self, ent, root, lisct,func_num, var=None):
         self.footer.pack_forget()
         self.footer.destroy()
         self.footer = Frame(root)
         var_file = shelve.open('var_file')
-        rules = []
         try:
-            rules = var_file['spec_col_rules']
+            rules = var_file[lisct]
         except KeyError:
-            print('Default rules')
-        rules.append(ent.get())
-        rules = list(dict.fromkeys(rules))
-        var_file['spec_col_rules'] = rules
+            if func_num == 1:
+                rules = []
+            else:
+                rules={}
+        if func_num == 1:
+            rules.append(ent.get())
+        else:
+            if ent.get() not in rules:
+                rules[ent.get()] = var.get()
+        var_file[lisct] = rules
         var_file.close()
-
-        for i in rules:
-            row = Frame(self.footer)
-            lab = Label(row, text=i, anchor='w')
-            row.pack(side=TOP, fill=X, padx=5, pady=2)
-            lab.pack(side=LEFT)
+        #print(rules)
+        self.print_lab(rules,func_num)
         breset = Button(self.footer, text='Reset List',
-                        command=(lambda e='what this': self.reset_col_list()))
-        breset.pack(side=RIGHT)
-        self.footer.pack()
-
-    def col_dtype(self, ent, var, root):
-        self.footer.pack_forget()
-        self.footer.destroy()
-        self.footer = Frame(root)
-        var_file = shelve.open('var_file')
-        rules = {}
-        try:
-            rules = var_file['col_dtypes']
-        except KeyError:
-            print('Default rules')
-        if ent.get() not in rules:
-            rules[ent.get()] =var.get()
-
-        var_file['col_dtypes'] = rules
-        var_file.close()
-
-        print(rules)
-        for key, value in rules.items():
-            text_var = key.strip() + " : " + value
-            row = Frame(self.footer)
-            lab = Label(row, text=text_var, anchor='w')
-            row.pack(side=TOP, fill=X, padx=5, pady=2)
-            lab.pack(side=LEFT)
-        breset = Button(self.footer, text='Reset List',
-                        command=(lambda e='what this': self.reset_col_list(func=2)))
+                        command=(lambda e='what this': self.reset_col_list(func=func_num)))
         breset.pack(side=RIGHT)
         self.footer.pack()
 
     def reset_col_list(self, func=1):
         try:
+            var_file = shelve.open('var_file')
             if func == 2:
-                var_file = shelve.open('var_file')
                 del var_file['col_dtypes']
-                var_file.close()
-                self.footer.pack_forget()
-                self.footer.destroy()
+            elif func == 3:
+                del var_file['col_spacing']
+            elif func == 4:
+                del var_file['lead_zeroes']
             else:
-                var_file = shelve.open('var_file')
                 del var_file['spec_col_rules']
-                var_file.close()
-                self.footer.pack_forget()
-                self.footer.destroy()
+            var_file.close()
+            self.footer.pack_forget()
+            self.footer.destroy()
         except KeyError:
             print('No settings in list')
 
+    def print_lab(self,rules, func=1):
+        dict_funcs = 2, 3, 4
+        if func in dict_funcs:
+            for key, value in rules.items():
+                text_var = key.strip() + " : " + value
+                row = Frame(self.footer)
+                lab = Label(row, text=text_var, anchor='w')
+                row.pack(side=TOP, fill=X, padx=5, pady=2)
+                lab.pack(side=LEFT)
+        else:
+            for i in rules:
+                row = Frame(self.footer)
+                lab = Label(row, text=i, anchor='w')
+                row.pack(side=TOP, fill=X, padx=5, pady=2)
+                lab.pack(side=LEFT)
 
+    def save_font(self, style, size):
+        var_file = shelve.open('var_file')
+        var_file['font_rules'] = {style.get(): size.get()}
+        var_file.close()
+
+    def donothing(self):
+        x = 0
+        return x
+
+    def update_dir(self, root, roots_root):
+        directory = filedialog.askdirectory(parent=root,
+                                            initialdir=os.getcwd(),
+                                            title="Please select Directory:")
+        root.pack_forget()
+        root.destroy()
+        root = Frame(roots_root)
+        var1_file = shelve.open('var_file')
+        var1_file['dir_location'] = directory
+        var1_file.close()
+        bchange_dir = Button(root, text='Output Dir',
+                             command=(lambda e='dont get lambda': self.update_dir(root, roots_root)))
+        bchange_dir.pack(side=LEFT)
+
+        Label(root, text=directory, anchor='w').pack()
+        root.pack()
+
+    def exp_imp_sets(self,root, dir, func=1):
+        my_filetypes = [('Text Documents', '.txt')]
+        if func == 1:
+            eltit = "Select saved file:"
+            edom = 'r'
+            place_holda = filedialog.askopenfilename
+        else:
+            eltit = "Save as:"
+            edom = 'w'
+            place_holda = filedialog.asksaveasfile
+
+        file_w_headers = place_holda(parent=root, initialdir=dir, title=eltit, filetypes=my_filetypes)
+        if func == 1:
+            file_name = file_w_headers
+        else:
+            file_name =file_w_headers.name
+            file_w_headers.close()
+        setting_file = open(file_name,edom)
+        var_file = shelve.open('var_file')
+        rule_list = []
+        if func == 1:
+            space_dict = {}
+            zero_dict = {}
+            font_dict = {}
+            lines = setting_file.readlines()
+            for line in lines:
+                new_list = re.split('::::', line)
+                if new_list[0] == 'col_spacing':
+                    space_dict[new_list[1]] = new_list[2].strip()
+                elif new_list[0] == 'lead_zeroes':
+                    zero_dict[new_list[1]] = new_list[2].strip()
+                elif new_list[0] == 'font_rules':
+                    font_dict[new_list[1]] = new_list[2].strip()
+            var_file['col_spacing'] = space_dict
+            var_file['lead_zeroes'] = zero_dict
+            var_file['font_rules'] = font_dict
+        else:
+            try:
+                col_width = var_file['col_spacing']
+                for col, val in col_width.items():
+                    rule_list.append('col_spacing'+ '::::' + col + '::::' + str(val) + '\n')
+            except KeyError:
+                pass
+            try:
+                zeros_dict = var_file['lead_zeroes']
+                for col, val in zeros_dict.items():
+                    rule_list.append('lead_zeroes'+ '::::' + col + '::::' + str(val) + '\n')
+            except KeyError:
+                pass
+            try:
+                font_rules = var_file['font_rules']
+                rule_list.append('font_rules' + '::::' + list(font_rules.values())[0] + '::::' +
+                                 str(list(font_rules.keys())[0]) + '\n')
+            except KeyError:
+                pass
+            setting_file.writelines(rule_list)
+
+        var_file.close()
+        setting_file.close()
