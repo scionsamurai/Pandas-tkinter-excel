@@ -7,6 +7,7 @@ import xlsxwriter
 class Retrieve_Input:
     def __init__(self):
         self.no_value = 0
+
     def row_frames(self,input_criteria, opened_files, data_frames, auto_open_var, output_type, NA_head_dict):
         start = time.time()
         new_output = []
@@ -26,7 +27,7 @@ class Retrieve_Input:
                             temp_output[col].replace(NA_head_dict[opened_files[i][0]][col], np.NaN, inplace=True)
                         if not temp_output.empty:
                             new_output.append(temp_output)
-                    except AttributeError:
+                    except (TypeError, AttributeError):
                         pass
                         #return pd.DataFrame({'A':[]}), None
                 else:
@@ -37,50 +38,29 @@ class Retrieve_Input:
                             temp_output[col].replace(NA_head_dict[opened_files[i][0]][col], np.NaN, inplace=True)
                         if not temp_output.empty:
                             new_output.append(temp_output)
-                    except AttributeError:
+                    except (TypeError, AttributeError):
                         pass
                         #return pd.DataFrame({'A':[]}), None
 
         try:
-            if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
-                if len(Split_Entry.split(input_criteria[1][1].get())) > 1:
-                    output_dir = search_column + "(" + str(len(Split_Entry.split(input_criteria[1][1].get()))) + ")." + output_type
-                else:
-                    output_dir = Split_Entry.split(input_criteria[1][1].get()) + "." + output_type
-            else:
-                output_dir = Split_Entry.split(input_criteria[1][1].get()) + "." + output_type
-            var_file = shelve.open('var_file')
-            try:
-                rules = var_file['rules']
-            except KeyError:
-                print('No Rules to assign')
-                rules = []
-            try:
-                output_path = var_file['dir_location']
-                output_directory = os.path.join(output_path,output_dir)
-            except:
-                output_directory = output_dir
-                print('saving to default directory')
-            var_file.close()
+            output_directory, zeros_dict, font_type_size, col_width = self.get_rules(input_criteria, search_column,
+                                                                                     output_type)
             try:
                 new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
-                for rule in rules:
-                    if rule[2] != '':
-                        try:
-                            temp_str = '{0:0>' + str(rule[5]) + '}'
-                            if str(new_new_output[rule[2]].dtype)[:3] == 'int' or \
-                                    str(new_new_output[rule[2]].dtype)[:3] == 'uin' or \
-                                    str(new_new_output[rule[2]].dtype)[:5] == 'float':
-                                new_new_output[rule[2]] = new_new_output[rule[2]].apply(lambda x: temp_str.format(x))
-                            else:
-                                try:
-                                    new_new_output[rule[2]] = new_new_output[rule[2]].str.zfill(int(rule[5]))
-                                except AttributeError:
-                                    pass
-                        except KeyError:
-                            print(rule[2] + ' isn\'t in output.')
-                        #rules.remove(rule)
-                        #num_format = workbook.add_format({'num_format': rule[2]})
+                for key, val in zeros_dict.items():
+                    try:
+                        temp_str = '{0:0>' + str(val) + '}'
+                        if str(new_new_output[key].dtype)[:3] == 'int' or \
+                                str(new_new_output[key].dtype)[:3] == 'uin' or \
+                                str(new_new_output[key].dtype)[:5] == 'float':
+                            new_new_output[key] = new_new_output[key].apply(lambda x: temp_str.format(x))
+                        else:
+                            try:
+                                new_new_output[key] = new_new_output[key].str.zfill(int(val))
+                            except AttributeError:
+                                pass
+                    except KeyError:
+                        print(key + ' isn\'t in output.')
                 if output_type == 'csv':
                     new_new_output.to_csv(output_directory, index=False)
                 elif output_type == 'xlsx':
@@ -88,23 +68,12 @@ class Retrieve_Input:
                     new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput')
                     workbook = writer_orig.book
                     worksheet = writer_orig.sheets['SearchOutput']
-                    #[col.get(),width.get(),rule.get(),font.get(),font_size.get()]
-                    if len(rules) > 0:
-                        for rule in rules:
-                            if rule[2] == '':
-                                num_format = None
-                            else:
-                                pass
-                                #num_format = workbook.add_format({'num_format': rule[2]})
-                            if (rule[0] == '') and (rule[5] == ''):
-                                workbook.formats[0].set_font_size(int(rule[4]))
-                                workbook.formats[0].set_font_name(rule[3])
-                            else:
-                                try:
-                                    worksheet.set_column(rule[0], int(rule[1]), num_format)
-                                except ValueError:
-                                    pass
-
+                    if font_type_size != {}:
+                        workbook.formats[0].set_font_size(int(list(font_type_size.values())[0]))
+                        workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
+                    if len(col_width) > 0:
+                        for rule in col_width.items():
+                            worksheet.set_column(rule[0], int(rule[1]))
 
 
                     writer_orig.save()
@@ -140,3 +109,34 @@ class Retrieve_Input:
         except ValueError:
             new_output2 = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
         return new_output2
+
+    def get_rules(self, input_criteria, search_column, output_type):
+        if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
+            if len(Split_Entry.split(input_criteria[1][1].get())) > 1:
+                output_dir = search_column + "(" + str(
+                    len(Split_Entry.split(input_criteria[1][1].get()))) + ")." + output_type
+            else:
+                output_dir = Split_Entry.split(input_criteria[1][1].get()) + "." + output_type
+        else:
+            output_dir = Split_Entry.split(input_criteria[1][1].get()) + "." + output_type
+
+        var_file = shelve.open('var_file')
+        try:
+            col_width = var_file['col_spacing']
+        except KeyError:
+            col_width = {}
+        try:
+            zeros_dict = var_file['lead_zeroes']
+        except KeyError:
+            zeros_dict = {}
+        try:
+            output_path = var_file['dir_location']
+            output_directory = os.path.join(output_path, output_dir)
+        except:
+            output_directory = output_dir
+        try:
+            font_rules = var_file['font_rules']
+        except KeyError:
+            font_rules = {}
+        var_file.close()
+        return output_directory, zeros_dict, font_rules, col_width
