@@ -56,7 +56,7 @@ class Retrieve_Input:
                     new_new_output.to_csv(output_directory, index=False)
                 elif output_type == 'xlsx':
                     writer_orig = pd.ExcelWriter(output_directory, engine='xlsxwriter')
-                    new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput')
+                    new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput', float_format="%.2f")
                     workbook = writer_orig.book
                     worksheet = writer_orig.sheets['SearchOutput']
                     size = 10
