@@ -59,16 +59,21 @@ class Retrieve_Input:
                     new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput')
                     workbook = writer_orig.book
                     worksheet = writer_orig.sheets['SearchOutput']
+                    size = 10
                     if font_type_size != {}: # Set Global Font Size / Type
-                        workbook.formats[0].set_font_size(int(list(font_type_size.values())[0]))
-                        workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
+                        try:
+                            size = int(list(font_type_size.values())[0])
+                            workbook.formats[0].set_font_size(size)
+                            workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
+                        except IndexError:
+                            pass
                     if len(col_width) > 0: # Set Column / Widths
                         for rule in col_width.items():
                             worksheet.set_column(rule[0], int(rule[1]))
                     if len(dec_rules) > 0: # Set Column / Decimal places
                         for key, val in dec_rules.items():
                             num_format = workbook.add_format({'num_format': val})
-                            worksheet.set_column(key, (int(list(font_type_size.values())[0])), num_format)
+                            worksheet.set_column(key, size, num_format)
 
 
                     writer_orig.save()
