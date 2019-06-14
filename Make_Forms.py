@@ -421,7 +421,7 @@ class MakeForm:
             supply_dict['change_func'] = self.changed_2
             inp_ents = self.make(footer_1, func=9, NAdict=supply_dict)
         elif widget.get() == 'Search Output':
-            supply_dict['in_list'] = 'General', 'Column Lead Zeros', 'Column Spacing'
+            supply_dict['in_list'] = 'General', 'Column Lead Zeros', 'Column Spacing', 'Round Decimal Place'
             supply_dict['change_func'] = self.changed_3
             inp_ents = self.make(footer_1, func=9, NAdict=supply_dict)
         footer_1.pack()
@@ -475,6 +475,15 @@ class MakeForm:
             supply_dict['list_opts'] = list(range(25))
             supply_dict['dict/list'] = 'col_spacing'
             supply_dict['reset_l_func'] = 3
+            inp_ents = self.make(opt_footer, func=14, NAdict=supply_dict)
+        elif widget.get() == 'Round Decimal Place':
+            supply_dict = {}
+            supply_dict['label'] = 'Saved Decimal Place Rules'
+            supply_dict['but_name'] = 'Col Index/Decimals'
+            supply_dict['list_opts'] = 'tenths', 'hundredths', 'thousandths', '10 thousandths',\
+                                       '100 thousandths', 'millionths'
+            supply_dict['dict/list'] = 'decimal_places'
+            supply_dict['reset_l_func'] = 5
             inp_ents = self.make(opt_footer, func=14, NAdict=supply_dict)
         opt_footer.pack()
 
@@ -550,18 +559,33 @@ class MakeForm:
         try:
             rules = var_file[lisct]
         except KeyError:
-            if func_num == 1:
-                rules = []
+            if func_num != 1:
+                rules = {}
             else:
-                rules={}
-        if func_num == 1:
-            rules.append(ent.get())
-        else:
+                rules = []
+
+        if func_num == 5:
+            if ent.get() not in rules:
+                if var.get() == 'tenths':
+                    dec_format = '0.0'
+                elif var.get() == 'hundredths':
+                    dec_format = '0.00'
+                elif var.get() == 'thousandths':
+                    dec_format = '0.000'
+                elif var.get() == '10 thousandths':
+                    dec_format = '0.0000'
+                elif var.get() == '100 thousandths':
+                    dec_format = '0.00000'
+                elif var.get() == 'millionths':
+                    dec_format = '0.000000'
+                rules[ent.get()] = dec_format
+        elif func_num != 1:
             if ent.get() not in rules:
                 rules[ent.get()] = var.get()
+        else:
+            rules.append(ent.get())
         var_file[lisct] = rules
         var_file.close()
-        #print(rules)
         self.print_lab(rules,func_num)
         breset = Button(self.footer, text='Reset List',
                         command=(lambda e='what this': self.reset_col_list(func=func_num)))
@@ -577,6 +601,8 @@ class MakeForm:
                 del var_file['col_spacing']
             elif func == 4:
                 del var_file['lead_zeroes']
+            elif func == 5:
+                del var_file['decimal_places']
             else:
                 del var_file['spec_col_rules']
             var_file.close()
@@ -586,7 +612,7 @@ class MakeForm:
             print('No settings in list')
 
     def print_lab(self,rules, func=1):
-        dict_funcs = 2, 3, 4
+        dict_funcs = 2, 3, 4, 5
         if func in dict_funcs:
             for key, value in rules.items():
                 text_var = key.strip() + " : " + value
