@@ -463,7 +463,7 @@ class MakeForm:
         elif widget.get() == 'Column Lead Zeros':
             supply_dict = {}
             supply_dict['label'] = 'Saved Column/Lead Zero Rules'
-            supply_dict['but_name'] = 'Add Col/#of 0\'s'
+            supply_dict['but_name'] = 'Col Name/# 0\'s'
             supply_dict['list_opts'] = list(range(25))
             supply_dict['dict/list'] = 'lead_zeroes'
             supply_dict['reset_l_func'] = 4
@@ -677,6 +677,7 @@ class MakeForm:
             space_dict = {}
             zero_dict = {}
             font_dict = {}
+            dec_dict = {}
             lines = setting_file.readlines()
             for line in lines:
                 new_list = re.split('::::', line)
@@ -686,9 +687,12 @@ class MakeForm:
                     zero_dict[new_list[1]] = new_list[2].strip()
                 elif new_list[0] == 'font_rules':
                     font_dict[new_list[1]] = new_list[2].strip()
+                elif new_list[0] == 'decimal_places':
+                    dec_dict[new_list[1]] = new_list[2].strip()
             var_file['col_spacing'] = space_dict
             var_file['lead_zeroes'] = zero_dict
             var_file['font_rules'] = font_dict
+            var_file['decimal_places'] = dec_dict
         else:
             try:
                 col_width = var_file['col_spacing']
@@ -706,6 +710,12 @@ class MakeForm:
                 font_rules = var_file['font_rules']
                 rule_list.append('font_rules' + '::::' + list(font_rules.keys())[0] + '::::' +
                                  str(list(font_rules.values())[0]) + '\n')
+            except KeyError:
+                pass
+            try:
+                dec_places = var_file['decimal_places']
+                rule_list.append('dec_places' + '::::' + list(dec_places.keys())[0] + '::::' +
+                                 str(list(dec_places.values())[0]) + '\n')
             except KeyError:
                 pass
             setting_file.writelines(rule_list)
