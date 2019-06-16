@@ -6,7 +6,6 @@ from functools import partial
 class MakeForm:
     def __init__(self, data_frames=[], frame_keys={},input_box1=False, input_box2=False):
         self.entries = []
-        self.entries2 = {}
         self.li = data_frames
         self.li_dict = frame_keys
         self.ents1 = input_box1
@@ -15,11 +14,13 @@ class MakeForm:
         self.header_dtypes = {}
         self.my_filetypes = [('all files', '.*'), ('CSV files', '.csv'),('HD5', '.h5'),('xls','.xls')]
         self.NA_dict = {}
+        self.x = 0
+        self.x2 = 45
 
-    def make(self, root=None, fields=[], func=0,body=False, key=False, set_info=False, NAdict={}):
+    def make(self, root=None, fields=[], func=0, body=False, body2=False, key=False, set_info=False, NAdict={}):
         if func == 1:
             self.entries = []
-            fields = 'Header To Search', '  Search Item(s)'  # , 'Output Directory'
+            fields = 'Header To Search', '  Search Item(s)'
             for field in fields:
                 row = Frame(root)
                 lab = Label(row, width=15, text=field, anchor='w')
@@ -30,6 +31,9 @@ class MakeForm:
                 self.entries.append((field, ent))
             return self.entries
         elif func == 2:
+            lrow = Frame(root)
+            Label(lrow, text=' --- Files / Search Order --- ').pack()
+            lrow.pack()
             self.NA_dict = NAdict
             self.entries = []
             for field in fields:
@@ -47,44 +51,33 @@ class MakeForm:
                 self.entries.append((field, ent, var1))
             return self.entries
         elif func == 3:
-            self.entries2 = {}
-            scrollable_body = Scrollable(body)
             count = 0
-            for f in fields:
+            for f in fields[self.x:self.x2]:
                 count += 1
-                row1 = len(self.entries2)
-                b1 = Button(scrollable_body, text=f,
-                            command=(lambda e=f: self.update_entry(root, e, self.ents1, 1))).grid(row=row1, column=1,
+                Button(body2, text=f,
+                            command=(lambda e=f: self.update_entry(body, e, self.ents1, 1))).grid(row=count, column=1,
                                                                                                   padx=1)
-                Button(scrollable_body, text='Result\'s within Column',
-                       command=(lambda e=f: self.update_column_win(root,
-                                                                   e, key))).grid(row=row1,
-                                                                                  column=2,  padx=1)
-                self.entries2[f] = b1
-                if count > 50:
-                    break
-            Button(scrollable_body, text="Exit", command=(lambda e=root: e.destroy())).grid(column=2)
-            scrollable_body.update()
-            root.mainloop()
-            return self.entries2
-        elif func == 4:
-            scrollable_body = Scrollable(body)
-            count_dict = {}
-            slimmed_list = []
-            count = 0
-            data = self.li[self.li_dict[key]]
-            num = data[set_info].values
-            for value in num:
-                try:
-                    count_dict[value] += 1
-                except KeyError:
-                    count_dict[value] = 1
-            for key1, value in sorted(count_dict.items(), key=lambda item: item[1])[::-1]:
-                slimmed_list.append(key1)
+                Button(body2, text='Result\'s within Column',
+                       command=(lambda e=f: self.update_column_win(body,e, key))).grid(row=count, column=2,  padx=1)
+            count += 1
+            temp_count = False
+            if len(fields[:self.x2]) / 45 > 1:
+                Button(body2, text='Previous Page',
+                       command=(lambda e=key: self.headers_option_button(e, root=body, func='prev'))).grid(row=count,column=1,padx=1)
+                temp_count = True
+            if len(fields) > len(fields[:self.x2]):
+                Button(body2, text='Next Page',
+                       command=(lambda e=key: self.headers_option_button(e, root=body, func='next'))).grid(row=count,column=2, padx=1)
+                temp_count = True
+            if temp_count == True:
                 count += 1
-                if count > 50:
-                    break
-            for field in slimmed_list:
+            Button(body2, text="Exit", command=(lambda e=root: e.destroy())).grid(column=2)
+            body2.update()
+            root.mainloop()
+        elif func == 4:
+            count = 0
+            for field in fields[self.x:self.x2]:
+                count += 1
                 if set_info in self.NA_dict[key]: #if (column) in
                     if field == self.NA_dict[key][set_info]:
                         new_field = 'Blank'
@@ -95,20 +88,33 @@ class MakeForm:
                         new_field = 'Blank'
                     else:
                         new_field = field
-
-                row1 = len(self.entries2)
-                b1 = Button(scrollable_body, text=new_field,
-                            command=(lambda e=field: self.update_entry(root, e, self.ents2))).grid(row=row1, column=1,
+                Button(body2, text=new_field,
+                            command=(lambda e=field: self.update_entry(body, e, self.ents2))).grid(row=count, column=1,
                                                                                                 padx=1)
-                Label(scrollable_body, width=15,
-                      text=("Total Results: " + str(count_dict[field]))).grid(row=row1, column=2, columnspan=25,pady=5, padx=1)
-                self.entries2[field] = b1
-            Button(scrollable_body, text="Reset Items",
-                   command=(lambda e="nothing": self.update_entry(root, e, self.ents2, 2))).grid(column=1)
-            Button(scrollable_body, text="Exit", command=(lambda e=root: e.destroy())).grid(column=2)
-            scrollable_body.update()
+                Label(body2, width=15,
+                      text=("Total Results: " + str(NAdict[field]))).grid(row=count, column=2,pady=5, padx=1)
+
+            count += 1
+            temp_count = False
+            if len(fields[:self.x2])/45 > 1:
+                Button(body2, text='Previous Page',
+                       command=(lambda e=set_info: self.update_column_win(body, e, key, func='prev'))).grid(row=count,
+                                                                                                              column=1,
+                                                                                                              padx=1)
+                temp_count = True
+            if len(fields) > len(fields[:self.x2]):
+                Button(body2, text='Next Page',
+                       command=(lambda e=set_info: self.update_column_win(body,e, key, func='next'))).grid(row=count,
+                                                                                  column=2, padx=1)
+                temp_count = True
+            if temp_count == True:
+                count += 1
+            Button(body2, text="Reset Items",
+                   command=(lambda e="nothing": self.update_entry(root, e, self.ents2, 2))).grid(row=count,
+                                                                                                 column=1,padx=1)
+            Button(body2, text="Exit", command=(lambda e=root: e.destroy())).grid(row=count, column=2,pady=5, padx=1)
+            body2.update()
             root.mainloop()
-            return self.entries2
         elif func == 6:
             self.entries = []
             for field in fields:
@@ -134,7 +140,7 @@ class MakeForm:
                 opt_window = Toplevel()
                 opt_window.title("File_Pal_1.0")
                 header = Frame(opt_window)
-                body = Frame(opt_window)
+                body1 = Frame(opt_window)
                 footer_1 = Frame(opt_window)
                 variable = StringVar(header)
                 variable.set('Click Here')
@@ -142,8 +148,8 @@ class MakeForm:
                 header.pack()
                 variable.trace("w", partial(self.changed_1, widget=variable))
                 w.pack(padx=20)
-                Label(body, text=' --- Options --- ').pack()
-                body.pack()
+                Label(body1, text=' --- Options --- ').pack()
+                body1.pack()
                 opt_window.mainloop()
         elif func == 8:
             self.entries = []
@@ -256,27 +262,37 @@ class MakeForm:
             except KeyError:
                 dir_loc = os.getcwd()
             try:
+                glob_dec_place = var_file['glob_dec_place']
+            except KeyError:
+                glob_dec_place = False
+            try:
                 font_type_size = var_file['font_rules']
             except KeyError:
                 font_type_size = {}
             var_file.close()
             row1 = Frame(opt_footer)
             lab = Label(row1, width=8, text='Font Style', anchor='w')
-            ent = Entry(row1, width=12)
+            ent = Entry(row1, width=8)
             lab.pack(side=LEFT)
             ent.pack(side=LEFT)
             lab1 = Label(row1, width=7, text='Font Size', anchor='w')
-            ent1 = Entry(row1, width=4)
+            ent1 = Entry(row1, width=2)
             lab1.pack(side=LEFT)
             ent1.pack(side=LEFT)
+            lab2 = Label(row1, width=11, text='Decimal Places', anchor='w')
+            ent2 = Entry(row1, width=2)
+            lab2.pack(side=LEFT)
+            ent2.pack(side=LEFT)
             row1.pack(side=TOP, padx=5, pady=2)
-            bsave = Button(row1, text='Save Changes',
-                           command=(lambda e='dont get lambda': self.save_font(ent, ent1)))
-            bsave.pack(side=LEFT)
             if font_type_size != {}:
                 ent.insert(0,(str(list(font_type_size.keys())[0])))
                 ent1.insert(0,(str(list(font_type_size.values())[0])))
+            if glob_dec_place != False:
+                ent2.insert(0,(str(glob_dec_place)))
             row2 = Frame(opt_footer)
+            bsave = Button(row2, text='Save Changes',
+                           command=(lambda e='dont get lambda': self.save_font(ent, ent1,ent2)))
+            bsave.pack(side=LEFT)
             bexport = Button(row2, text='Export Settings',
                            command=(lambda e='dont get lambda': self.exp_imp_sets(row2,dir_loc,2)))
             bexport.pack(side=LEFT)
@@ -292,7 +308,6 @@ class MakeForm:
 
             Label(last_row, text=dir_loc, anchor='w').pack()
             last_row.pack(fill=X)
-
         elif func == 14:
             row = Frame(opt_footer)
             row2 = Frame(opt_footer)
@@ -340,54 +355,68 @@ class MakeForm:
         else:
             field_to_update.insert(0, (str(set_info) + "\t"))
 
-    def update_column_win(self, root, set_info, key):
+    def update_column_win(self, root, set_info, key, func=0):
         global opt_window
         self.ents1.delete(0, END)
         self.ents1.insert(0, (str(set_info)))
         self.ents2.delete(0, END)
         root.destroy()
-        self.entries2 = {}
-        try:
-            win_exists_var = Toplevel.winfo_exists(opt_window)
-        except NameError:
-            win_exists_var = 0
-        if win_exists_var != 1:
-            opt_window = Toplevel()
-            opt_window.title(key)
-            results = (self.li[self.li_dict[key]][set_info]).values
-            new_string = list(dict.fromkeys(results))
-            header = Frame(opt_window)
-            body = Frame(opt_window)
-            footer = Frame(opt_window)
-            header.pack()
-            body.pack()
-            footer.pack()
-            Label(header, text="Results").pack()
-            Label(footer, text="Results Footer").pack()
+        body = Frame(opt_window)
+        scrollable_body = Scrollable(body)
+        body.pack()
+        count_dict = {}
+        slimmed_list = []
+        data = self.li[self.li_dict[key]]
+        num = data[set_info].values
+        if func == 'next':
+            self.x += 45
+            self.x2 += 45
+        elif func == 'prev':
+            self.x -= 45
+            self.x2 -=45
+        else:
+            self.x = 0
+            self.x2 = 45
+        for value in num:
+            try:
+                count_dict[value] += 1
+            except KeyError:
+                count_dict[value] = 1
+        for key1, value in sorted(count_dict.items(), key=lambda item: item[1])[::-1]:
+            slimmed_list.append(key1)
+        self.make(opt_window, slimmed_list, 4, body=body, body2=scrollable_body, key=key, set_info=set_info, NAdict=count_dict)
 
-            self.make(opt_window,
-                      new_string, 4, body=body, key=key,
-                      set_info=set_info)
-
-    def headers_option_button(self, key):
+    def headers_option_button(self, key, root=None, func=0):
         global opt_window
         field = (self.li[self.li_dict[key]]).columns.values
-        try:
-            win_exists_var = Toplevel.winfo_exists(opt_window)
-        except NameError:
-            win_exists_var = 0
-        if win_exists_var != 1:
-            opt_window = Toplevel()
-            opt_window.title(key)
-            header = Frame(opt_window)
-            body = Frame(opt_window)
-            footer = Frame(opt_window)
-            header.pack()
-            body.pack()
-            footer.pack()
-            Label(header, text="The Header").pack()
-            Label(footer, text="The Footer").pack()
-            self.make(opt_window, field, 3, body=body, key=key)
+        if root is not None:
+            root.destroy()
+        else:
+            try:
+                win_exists_var = Toplevel.winfo_exists(opt_window)
+            except NameError:
+                win_exists_var = 0
+            if win_exists_var != 1:
+                opt_window = Toplevel()
+                opt_window.title(key)
+            else:
+                opt_window.destroy()
+                opt_window = Toplevel()
+                opt_window.title(key)
+        body = Frame(opt_window)
+        scrollable_body = Scrollable(body)
+        body.pack()
+        if func == 'next':
+            self.x += 45
+            self.x2 += 45
+        elif func == 'prev':
+            self.x -= 45
+            self.x2 -= 45
+        else:
+            self.x = 0
+            self.x2 = 45
+
+        self.make(opt_window, field, 3, body=body, body2=scrollable_body, key=key)
 
     def opt_rule(self, func=1):
         var_file = shelve.open('var_file')
@@ -627,9 +656,10 @@ class MakeForm:
                 row.pack(side=TOP, fill=X, padx=5, pady=2)
                 lab.pack(side=LEFT)
 
-    def save_font(self, style, size):
+    def save_font(self, style, size, glob_dec_place):
         var_file = shelve.open('var_file')
         var_file['font_rules'] = {style.get(): size.get()}
+        var_file['glob_dec_place'] = glob_dec_place.get()
         var_file.close()
 
     def donothing(self):
@@ -678,6 +708,7 @@ class MakeForm:
             zero_dict = {}
             font_dict = {}
             dec_dict = {}
+            glob_dec = False
             lines = setting_file.readlines()
             for line in lines:
                 new_list = re.split('::::', line)
@@ -689,10 +720,13 @@ class MakeForm:
                     font_dict[new_list[1]] = new_list[2].strip()
                 elif new_list[0] == 'decimal_places':
                     dec_dict[new_list[1]] = new_list[2].strip()
+                elif new_list[0] == 'glob_dec_place':
+                    glob_dec = new_list[1]
             var_file['col_spacing'] = space_dict
             var_file['lead_zeroes'] = zero_dict
             var_file['font_rules'] = font_dict
             var_file['decimal_places'] = dec_dict
+            var_file['glob_dec_place'] = glob_dec
         else:
             try:
                 col_width = var_file['col_spacing']
@@ -714,8 +748,13 @@ class MakeForm:
                 pass
             try:
                 dec_places = var_file['decimal_places']
-                rule_list.append('dec_places' + '::::' + list(dec_places.keys())[0] + '::::' +
+                rule_list.append('decimal_places' + '::::' + list(dec_places.keys())[0] + '::::' +
                                  str(list(dec_places.values())[0]) + '\n')
+            except KeyError:
+                pass
+            try:
+                glob_dec_places = var_file['glob_dec_place']
+                rule_list.append('glob_dec_place' + '::::' + str(glob_dec_places) + '\n')
             except KeyError:
                 pass
             setting_file.writelines(rule_list)
