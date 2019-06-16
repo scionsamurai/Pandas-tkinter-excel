@@ -1,22 +1,13 @@
 class Split_Entry:
     def split(entry):
         entry = entry
-        if len(entry.split()) > 1: #'\t'
-            temp_set = entry.split() #'\t'
-            real_list = []
-            for item in temp_set:
-                if len(list(filter(bool, item.splitlines()))) > 1:
-                    new_string = list(filter(bool, item.splitlines()))
-                    for string in new_string:
-                        real_list.append(string)
-                else:
-                    real_list.append(item.strip())
-            real_list = list(dict.fromkeys(real_list))
-            return real_list
-        elif len(list(filter(bool, entry.splitlines()))) > 1:
-            new_string = list(filter(bool, entry.splitlines()))
-            new_string = list(dict.fromkeys(new_string))
-            return new_string
+        if len(entry.split('\t')) > 1 and len(entry.split('\n')) > 1:
+            t_split_l = entry.split('\t')
+            split_l = []
+            for t_split in t_split_l:
+                n_split_l = t_split.split('\n')
+                for n_split in n_split_l:
+                    split_l.append(n_split.strip())
+            return split_l
         else:
-            search_item = entry.strip()
-            return search_item
+            return entry.strip()
