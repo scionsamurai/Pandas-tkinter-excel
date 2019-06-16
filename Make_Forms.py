@@ -154,7 +154,7 @@ class MakeForm:
         elif func == 8:
             self.entries = []
             gen_opts = 'Delimiter', 'Terminator', 'Header Line', 'Index Column', 'Chunk', 'CPU Cores', 'Verbose',\
-                       'Header Func'
+                       'Header Func', 'Main Win Criteria'
             gen_def = {'Delimiter':',','Terminator':'DV', 'Header Line':'DV', 'Index Column':'DV',
                        'Chunk':'DV', 'CPU Cores':1, 'Verbose':0}
             var_file = shelve.open('var_file')
@@ -178,12 +178,14 @@ class MakeForm:
                         temp_dict['Verbose'] = gen_set[1]
                     elif gen_set[0] == 'Header Func':
                         temp_dict['Header Func'] = gen_set[1]
+                    elif gen_set[0] == 'Main Win Criteria':
+                        temp_dict['Main Win Criteria'] = gen_set[1]
             except KeyError:
                 pass
 
             var_file.close()
             for opt in gen_opts:
-                if opt != 'Verbose' and opt != 'Header Func':
+                if opt != 'Verbose' and opt != 'Header Func' and opt != 'Main Win Criteria':
                     row = Frame(opt_footer)
                     lab = Label(row, width=12, text=opt, anchor='w')
                     ent = Entry(row, width=3)
@@ -362,6 +364,9 @@ class MakeForm:
         self.ents2.delete(0, END)
         root.destroy()
         body = Frame(opt_window)
+        temp_field = key.split('/')
+        new_field = temp_field[(len(temp_field) - 1)]
+        opt_window.title(new_field + ' / ' + str(set_info))
         scrollable_body = Scrollable(body)
         body.pack()
         count_dict = {}
@@ -389,6 +394,8 @@ class MakeForm:
     def headers_option_button(self, key, root=None, func=0):
         global opt_window
         field = (self.li[self.li_dict[key]]).columns.values
+        temp_field = key.split('/')
+        new_field = temp_field[(len(temp_field) - 1)]
         if root is not None:
             root.destroy()
         else:
@@ -398,11 +405,11 @@ class MakeForm:
                 win_exists_var = 0
             if win_exists_var != 1:
                 opt_window = Toplevel()
-                opt_window.title(key)
+                opt_window.title(new_field)
             else:
                 opt_window.destroy()
                 opt_window = Toplevel()
-                opt_window.title(key)
+                opt_window.title(new_field)
         body = Frame(opt_window)
         scrollable_body = Scrollable(body)
         body.pack()
@@ -446,7 +453,7 @@ class MakeForm:
             pass
         supply_dict = {}
         if widget.get() == 'File Input':
-            supply_dict['in_list'] = 'General', 'Specify Columns', 'Set Col DataType'
+            supply_dict['in_list'] = 'General', 'Set Col DataType'#, 'Specify Columns'
             supply_dict['change_func'] = self.changed_2
             inp_ents = self.make(footer_1, func=9, NAdict=supply_dict)
         elif widget.get() == 'Search Output':
@@ -475,7 +482,7 @@ class MakeForm:
             supply_dict = {}
             supply_dict['label'] = 'Saved Column/Datatype Rules'
             supply_dict['but_name'] = 'Add Col/Dtype:'
-            supply_dict['list_opts'] = 'Text', 'Number'
+            supply_dict['list_opts'] = 'Text', 'Text'#, 'Number'
             supply_dict['dict/list'] = 'col_dtypes'
             supply_dict['reset_l_func'] = 2
             inp_ents = self.make(opt_footer, func=14, NAdict=supply_dict)
