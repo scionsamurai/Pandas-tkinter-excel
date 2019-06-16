@@ -38,6 +38,7 @@ def fetch(pandas_obj):
    print(pandas_obj.info(verbose=True))
    print('----header_W/filler_value : filler_value----')
    print(NA_head_dict[answer[0]])
+   print(NA_head_dict)
 
 def changed(*args, widget=None):
     global header, footer, ents, ents2, form1, form2
@@ -48,7 +49,7 @@ def changed(*args, widget=None):
     header = Frame(root)
     footer = Frame(root)
     if widget.get() > 1:
-        ents4 = form1.make(header, widget.get(), 11)
+        form1.make(header, widget.get(), 11)
     else:
         ents = form1.make(header, fields, 1)
     ents2 = form2.make(footer, answer, 2)
@@ -63,14 +64,13 @@ def popupmsg(msg):
    popup.title("!")
    label = Label(popup, text=msg, font=NORM_FONT)
    label.pack(side="top", fill="x", pady=10)
-   B1 = Button(popup, text="Okay", command=popup.destroy)
-   B1.pack()
+   Button(popup, text="Okay", command=popup.destroy).pack()
    popup.mainloop()
 
 def df_to_hdf():
    global ents2
    new_output = []
-   answer = filedialog.asksaveasfilename(initialdir=os.getcwd(),
+   save_answer = filedialog.asksaveasfilename(initialdir=os.getcwd(),
                                          title="Please select save location and name:",
                                          filetypes=output_filetypes,
                                          defaultextension='.h5')
@@ -78,20 +78,20 @@ def df_to_hdf():
       if ents2[i][2].get() == 1:
          new_output.append(li[i])
    new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
-   if answer[-3:] == '.h5':
-      new_new_output.to_hdf(answer, key='df', mode='w')
-   elif answer[-4:] == '.csv':
-      new_new_output.to_csv(answer, index=False)
+   if save_answer[-3:] == '.h5':
+      new_new_output.to_hdf(save_answer, key='df', mode='w')
+   elif save_answer[-4:] == '.csv':
+      new_new_output.to_csv(save_answer, index=False)
    print('saved')
 
 def donothing():
     x=0
     return x
 
-def close_files(root):
+def close_files(toor):
     global answer, footer, ents2, li, li_dict
     close_var = messagebox.askyesno("File_Pal_1.0", "Do you want to close checked files?")
-    if close_var == True:
+    if close_var:
         for file in answer[::-1]:
             if ents2[li_dict[file]][2].get() == 1:
                 del li[li_dict[file]]
@@ -101,8 +101,8 @@ def close_files(root):
             li_dict[file] = answer.index(file)
         footer.pack_forget()
         footer.destroy()
-        footer = Frame(root)
-        ents2 = form2.make(footer, answer, 2)
+        footer = Frame(toor)
+        ents2 = form2.make(footer, answer, 2, NAdict=NA_head_dict)
         footer.pack()
 
 def open_files(func=1):
@@ -130,7 +130,7 @@ def open_files(func=1):
                 print(e)
     elif func==2:
         check_name_temp = messagebox.askyesno("File_Pal_1.0", "Do you want to specify the first characters?")
-        if check_name_temp == True:
+        if check_name_temp:
             name_str = simpledialog.askstring("File_Pal_1.0",
                                               "First part of name for the files you want to open?",
                                               parent=root)
@@ -140,7 +140,7 @@ def open_files(func=1):
                                             title="Please select Directory:")
         for path, subdirs, files in os.walk(directory):
             for name in files:
-                if check_name_temp == True:
+                if check_name_temp:
                     if (name[-4:] == '.csv') or (name[-3:] == '.h5'):
                             if name[:len(name_str)].lower() == name_str.lower():
                                 if name not in answer:
@@ -175,7 +175,7 @@ def open_files(func=1):
             pool = Pool(processes=inp_opts[0]['CPU Cores'])
             df_list = pool.map(partial(open.open_file, inp_options=inp_opts), new_list)
             for i in range(len(new_list)):
-                if df_list[i][0].empty != True:
+                if not df_list[i][0].empty:
                     li.append(df_list[i][0])
                     answer.append(df_list[i][1])
                     li_dict[df_list[i][1]] = (len(li) - 1)
@@ -189,8 +189,8 @@ def open_files(func=1):
                 if file not in answer:
                     try:
                         dataframe = open.open_file(file, inp_opts)
-                        #print(dataframe[0])
-                        if dataframe[0].empty != True:
+                        # #frame , location/key, (cols:NA_Fill vals
+                        if not dataframe[0].empty:
                             li.append(dataframe[0])
                             answer.append(file)
                             li_dict[file] = (len(li) - 1)
@@ -221,7 +221,7 @@ def resort_p2(ents3):
     temp_list = []
     for i in ents3:
         temp_list.append((i[0],i[1].get()))
-    temp_list.sort(key= sortSecond)
+    temp_list.sort(key= sort_second)
 
     temp2_list = []
     for i in temp_list:
@@ -239,10 +239,10 @@ def resort_p2(ents3):
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
-    ents2 = form2.make(footer, answer, 2)
+    ents2 = form2.make(footer, answer, 2, NAdict=NA_head_dict)
     footer.pack()
 
-def sortSecond(val):
+def sort_second(val):
     return val[1]
 
 def get_inp_opts():
@@ -278,10 +278,8 @@ def get_inp_opts():
             elif gen_set[0] == 'CPU Cores':
                 if gen_set[1] == 1 or gen_set[1] == '':
                     gen_rules['CPU Cores'] = 1
-                    tcores = 1
                 else:
                     gen_rules['CPU Cores'] = int(gen_set[1])
-                    tcores = int(gen_set[1])
             elif gen_set[0] == 'Verbose':
                 if gen_set[1] == 0:
                     gen_rules['Verbose'] = False
@@ -319,7 +317,7 @@ def get_inp_opts():
     except KeyError:
         head_func_dtypes = None
     var_file.close()
-    return (gen_rules,only_cols,dtypes,head_func_dtypes)
+    return gen_rules,only_cols,dtypes,head_func_dtypes
 
 def err_dialog():
     global err_dial_pressed
@@ -350,7 +348,7 @@ if __name__ == '__main__':
    form1 = MakeForm()
    ents = form1.make(header, fields,1)
    form2= MakeForm(data_frames=li,frame_keys=li_dict, input_box1=ents[0][1],input_box2=ents[1][1])
-   ents2 = form2.make(footer, answer,2)
+   ents2 = form2.make(footer, answer,2, NAdict=NA_head_dict)
    opt_form = MakeForm()
 
    menubar = Menu(root)
