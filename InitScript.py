@@ -112,7 +112,7 @@ def open_files(func=1):
     inp_opts = get_inp_opts()
     loc_answer = []
     if func==1:
-        results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
+        #results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
         files_answer = filedialog.askopenfilenames(parent=footer,
                                                    initialdir=os.getcwd(),
                                                    title="Please select one or more files:",
@@ -134,7 +134,7 @@ def open_files(func=1):
             name_str = simpledialog.askstring("File_Pal_1.0",
                                               "First part of name for the files you want to open?",
                                               parent=root)
-        results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
+        #results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
         directory = filedialog.askdirectory(parent=root,
                                             initialdir=os.getcwd(),
                                             title="Please select Directory:")
@@ -160,7 +160,7 @@ def open_files(func=1):
                             if name not in answer:
                                 new_list.append((path + '/' + name))
     if (len(loc_answer) + len(new_list)) > 0:
-        if results_only == True:
+        if inp_opts[0]['Main Win Criteria']:
             temp_opts = list(inp_opts)
             search_column = (ents[0][1].get()).strip()
             real_list = Split_Entry.split(ents[1][1].get())
@@ -290,6 +290,11 @@ def get_inp_opts():
                     gen_rules['Header Func'] = False
                 else:
                     gen_rules['Header Func'] = True
+            elif gen_set[0] == 'Main Win Criteria':
+                if gen_set[1] == 0:
+                    gen_rules['Main Win Criteria'] = False
+                else:
+                    gen_rules['Main Win Criteria'] = True
     except KeyError:
         gen_rules['Delimiter'] = ','
         gen_rules['Terminator'] = None
@@ -299,6 +304,7 @@ def get_inp_opts():
         gen_rules['CPU Cores'] = 1
         gen_rules['Verbose'] = False
         gen_rules['Header Func'] = False
+        gen_rules['Main Win Criteria'] = False
     try:
         only_cols = var_file['spec_col_rules']
     except KeyError:
