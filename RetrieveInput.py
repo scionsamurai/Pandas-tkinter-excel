@@ -13,14 +13,19 @@ class Retrieve_Input:
         print('Searching:\n' + input_criteria[1][1].get())
         search_column = (input_criteria[0][1].get()).strip()
         output_directory, zeros_dict, font_type_size, \
-        col_width, dec_rules = self.get_rules(input_criteria, search_column, output_type) # Load Settings
+        col_width, dec_rules, dec_place = self.get_rules(input_criteria, search_column, output_type) # Load Settings
+        if dec_place != False:
+            dec_var = '%.' + str(dec_place) + 'f'
+        else:
+            dec_var = "%.2f"
+        int_col = []
         for i in range(0, len(data_frames)): # Iterate through DataFrames using i as index
             temp_field = (opened_files[i][0]).split('/')
             new_field = temp_field[(len(temp_field) - 1)]
             if opened_files[i][2].get() == 1: # If tkinter checkbutton next to file name is checked -> Open the file
                 real_list = Split_Entry.split(input_criteria[1][1].get()) # Splits main window Search Item(s) into list
                 temp_output = pd.DataFrame({'A':[]})
-                if isinstance(real_list, str) == False:
+                if not isinstance(real_list, str):
                     func_var = 2
                 else:
                     func_var = 1
@@ -28,7 +33,12 @@ class Retrieve_Input:
                     temp_output = SearchDataFrame.criteria_by_column(search_column, real_list, new_field, func_var,
                                                                      data_frames[i]).copy()
                     for col in NA_head_dict[opened_files[i][0]]: # Strip space saving Filler Values from output
-                        temp_output[col].replace(NA_head_dict[opened_files[i][0]][col], None, inplace=True)
+                        print(col)
+                        dtype_var = temp_output[col].dtype
+                        if str(dtype_var)[:3] == 'int' or str(dtype_var)[:3] == 'uin':
+                            int_col.append(col)
+                        temp_output[col].replace(NA_head_dict[opened_files[i][0]][col], "", inplace=True)
+                        print(str(temp_output[col].dtype))
                     if not temp_output.empty: # if Search had results add them to new_output list
                         new_output.append(temp_output)
                 except (TypeError, AttributeError):
@@ -42,8 +52,11 @@ class Retrieve_Input:
                         temp_str = '{0:0>' + str(val) + '}'
                         if str(new_new_output[key].dtype)[:3] == 'int' or \
                                 str(new_new_output[key].dtype)[:3] == 'uin' or \
-                                str(new_new_output[key].dtype)[:5] == 'float': # For Numbers
+                                str(new_new_output[key].dtype)[:5] == 'float' or key in int_col: # For Numbers
                             new_new_output[key] = new_new_output[key].apply(lambda x: temp_str.format(x))
+                        elif str(new_new_output[key].dtype)[:3] == 'cat':
+                            new_new_output[key] = new_new_output[key].astype('object')
+                            new_new_output[key] = new_new_output[key].str.zfill(int(val))
                         else: # For Strings
                             try:
                                 new_new_output[key] = new_new_output[key].str.zfill(int(val))
@@ -55,7 +68,7 @@ class Retrieve_Input:
                     new_new_output.to_csv(output_directory, index=False)
                 elif output_type == 'xlsx':
                     writer_orig = pd.ExcelWriter(output_directory, engine='xlsxwriter')
-                    new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput', float_format="%.2f")
+                    new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput', float_format=dec_var)
                     workbook = writer_orig.book
                     worksheet = writer_orig.sheets['SearchOutput']
                     size = 10
@@ -94,7 +107,7 @@ class Retrieve_Input:
         new_output = [] # ^^^Function to specify rows when opening file (with main window search criteria)
         temp_field = file_name.split('/')
         new_field = temp_field[(len(temp_field) - 1)]
-        if isinstance(real_list, str) == False:
+        if not isinstance(real_list, str):
             new_output.append(SearchDataFrame.criteria_by_column(search_column,
                                                                  real_list,
                                                                  new_field, 2, data_frame))
@@ -110,7 +123,7 @@ class Retrieve_Input:
         return new_output2
 
     def get_rules(self, input_criteria, search_column, output_type):
-        if isinstance(Split_Entry.split(input_criteria[1][1].get()), str) == False:
+        if not isinstance(Split_Entry.split(input_criteria[1][1].get()), str):
             if len(Split_Entry.split(input_criteria[1][1].get())) > 1:
                 output_dir = search_column + "(" + str(
                     len(Split_Entry.split(input_criteria[1][1].get()))) + ")." + output_type
@@ -141,6 +154,9 @@ class Retrieve_Input:
             dec_rules = var_file['decimal_places']
         except KeyError:
             dec_rules = {}
-
+        try:
+            dec_place = var_file['glob_dec_place']
+        except KeyError:
+            dec_place = False
         var_file.close()
-        return output_directory, zeros_dict, font_rules, col_width, dec_rules
+        return output_directory, zeros_dict, font_rules, col_width, dec_rules, int(dec_place.strip())
