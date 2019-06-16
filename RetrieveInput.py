@@ -33,12 +33,10 @@ class Retrieve_Input:
                     temp_output = SearchDataFrame.criteria_by_column(search_column, real_list, new_field, func_var,
                                                                      data_frames[i]).copy()
                     for col in NA_head_dict[opened_files[i][0]]: # Strip space saving Filler Values from output
-                        print(col)
                         dtype_var = temp_output[col].dtype
                         if str(dtype_var)[:3] == 'int' or str(dtype_var)[:3] == 'uin':
                             int_col.append(col)
                         temp_output[col].replace(NA_head_dict[opened_files[i][0]][col], "", inplace=True)
-                        print(str(temp_output[col].dtype))
                     if not temp_output.empty: # if Search had results add them to new_output list
                         new_output.append(temp_output)
                 except (TypeError, AttributeError):
