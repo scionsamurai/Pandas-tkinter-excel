@@ -153,8 +153,11 @@ class Retrieve_Input:
         except KeyError:
             dec_rules = {}
         try:
-            dec_place = var_file['glob_dec_place']
+            try:
+                dec_place = var_file['glob_dec_place'].strip()
+            except AttributeError:
+                dec_place = var_file['glob_dec_place']
         except KeyError:
             dec_place = False
         var_file.close()
-        return output_directory, zeros_dict, font_rules, col_width, dec_rules, int(dec_place.strip())
+        return output_directory, zeros_dict, font_rules, col_width, dec_rules, int(dec_place)
