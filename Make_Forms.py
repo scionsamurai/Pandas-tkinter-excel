@@ -55,7 +55,7 @@ class MakeForm:
             for f in fields[self.x:self.x2]:
                 count += 1
                 Button(body2, text=f,
-                            command=(lambda e=f: self.update_entry(body, e, self.ents1, 1))).grid(row=count, column=1,
+                            command=(lambda e=f: self.update_entry(root, e, self.ents1, 1))).grid(row=count, column=1,
                                                                                                   padx=1)
                 Button(body2, text='Result\'s within Column',
                        command=(lambda e=f: self.update_column_win(body,e, key))).grid(row=count, column=2,  padx=1)
