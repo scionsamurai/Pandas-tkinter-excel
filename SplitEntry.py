@@ -5,7 +5,7 @@ class Split_Entry:
             if '' in xlist:
                 xlist.remove('') # Remove whitespace value
             if len(xlist) == 1:
-                xlist = xlist[0] # Don't return list if there is only one result 
+                xlist = xlist[0] # Return just item if there is just 1 result / not list with single item
             return xlist
         def strip_list(nlist, removeDups=False):
             n_list = []
@@ -14,7 +14,6 @@ class Split_Entry:
             if removeDups:
                 n_list = remove_dups(n_list) # Remove duplicates from list if set removeDupes=True
             return n_list
-        entry = entry
         if len(entry.split('\t')) > 1 and len(entry.split('\n')) > 1: # If list contains tabs and new lines
             t_split_l = entry.split('\t')
             split_l = []
@@ -31,6 +30,5 @@ class Split_Entry:
             n_split_l = entry.split('\n')
             split_l = strip_list(n_split_l, True)
             return split_l
-        else: # Else return item with whitespace stripped
+        else: # Else return item with lead/trail whitespace stripped
             return entry.strip()
-
