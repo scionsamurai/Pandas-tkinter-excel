@@ -575,18 +575,6 @@ class MakeForm:
         var_file.close()
         #print(self.header_dtypes)
 
-    def reset_defaults(self):
-        var_file = shelve.open('var_file')
-        try:
-            del var_file['opt_gen_rules']
-        except KeyError:
-            pass
-        #try:
-        #    del var_file['spec_col_rules']
-        #except KeyError:
-        #    pass
-        var_file.close()
-
     def but_func(self, ent, root, lisct,func_num, var=None):
         self.footer.pack_forget()
         self.footer.destroy()
