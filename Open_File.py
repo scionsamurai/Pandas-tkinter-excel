@@ -31,13 +31,13 @@ class OpenFile:
                 filter_results = True
             if filter_results:
                 data = inp.result_frames(data, search_col, real_l, entry)
-            if not data.empty:
-                data, NA_list = self.reduce_mem_usage(data)#[0]
-            else:
-                print('no results in 6')
+            #if not data.empty:
+            #    data, NA_list = self.reduce_mem_usage(data)#[0]
+            #else:
+            #    print('no results in 6')
             end = time.time()
             print('-------'+ str(end-start) +'-------')
-            return data, entry, NA_list
+            return data, entry, {}
         else:
             df_empty = pd.DataFrame({'A':[]})
             end = time.time()
@@ -145,15 +145,8 @@ class OpenFile:
         first_header = dict_key_list[0]
         if first_header == slice_key_list[0]:            #first col header matches
             return 0, 0, None
-            #print('first col header matches')
-            #for col in slice_dict:
-            #    if col in func_dict:
-            #        print(col + ' is in func dict')
         else:                                           #first col header doesn't match
             print('first col header doesn\'t match')
-            #for col in frame_slice.columns.values:
-            #    in_col = frame_slice[col].str.contains(first_header)
-            #    print(col + ' : ' + in_col)
             current_col = (-1)
             found_col = []
             list1 = frame_slice[frame_slice.isin([first_header])].dropna(how='all').count()
@@ -218,7 +211,6 @@ class OpenFile:
                 tem_list = range(skip_rows - 1)
                 df = df.drop(df.index[tem_list])
                 df.columns = df.loc[(skip_rows - 1), :]
-        # print(df.columns.values.tolist())
         orig_headers = df.columns.values.tolist()
         stripped_headers = []
         for item in orig_headers:
