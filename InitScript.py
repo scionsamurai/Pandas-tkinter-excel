@@ -5,6 +5,7 @@ from multiprocessing import Pool
 from tkinter import filedialog, simpledialog
 import os, warnings, tables, shelve
 import pandas as pd
+import numpy as np
 from RetrieveInput import Retrieve_Input
 from functools import partial
 from Open_File import OpenFile
@@ -15,8 +16,8 @@ warnings.filterwarnings("error")
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 my_filetypes = [('all files', '.*'), ('CSV files', '.csv')]
-output_filetypes = [('HD5', '.h5'), ('CSV files', '.csv')]
-fields = 'Header To Search', '  Search Item(s)'#, 'Output Directory'
+output_filetypes = [('HD5', '.h5')]#, ('CSV files', '.csv')]
+fields = 'Header To Search', '  Search Item(s)'
 li = []
 li_dict = {}
 NA_head_dict = {}
@@ -74,12 +75,19 @@ def df_to_hdf():
                                          title="Please select save location and name:",
                                          filetypes=output_filetypes,
                                          defaultextension='.h5')
-   for i in range(0, len(li)):
-      if ents2[i][2].get() == 1:
-         new_output.append(li[i])
-   new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+   for key in answer:
+       if ents2[answer.index(key)][2].get() == 1:
+           if NA_head_dict[key] != {}:
+               temp_df = li[answer.index(key)].copy()
+               for col, val in NA_head_dict[key].items():
+                   temp_df[col].replace(val, np.NaN, inplace=True)
+               new_output.append(temp_df)
+   try:
+       new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+   except ValueError:
+       new_new_output = new_output
    if save_answer[-3:] == '.h5':
-      new_new_output.to_hdf(save_answer, key='df', mode='w')
+      new_new_output.to_hdf(save_answer, key='df', mode='w', format='table')
    elif save_answer[-4:] == '.csv':
       new_new_output.to_csv(save_answer, index=False)
    print('saved')
@@ -112,7 +120,6 @@ def open_files(func=1):
     inp_opts = get_inp_opts()
     loc_answer = []
     if func==1:
-        #results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
         files_answer = filedialog.askopenfilenames(parent=footer,
                                                    initialdir=os.getcwd(),
                                                    title="Please select one or more files:",
@@ -134,7 +141,6 @@ def open_files(func=1):
             name_str = simpledialog.askstring("File_Pal_1.0",
                                               "First part of name for the files you want to open?",
                                               parent=root)
-        #results_only = messagebox.askyesno("File_Pal_1.0", "Open only lines with main window search criteria?")
         directory = filedialog.askdirectory(parent=root,
                                             initialdir=os.getcwd(),
                                             title="Please select Directory:")
