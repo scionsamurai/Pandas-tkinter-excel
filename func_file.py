@@ -1,7 +1,7 @@
 """
 General Functions Pulled to trim primary code
 """
-import shelve, os
+import shelve, os, re
 from SplitEntry import Split_Entry
 from tkinter import END
 class GenFuncs:
