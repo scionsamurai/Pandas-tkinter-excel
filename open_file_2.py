@@ -1,3 +1,6 @@
+"""
+Per file Open functions
+"""
 import pandas as pd
 import numpy as np
 import time
@@ -5,11 +8,22 @@ from func_file import GenFuncs
 from RetrieveInput import Retrieve_Input
 class OpenFile:
     def open_file(entry1, inp_options1):
+        """
+        :param entry1: Directory/FileName
+        :param inp_options1: Input options
+        :return: DataFrame, Directory/FileName, Dictionary of Column/FillVal's
+        """
         new_field = GenFuncs.strip_dir(entry1)
         print('Opening ' + new_field)
         start1 = time.time()
 
         def reduce_mem_usage(props):
+            """
+            99% Arjan's original setup - if you're reading this Arjan - It was super easy to implement, Thank you!
+            https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65
+            :param props: DataFrame
+            :return: Slimmed DataFrame, Fill_Val Dictionary
+            """
             start_mem_usg = props.memory_usage().sum() / 1024 ** 2
             verb_print(("Memory usage of properties dataframe is :", start_mem_usg, " MB"))
             NAlist = {}  # Keeps track of columns that have missing values filled in.
@@ -92,11 +106,22 @@ class OpenFile:
             return props, NAlist
 
         def verb_print(text):
+            """
+            Print only if Verbose Input setting is set to true.
+            :param text: Text to print
+            """
             global var
             if var:
                 print(text)
 
         def col_check(frame_slice, func_dict):
+            """
+            Function for verifying/searching for header line in opening file - from header Func
+            :param frame_slice: First 50 rows of the opening file
+            :param func_dict:
+            :return: First Header Row Location, First Header Column Location,
+                        List of Headers to apply if First header isn't in file
+            """
             slice_dict = {}
             slice_key_list = []
             dict_key_list = []
@@ -140,6 +165,15 @@ class OpenFile:
                     return None, 0, name
 
         def open_func(entry, df, inp_options, start, func=0):
+            """
+            Function for applying input settings to Open
+            :param entry: File Name and Directory
+            :param df: First 50 Lines of Opening File
+            :param inp_options: Input Settings ;)
+            :param start: Start Time
+            :param func: 0=CSVw/Delimiter,1=CSV,2=Excel
+            :return: Dataframe, Dictionary of Column/FillVal's
+            """
             global var
             gen_rules = inp_options[0]
             delimiter = gen_rules['Delimiter']
@@ -164,9 +198,7 @@ class OpenFile:
                 inp = Retrieve_Input()
             else:
                 filter_results = False
-            temp_field = entry.split('/')
-            new_field = temp_field[(len(temp_field) - 1)]
-
+            new_field = GenFuncs.strip_dir(entry)
             if header_func:
                 skip_rows, skip_cols, name = col_check(df, head_func_dtypes)
             if skip_cols > 0:
