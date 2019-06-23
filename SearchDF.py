@@ -42,7 +42,7 @@ class SearchDataFrame:
                         return rows_w_matching_crit
                     else:
                         print('4')
-                        print('List item isn\'t in ' + new_field)
+                        print('No results in ' + new_field)
                 except KeyError:
                     print(search_column + ' Header isn\'t in ' + new_field)
             except (FutureWarning, TypeError):
@@ -58,12 +58,11 @@ class SearchDataFrame:
                     print(str_list)
                     print('^^not in numeric column^^')
                     rows_w_matching_crit = data.loc[data[search_column].isin(num_list)]
-                    #rows_w_matching_crit = data[data[search_column] == float(search_item)]
                     if len(rows_w_matching_crit.values) >= 1:
                         return rows_w_matching_crit
                     else:
                         print('5')
-                        print('List item isn\'t in ' + new_field)
+                        print('No results in ' + new_field)
                 except (KeyError, ValueError) as e:
                     # print('6')
                     print(str(e)[34:] + ' isn\'t in ' + new_field)
