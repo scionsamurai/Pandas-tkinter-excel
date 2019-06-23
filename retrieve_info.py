@@ -81,23 +81,27 @@ class Retrieve_R:
         except PermissionError as e:
             print(str(e)[:28] + ": Close File Before Searching")
 
-    def result_frames(data_frame, search_column, real_list, file_name):
+    def esult_frames(data_frame, search_column, real_list, file_name):
         """
-        For opening only rows with results that match main window search criteria --needs update
-        :param search_column:
-        :param real_list:
-        :param file_name:
-        :return:
+        For opening only rows with results that match main window search criteria
+        :param data_frame: New frame created from file
+        :param search_column: Column to search                  -from main window
+        :param real_list: Stripped list of item(s) to search    -from main window
+        :param file_name: Current Files Name
+        :return: Results from File
         """
-        new_output = [] # ^^^Function to specify rows when opening file (with main window search criteria)
+        new_output = []
         new_field = GenFuncs.strip_dir(file_name)
         if not isinstance(real_list, str):
-            new_output = SearchDataFrame.criteria_by_column(search_column,real_list, new_field, 2, data_frame)
+            list_str_var =  2
         else:
-            new_output = SearchDataFrame.criteria_by_column(search_column,  real_list,  new_field, 1, data_frame)
-        if new_output == [None]:
-            new_output2 =pd.DataFrame({'A': []})
-        else:
-            new_output2 = new_output
+            list_str_var = 1
+        new_output.append(SearchDataFrame.criteria_by_column(search_column, real_list, new_field,
+                                                             list_str_var, data_frame))
+        try:
+            if new_output == [None]:
+                new_output2 =pd.DataFrame({'A': []})
+        except ValueError:
+            new_output2 = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
         return new_output2
 
