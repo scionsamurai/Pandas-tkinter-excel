@@ -1,3 +1,12 @@
+"""
+File_Pal
+========
+
+Provides
+  1. Interface for Pandas Loading/Searching Excel/CSV files.
+  2. Fast and Easy searching of loaded Files.
+"""
+# Put together by James Ruikka
 from tkinter import *
 from tkinter import messagebox
 import multiprocessing
@@ -28,6 +37,10 @@ x = 0
 x2 = 45
 
 def fetch(pandas_obj):
+   """
+   Print first Files Memory Usage and file list.
+   :param pandas_obj: Input DataFrame.
+   """
    if isinstance(pandas_obj, pd.DataFrame):
        usage_b = pandas_obj.memory_usage(deep=True).sum()
    else:
@@ -39,6 +52,9 @@ def fetch(pandas_obj):
    print(answer)
 
 def df_to_hdf():
+   """
+   Save Dataframes that are checked in main window to a single file.
+   """
    global ents2
    new_output = []
    save_answer = filedialog.asksaveasfilename(initialdir=os.getcwd(),
@@ -67,8 +83,11 @@ def donothing():
     return x
 
 def close_files(toor):
+    """
+    Close Dataframes that are checked in main window.
+    """
     global answer, footer, ents2, li
-    close_var = messagebox.askyesno("File_Pal_1.0", "Do you want to close checked files?")
+    close_var = messagebox.askyesno("File_Pal_1.1", "Do you want to close checked files?")
     if close_var:
         for file in answer[::-1]:
             ind = answer.index(file)
@@ -78,11 +97,16 @@ def close_files(toor):
         footer.pack_forget()
         footer.destroy()
         footer = Frame(toor)
-        ents2 = cols_vals_func(footer, answer)
+        ents2 = file_frame(footer, answer)
         form2.answer = answer
         footer.pack()
 
 def open_files(func=1):
+    """
+    Select and Open Files.
+    :param func: ==1 Open Selected files from within a folder .
+    :param func: ==2 Open files within Selected Directory.
+    """
     global answer, footer,ents, ents2
     inp_opts = GenFuncs.get_inp_opts()
     new_list = []
@@ -92,17 +116,25 @@ def open_files(func=1):
                                                    initialdir=os.getcwd(),
                                                    title="Please select one or more files:",
                                                    filetypes=my_filetypes)
-        new_list, loc_answer = GenFuncs.get_file_list(files_answer,answer,func=1)
+        try:
+            new_list, loc_answer = GenFuncs.get_file_list(files_answer,answer,func=1)
+        except TypeError:
+            new_list, loc_answer = [], []
     elif func==2:
-        check_name_temp = messagebox.askyesno("File_Pal_1.0", "Do you want to specify the first characters?")
+        check_name_temp = messagebox.askyesno("File_Pal_1.1", "Do you want to specify the first characters?")
         if check_name_temp:
-            name_str = simpledialog.askstring("File_Pal_1.0",
+            name_str = simpledialog.askstring("File_Pal_1.1",
                                               "First part of name for the files you want to open?",
                                               parent=root)
+        else:
+            name_str = ''
         directory = filedialog.askdirectory(parent=root,
                                             initialdir=os.getcwd(),
                                             title="Please select Directory:")
-        new_list, loc_answer = GenFuncs.get_file_list(directory, answer, check_name_temp, name_str, func=2)
+        try:
+            new_list, loc_answer = GenFuncs.get_file_list(directory, answer, check_name_temp, name_str, func=2)
+        except TypeError:
+            new_list, loc_answer = [], []
     if (len(loc_answer) + len(new_list)) > 0:
         if inp_opts[0]['Main Win Criteria']:
             temp_opts = list(inp_opts)
@@ -140,10 +172,13 @@ def open_files(func=1):
                         print(e)
         except KeyboardInterrupt as e:
             print(e)
-        ents2 = cols_vals_func(footer, answer)
+        ents2 = file_frame(footer, answer)
         footer.pack()
 
 def resort():
+    """
+    Refresh main window footer to have file and entry to start Resort.
+    """
     global answer, footer, ents2
     footer.pack_forget()
     footer.destroy()
@@ -154,6 +189,9 @@ def resort():
     footer.pack()
 
 def resort_p2(ents3):
+    """
+    Refresh main window footer to have original layout with new order.
+    """
     global answer, footer, ents2, li, form2
     temp_list = []
     for i in ents3:
@@ -174,7 +212,7 @@ def resort_p2(ents3):
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
-    ents2 = cols_vals_func(footer, answer)
+    ents2 = file_frame(footer, answer)
     form2.answer = answer
     footer.pack()
 
@@ -182,17 +220,31 @@ def sort_second(val):
     return val[1]
 
 def err_dialog():
-    global err_dial_pressed
-    err_window = Toplevel()
-    err_window.title("Info Dialog")
-    t = Text(err_window)
-    t.pack()
-    p1 = PrintLogger(t)
-    t.see('end')
-    sys.stdout = p1
-    err_dial_pressed = True
+    """
+    Redirects print commands to output in newly generated Dialog window .
+    """
+    global err_dial_pressed, err_window
+    try:
+        win_exists_var = Toplevel.winfo_exists(err_window)
+    except NameError:
+        win_exists_var = 0
+    if win_exists_var != 1:
+        err_window = Toplevel()
+        err_window.title("Info Dialog")
+        t = Text(err_window)
+        t.pack()
+        p1 = PrintLogger(t)
+        t.see('end')
+        sys.stdout = p1
+        err_dial_pressed = True
 
-def cols_vals_func(rootx, fields):
+def file_frame(rootx, fields):
+    """
+    Generates footer Frame of main window with opened files listed.
+    :param rootx: Parent Frame.
+    :param fields: List of open files.
+    :return: List of Files with checkbutton Status.
+    """
     lrow = Frame(rootx)
     Label(lrow, text=' --- Files / Search Order --- ').pack()
     lrow.pack()
@@ -204,26 +256,44 @@ def cols_vals_func(rootx, fields):
         var1 = IntVar()
         var1.set(1)
         ent = Checkbutton(vrow, text=new_field, variable=var1)
-        bx = Button(vrow, text='Headers', command=(lambda e=field: headers_option_button(key=e)))
+        bx = Button(vrow, text='Headers', command=(lambda e=field: header_button(key=e)))
         vrow.pack(side=TOP, fill=X, padx=5, pady=2)
         ent.pack(side=LEFT)
         bx.pack(side=RIGHT)
         entries.append((field, ent, var1))
     return entries
 
-def page_func(list,p_frame,row_c, func, file, bod, prev, next, set_info=None):
+def page_func(list,p_frame,row_c, func, file, bod, set_info=None):
+    """
+    Creates Next/Last page buttons for Header windows if they are needed
+    :param list: Values list generated to Header window
+    :param p_frame: Parent Frame to generate buttons
+    :param row_c: Row number to apply buttons
+    :param func: Command/Function to Generate with each Button
+    :param file: Name of the file for generated header list
+    :param bod: Parent Frames Parent Frame - for refreshing window
+    :param set_info: Selected Column
+    :return: True if one of the buttons are generated - for updating the row count for next buttons
+    """
     temp_count = False
     if len(list[:x2]) / 45 > 1:
         Button(p_frame, text='Previous Page',
-               command=(lambda e=file: func(e, bod, set_info, prev))).grid(row=row_c, column=1, padx=1)
+               command=(lambda e=file: func(e, bod, set_info, 'prev'))).grid(row=row_c, column=1, padx=1)
         temp_count = True
     if len(list) > len(list[:x2]):
         Button(p_frame, text='Next Page',
-               command=(lambda e=file: func(e, bod, set_info, next))).grid(row=row_c, column=2, padx=1)
+               command=(lambda e=file: func(e, bod, set_info, 'next'))).grid(row=row_c, column=2, padx=1)
         temp_count = True
     return temp_count
 
-def headers_option_button(key, root2=None, set_info=None, func=0):
+def header_button(key, root2=None, set_info=None, func=0):
+    """
+    Generates a window with the headers from associated file listed.
+    :param key: File Name
+    :param root2: Parent Frame
+    :param set_info: Place holder variable to make input more uniform with header_values input for button function
+    :param func: Function to specify if generating Next or Last page
+    """
     global opt_window, x, x2
     ind = answer.index(key)
     field = li[ind].df.columns.values
@@ -262,16 +332,23 @@ def headers_option_button(key, root2=None, set_info=None, func=0):
                command=(lambda e=f: GenFuncs.update_entry(opt_window, e, ents[0][1], 1))).grid(row=count, column=1,
                                                                                      padx=1)
         Button(scrollable_body, text='Result\'s within Column',
-               command=(lambda e=f: update_column_win(key, body, e))).grid(row=count, column=2, padx=1)
+               command=(lambda e=f: header_values(key, body, e))).grid(row=count, column=2, padx=1)
     count += 1
-    temp_count = page_func(field,scrollable_body,count, headers_option_button, key, body, 'prev', 'next')
+    temp_count = page_func(field,scrollable_body,count, header_button, key, body)
     if temp_count:
         count += 1
     Button(scrollable_body, text="Exit", command=(lambda e=root2: e.destroy())).grid(column=2)
     scrollable_body.update()
     opt_window.mainloop()
 
-def update_column_win(key, root2, set_info, func=0):
+def header_values(key, root2, set_info, func=0):
+    """
+    Generates a window with the values from clicked header.
+    :param key: File Name
+    :param root2: Parent Frame
+    :param set_info: Column Name
+    :param func: Function to specify if generating Next or Last page
+    """
     global opt_window, ents, ents2, x, x2
     ents[0][1].delete(0, END)
     ents[0][1].insert(0, (str(set_info)))
@@ -314,7 +391,7 @@ def update_column_win(key, root2, set_info, func=0):
               text=("Total Results: " + str(count_dict[field]))).grid(row=count, column=2, pady=5, padx=1)
 
     count += 1
-    temp_count = page_func(slimmed_list, scrollable_body, count, update_column_win, key, body3, 'prev', 'next', set_info)
+    temp_count = page_func(slimmed_list, scrollable_body, count, header_values, key, body3, set_info)
     if temp_count:
         count += 1
     Button(scrollable_body, text="Reset Items",
@@ -325,6 +402,13 @@ def update_column_win(key, root2, set_info, func=0):
     opt_window.mainloop()
 
 def get_col_vals(key, col):
+    """
+    Creates List of values from within column with Dictionary indicating Value counts - List is returned in Descending
+    Count order.
+    :param key: File Name
+    :param col: Column Name
+    :return: Returns List (in Descending count order) and Dictionary with count
+    """
     ind = answer.index(key)
     col_val_list = li[ind].df[col].values
     count_dict = {}
@@ -341,8 +425,7 @@ def get_col_vals(key, col):
 if __name__ == '__main__':
    multiprocessing.freeze_support()
    root = Tk()
-   root.title("File_Pal_1.0")
-   #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
+   root.title("File_Pal_1.1")
    global auto_open_box, ents,header, body, footer, form2
 
    header = Frame(root)
@@ -354,7 +437,7 @@ if __name__ == '__main__':
    form2 = MakeForm()
    ents = form2.make(header, fields,1)
    form2= MakeForm(answer_in=answer)
-   ents2 = cols_vals_func(footer, answer)
+   ents2 = file_frame(footer, answer)
 
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
