@@ -8,9 +8,9 @@ class PrintLogger(): # create file like object
     def write(self, text):
         try:
             self.textbox.insert(tk.END, text) # write text to textbox
+            self.textbox.see(tk.END)
         except:
             pass
-            # could also scroll to end of textbox here to make sure always visible
 
     def flush(self): # needed for file like object
         pass
