@@ -1,3 +1,6 @@
+"""
+Retrieve Input Options and Output File
+"""
 from SplitEntry import Split_Entry
 from SearchDF import SearchDataFrame
 import pandas as pd
@@ -6,55 +9,22 @@ import xlsxwriter
 from func_file import GenFuncs
 class Retrieve_R:
     def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list):
+        """
+        Search Open Files by Input Criteria and output file
+        :param input_criteria: Search Column and Search Item(s)
+        :param opened_files: List of opened files with Checkbutton variables
+        :param data_frames: list of open files(classes)
+        :param auto_open_var: Main window Checkbutton variable for Auto-Open
+        :param output_type: type of output - set to xlsx for a while
+        :param file_list: Search Order List
+        """
         start = time.time()
         new_output = [] # Search results per DataFrame
-
-        def get_rules(input_crit, search_col, out_type):
-            if not isinstance(Split_Entry.split(input_crit[1][1].get()), str):
-                if len(Split_Entry.split(input_crit[1][1].get())) > 1:
-                    output_dir = search_col + "(" + str(
-                        len(Split_Entry.split(input_crit[1][1].get()))) + ")." + out_type
-                else:
-                    output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
-            else:
-                output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
-
-            var_file = shelve.open('var_file')
-            try:
-                col_width = var_file['col_spacing']
-            except KeyError:
-                col_width = {}
-            try:
-                zeros_dict = var_file['lead_zeroes']
-            except KeyError:
-                zeros_dict = {}
-            try:
-                output_path = var_file['dir_location']
-                output_directory = os.path.join(output_path, output_dir)
-            except KeyError:
-                output_directory = output_dir
-            try:
-                font_rules = var_file['font_rules']
-            except KeyError:
-                font_rules = {}
-            try:
-                dec_rules = var_file['decimal_places']
-            except KeyError:
-                dec_rules = {}
-            try:
-                try:
-                    dec_place = var_file['glob_dec_place'].strip()
-                except AttributeError:
-                    dec_place = var_file['glob_dec_place']
-            except KeyError:
-                dec_place = False
-            var_file.close()
-            return output_directory, zeros_dict, font_rules, col_width, dec_rules, int(dec_place)
 
         print('Searching:\n' + input_criteria[1][1].get())
         search_column = (input_criteria[0][1].get()).strip()
         output_directory, zeros_dict, font_type_size, \
-        col_width, dec_rules, dec_place = get_rules(input_criteria, search_column, output_type) # Load Settings
+        col_width, dec_rules, dec_place = GenFuncs.get_out_opts(input_criteria, search_column, output_type) # Load Settings
         if dec_place != False:
             dec_var = '%.' + str(dec_place) + 'f'
         else:
@@ -66,7 +36,7 @@ class Retrieve_R:
                 try:
                     if not results.empty:
                         new_output.append(results)
-                except AtributeError:
+                except AttributeError:
                     pass
 
         try:
@@ -112,16 +82,22 @@ class Retrieve_R:
             print(str(e)[:28] + ": Close File Before Searching")
 
     def result_frames(data_frame, search_column, real_list, file_name):
+        """
+        For opening only rows with results that match main window search criteria --needs update
+        :param search_column:
+        :param real_list:
+        :param file_name:
+        :return:
+        """
         new_output = [] # ^^^Function to specify rows when opening file (with main window search criteria)
         new_field = GenFuncs.strip_dir(file_name)
         if not isinstance(real_list, str):
-            new_output.append(SearchDataFrame.criteria_by_column(search_column,real_list, new_field, 2, data_frame))
+            new_output = SearchDataFrame.criteria_by_column(search_column,real_list, new_field, 2, data_frame)
         else:
-            new_output.append(SearchDataFrame.criteria_by_column(search_column,  real_list,  new_field, 1, data_frame))
-        try:
-            if new_output == [None]:
-                new_output2 =pd.DataFrame({'A': []})
-        except ValueError:
-            new_output2 = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+            new_output = SearchDataFrame.criteria_by_column(search_column,  real_list,  new_field, 1, data_frame)
+        if new_output == [None]:
+            new_output2 =pd.DataFrame({'A': []})
+        else:
+            new_output2 = new_output
         return new_output2
 
