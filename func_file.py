@@ -1,7 +1,20 @@
+"""
+General Functions Pulled to trim primary code
+"""
 import shelve, os
+from SplitEntry import Split_Entry
 from tkinter import END
 class GenFuncs:
     def get_inp_opts():
+        """
+        Get Input options from shelve File
+        :return: gen_rules          -Delimiter, Line Terminator, Header Line, Index Column,
+                                        Chunk Size, Cpu Cores, Verbose, Header Function,
+                                         Main window Criteria
+        :return: only_cols          -Specify Columns to open ---not currently available
+        :return: dtypes             -Specify Column/Data_Type's
+        :return: head_func_dtypes   -List of Example Column/Data_type's from header_func
+        """
         gen_rules = {}
         var_file = shelve.open('var_file')
         try:
@@ -82,6 +95,12 @@ class GenFuncs:
         return gen_rules, only_cols, dtypes, head_func_dtypes
 
     def update_entry(root, set_info, field_to_update, func=0):
+        """
+        Header button Function for updating main window input fields
+        :param set_info: Info to add to input field
+        :param field_to_update: Field to update
+        :param func: 1=Delete field/Add Info, 2=Delete field, Else=Add Info+Tab
+        """
         if func == 1:
             try:
                 field_to_update.delete(0, END)
@@ -95,6 +114,14 @@ class GenFuncs:
             field_to_update.insert(0, (str(set_info) + "\t"))
 
     def get_file_list(input_list, already_open_list, check_name=False, name_str=False, func=1):
+        """
+        For splitting list of files into excel list and csv/h5 list
+        :param already_open_list: List of files that are already opened
+        :param check_name: Bool Value for specifying leading characters of files you want to open In Directory
+        :param name_str: Leading characters specified for opening files in Directory
+        :param func: 1=Selected Files from Directory, 2=All files in selected Directory
+        :return: Excel list, CSV/H5 list
+        """
         new_list = []
         loc_answer = []
         if func == 1:
@@ -134,8 +161,12 @@ class GenFuncs:
                                     new_list.append((path + '/' + name))
                 return new_list, loc_answer
 
-    def exp_imp_func(file, edom, func):
-        if func == 1:
+    def exp_imp_func(file, edom):
+        """
+        For reading/writing output settings to txt file
+        :param edom: Mode: 'r'=Read, 'w'=Write
+        """
+        if edom == 'r':
             file_name = file
         else:
             file_name =file.name
@@ -143,7 +174,7 @@ class GenFuncs:
         setting_file = open(file_name, edom)
         var_file = shelve.open('var_file')
         rule_list = []
-        if func == 1:
+        if edom == 'r':
             space_dict = {}
             zero_dict = {}
             font_dict = {}
@@ -202,6 +233,10 @@ class GenFuncs:
         setting_file.close()
 
     def gen_set():
+        """
+        For loading Input settings from shelve file
+        :return: Dictionary with General input settings
+        """
         var_file = shelve.open('var_file')
         temp_dict = {}
         try:
@@ -231,7 +266,59 @@ class GenFuncs:
         var_file.close()
         return temp_dict
 
+    def get_out_opts(input_crit, search_col, out_type):
+        """
+        Get Output options from shelve file
+        :param input_crit: Search Column and Search Item(s)
+        :param search_col: Stripped Search Column
+        :param out_type: type of output - set to xlsx for a while
+        """
+        if not isinstance(Split_Entry.split(input_crit[1][1].get()), str):
+            if len(Split_Entry.split(input_crit[1][1].get())) > 1:
+                output_dir = search_col + "(" + str(
+                    len(Split_Entry.split(input_crit[1][1].get()))) + ")." + out_type
+            else:
+                output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
+        else:
+            output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
+
+        var_file = shelve.open('var_file')
+        try:
+            col_width = var_file['col_spacing']
+        except KeyError:
+            col_width = {}
+        try:
+            zeros_dict = var_file['lead_zeroes']
+        except KeyError:
+            zeros_dict = {}
+        try:
+            output_path = var_file['dir_location']
+            output_directory = os.path.join(output_path, output_dir)
+        except KeyError:
+            output_directory = output_dir
+        try:
+            font_rules = var_file['font_rules']
+        except KeyError:
+            font_rules = {}
+        try:
+            dec_rules = var_file['decimal_places']
+        except KeyError:
+            dec_rules = {}
+        try:
+            try:
+                dec_place = var_file['glob_dec_place'].strip()
+            except AttributeError:
+                dec_place = var_file['glob_dec_place']
+        except KeyError:
+            dec_place = False
+        var_file.close()
+        return output_directory, zeros_dict, font_rules, col_width, dec_rules, int(dec_place)
+
     def strip_dir(file_dir):
+        """
+        Strips the directory (windows) from the file name.
+        :return: File name without (windows) directory
+        """
         temp_list = file_dir.split('/')
         file_name = temp_list[(len(temp_list) - 1)]
         return file_name
