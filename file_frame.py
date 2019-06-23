@@ -1,3 +1,6 @@
+"""
+Class for storing File data and fill values (generated when optimizing data size).
+"""
 from SearchDF import SearchDataFrame
 from SplitEntry import Split_Entry
 class FileFrame:
@@ -10,7 +13,14 @@ class FileFrame:
         self.int_cols = []
 
     def search_col(self, col, values, zeros_dict):
-        real_list = Split_Entry.split(values)  # Splits main window Search Item(s) into list
+        """
+        Retrieve info from file by searching info under header.
+        :param col: Column to Search - copied from main window.
+        :param values: Search Item(s) - copied from main window.
+        :param zeros_dict: Dictionary from Output settings for columns that user wants x leading zeros.
+        :return: Returns a DataFrame with resulting columns from Search or None if no results.
+        """
+        real_list = Split_Entry.split(values)  # If able splits main window Search Item(s) into list
         if not isinstance(real_list, str):
             func_var = 2
         else:
@@ -40,7 +50,7 @@ class FileFrame:
                     except KeyError: # Catch if Rule Header wasn't in output results
                         pass
             return temp_output
-        except (TypeError, AttributeError):
-            print('flag1122334455')
+        except (TypeError, AttributeError): # Catch AttributeError from SearchDataFrame.copy when result is noneType
+            pass #print('No results in ' + self.name)
 
 
