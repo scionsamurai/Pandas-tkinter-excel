@@ -28,8 +28,8 @@ warnings.filterwarnings("error")
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 my_filetypes = [('all files', '.*'), ('CSV files', '.csv')]
-output_filetypes = [('HD5', '.h5')]#, ('CSV files', '.csv')]
-fields = 'Header To Search', '  Search Item(s)'
+output_filetypes = [('HD5', '.h5'), ('CSV files', '.csv')]
+fields = 'Header To Search', '   Search Item(s)   '
 li = []
 answer = []
 err_dial_pressed = False
@@ -63,9 +63,9 @@ def df_to_hdf():
                                          defaultextension='.h5')
    for key in answer:
        if ents2[answer.index(key)][2].get() == 1:
-           if NA_head_dict[key] != {}:
-               temp_df = li[answer.index(key)].copy()
-               for col, val in NA_head_dict[key].items():
+           if li[answer.index(key)].fill_val != {}:
+               temp_df = li[answer.index(key)].df.copy()
+               for col, val in li[answer.index(key)].fill_val.items():
                    temp_df[col].replace(val, np.NaN, inplace=True)
                new_output.append(temp_df)
    try:
@@ -77,6 +77,7 @@ def df_to_hdf():
    elif save_answer[-4:] == '.csv':
       new_new_output.to_csv(save_answer, index=False)
    print('saved')
+   del new_output
 
 def donothing():
     x=0
