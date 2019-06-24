@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import time
 from func_file import GenFuncs
-from RetrieveInput import Retrieve_Input
+from retrieve_info import Retrieve_R
 class OpenFile:
     def open_file(entry1, inp_options1):
         """
@@ -19,7 +19,7 @@ class OpenFile:
 
         def reduce_mem_usage(props):
             """
-            99% Arjan's original setup - if you're reading this Arjan - It was super easy to implement, Thank you!
+            99% Arjan's original code - if you're reading this Arjan - It was super easy to implement, Thank you!
             https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65
             :param props: DataFrame
             :return: Slimmed DataFrame, Fill_Val Dictionary
@@ -37,8 +37,8 @@ class OpenFile:
 
                     # make variables for Int, max and min
                     IsInt = False
-                    mx = props[col].max()
-                    mn = props[col].min()
+                    mx = props[col].max() # Add multiprocessing?
+                    mn = props[col].min() # Add multiprocessing?
 
                     # Integer does not support NA, therefore, NA needs to be filled
                     if not np.isfinite(props[col]).all():
@@ -195,7 +195,6 @@ class OpenFile:
                 search_col = inp_options[4]
                 real_l = inp_options[5]
                 filter_results = True
-                inp = Retrieve_Input()
             else:
                 filter_results = False
             new_field = GenFuncs.strip_dir(entry)
@@ -268,11 +267,12 @@ class OpenFile:
                     except AttributeError:  # 'int'object has no attribute 'strip'  < - files with int headers
                         pass
                     if filter_results:
-                        data = inp.result_frames(data, search_col, real_l, entry)
+                        data = Retrieve_R.esult_frames(data, search_col, real_l, entry)
                     if not data.empty:
                         data, NA_list = reduce_mem_usage(data)  # [0]
                     else:
                         print('no results in 1')
+                        NA_list=[]
                     return data, NA_list
                 except ValueError as e:
                     print(e)
@@ -301,12 +301,12 @@ class OpenFile:
                     except AttributeError:  # 'int'object has no attribute 'strip'  < - files with int headers
                         pass
                     if filter_results:
-                        data = inp.result_frames(data, search_col, real_l, entry)
+                        data = Retrieve_R.esult_frames(data, search_col, real_l, entry)
                     if not data.empty:
                         data, NA_list = reduce_mem_usage(data)  # [0]
                     else:
                         print('no results due to header func criteria')
-                        NA_list = {}
+                        NA_list = []
 
                     end = time.time()
                     print('-------' + str(end - start) + '-------')
@@ -334,7 +334,7 @@ class OpenFile:
             if len(inp_options1) > 5:
                 filter_results = True
             if filter_results:
-                data = inp.result_frames(data, search_col, real_l, entry1)
+                data = Retrieve_R.esult_frames(data, search_col, real_l, entry1)
             end = time.time()
             print('-------'+ str(end-start1) +'-------')
             return data, entry1, {}
