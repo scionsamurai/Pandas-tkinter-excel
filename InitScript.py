@@ -1,35 +1,46 @@
+"""
+File_Pal
+========
+
+Provides
+  1. Interface for Pandas Loading/Searching Excel/CSV files.
+  2. Fast and Easy searching of loaded Files.
+"""
+# Put together by James Ruikka
 from tkinter import *
 from tkinter import messagebox
 import multiprocessing
 from multiprocessing import Pool
 from tkinter import filedialog, simpledialog
-import os, warnings, tables, shelve
+import os, warnings, tables
 import pandas as pd
 import numpy as np
-from RetrieveInput import Retrieve_Input
+from file_frame import FileFrame
+from retrieve_info import Retrieve_R
 from functools import partial
-from Open_File import OpenFile
+from open_file_2 import OpenFile
 from Make_Forms import MakeForm
 from SplitEntry import Split_Entry
+from scrollbarClass import Scrollable
+from func_file import GenFuncs
 from PLogger import PrintLogger
 warnings.filterwarnings("error")
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 my_filetypes = [('all files', '.*'), ('CSV files', '.csv')]
-output_filetypes = [('HD5', '.h5')]#, ('CSV files', '.csv')]
-fields = 'Header To Search', '  Search Item(s)'
+output_filetypes = [('HD5', '.h5'), ('CSV files', '.csv')]
+fields = 'Header To Search', '   Search Item(s)   '
 li = []
-li_dict = {}
-NA_head_dict = {}
 answer = []
 err_dial_pressed = False
-LARGE_FONT= ("Verdana", 12)
-NORM_FONT = ("Helvetica", 10)
-SMALL_FONT = ("Helvetica", 8)
+x = 0
+x2 = 45
 
 def fetch(pandas_obj):
-   #save_var = messagebox.askokcancel("Title", "Do you want to save?")
-   #print(save_var)
+   """
+   Print first Files Memory Usage and file list.
+   :param pandas_obj: Input DataFrame.
+   """
    if isinstance(pandas_obj, pd.DataFrame):
        usage_b = pandas_obj.memory_usage(deep=True).sum()
    else:
@@ -38,37 +49,12 @@ def fetch(pandas_obj):
    print("{:03.2f} MB".format(usage_mb))
    print(pandas_obj.info(verbose=True))
    print('----header_W/filler_value : filler_value----')
-   print(NA_head_dict[answer[0]])
-   print(NA_head_dict)
-
-def changed(*args, widget=None):
-    global header, footer, ents, ents2, form1, form2
-    header.pack_forget()
-    header.destroy()
-    footer.pack_forget()
-    footer.destroy()
-    header = Frame(root)
-    footer = Frame(root)
-    if widget.get() > 1:
-        form1.make(header, widget.get(), 11)
-    else:
-        ents = form1.make(header, fields, 1)
-    ents2 = form2.make(footer, answer, 2)
-    #input_box1 = ents[0][1], input_box2 = ents[1][1]
-    form2.ents1 = ents[0][1]
-    form2.ents2 = ents[1][1]
-    header.pack()
-    footer.pack()
-
-def popupmsg(msg):
-   popup = Toplevel()
-   popup.title("!")
-   label = Label(popup, text=msg, font=NORM_FONT)
-   label.pack(side="top", fill="x", pady=10)
-   Button(popup, text="Okay", command=popup.destroy).pack()
-   popup.mainloop()
+   print(answer)
 
 def df_to_hdf():
+   """
+   Save Dataframes that are checked in main window to a single file.
+   """
    global ents2
    new_output = []
    save_answer = filedialog.asksaveasfilename(initialdir=os.getcwd(),
@@ -77,9 +63,9 @@ def df_to_hdf():
                                          defaultextension='.h5')
    for key in answer:
        if ents2[answer.index(key)][2].get() == 1:
-           if NA_head_dict[key] != {}:
-               temp_df = li[answer.index(key)].copy()
-               for col, val in NA_head_dict[key].items():
+           if li[answer.index(key)].fill_val != {}:
+               temp_df = li[answer.index(key)].df.copy()
+               for col, val in li[answer.index(key)].fill_val.items():
                    temp_df[col].replace(val, np.NaN, inplace=True)
                new_output.append(temp_df)
    try:
@@ -91,80 +77,65 @@ def df_to_hdf():
    elif save_answer[-4:] == '.csv':
       new_new_output.to_csv(save_answer, index=False)
    print('saved')
+   del new_output
 
 def donothing():
     x=0
     return x
 
 def close_files(toor):
-    global answer, footer, ents2, li, li_dict
-    close_var = messagebox.askyesno("File_Pal_1.0", "Do you want to close checked files?")
+    """
+    Close Dataframes that are checked in main window.
+    """
+    global answer, footer, ents2, li
+    close_var = messagebox.askyesno("File_Pal_1.1", "Do you want to close checked files?")
     if close_var:
         for file in answer[::-1]:
-            if ents2[li_dict[file]][2].get() == 1:
-                del li[li_dict[file]]
-                del li_dict[file]
+            ind = answer.index(file)
+            if ents2[ind][2].get() == 1:
+                del li[ind]
                 answer.remove(file)
-        for file in answer:
-            li_dict[file] = answer.index(file)
         footer.pack_forget()
         footer.destroy()
         footer = Frame(toor)
-        ents2 = form2.make(footer, answer, 2, NAdict=NA_head_dict)
+        ents2 = file_frame(footer, answer)
+        form2.answer = answer
         footer.pack()
 
 def open_files(func=1):
+    """
+    Select and Open Files.
+    :param func: ==1 Open Selected files from within a folder .
+    :param func: ==2 Open files within Selected Directory.
+    """
     global answer, footer,ents, ents2
-    del_list = []
+    inp_opts = GenFuncs.get_inp_opts()
     new_list = []
-    inp_opts = get_inp_opts()
     loc_answer = []
     if func==1:
         files_answer = filedialog.askopenfilenames(parent=footer,
                                                    initialdir=os.getcwd(),
                                                    title="Please select one or more files:",
                                                    filetypes=my_filetypes)
-        if len(files_answer) > 0:
-            try:
-                for file in files_answer:
-                    if file not in answer:
-                        if ((file[-4:])[:3] == 'xls') or (file[-4:] == '.xls'):
-                            if file[:2] != '~$':
-                                new_list.append(file)
-                        elif (file[-4:] == '.csv') or (file[-3:] == '.h5'):
-                            loc_answer.append(file)
-            except KeyboardInterrupt as e:
-                print(e)
+        try:
+            new_list, loc_answer = GenFuncs.get_file_list(files_answer,answer,func=1)
+        except TypeError:
+            new_list, loc_answer = [], []
     elif func==2:
-        check_name_temp = messagebox.askyesno("File_Pal_1.0", "Do you want to specify the first characters?")
+        check_name_temp = messagebox.askyesno("File_Pal_1.1", "Do you want to specify the first characters?")
         if check_name_temp:
-            name_str = simpledialog.askstring("File_Pal_1.0",
+            name_str = simpledialog.askstring("File_Pal_1.1",
                                               "First part of name for the files you want to open?",
                                               parent=root)
+        else:
+            name_str = ''
         directory = filedialog.askdirectory(parent=root,
                                             initialdir=os.getcwd(),
                                             title="Please select Directory:")
-        for path, subdirs, files in os.walk(directory):
-            for name in files:
-                if check_name_temp:
-                    if (name[-4:] == '.csv') or (name[-3:] == '.h5'):
-                            if name[:len(name_str)].lower() == name_str.lower():
-                                if name not in answer:
-                                    loc_answer.append((path + '/' + name))
-                    elif ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
-                        if name[:2] != '~$':
-                            if name[:len(name_str)] == name_str:
-                                if name not in answer:
-                                    new_list.append((path + '/' + name))
-
-                else:
-                    if (name[-4:] == '.csv') or (name[-3:] == '.h5'):
-                        if name not in answer:
-                            loc_answer.append((path + '/' + name))
-                    elif ((name[-4:])[:3] == 'xls') or (name[-4:] == '.xls'):
-                        if name[:2] != '~$':
-                            if name not in answer:
-                                new_list.append((path + '/' + name))
+        try:
+            new_list, loc_answer = GenFuncs.get_file_list(directory, answer, check_name_temp, name_str, func=2)
+        except TypeError:
+            new_list, loc_answer = [], []
     if (len(loc_answer) + len(new_list)) > 0:
         if inp_opts[0]['Main Win Criteria']:
             temp_opts = list(inp_opts)
@@ -176,16 +147,14 @@ def open_files(func=1):
         footer.pack_forget()
         footer.destroy()
         footer = Frame(root)
-        open = OpenFile()
         if (len(new_list) > 1) and (inp_opts[0]['CPU Cores'] > 1):
             pool = Pool(processes=inp_opts[0]['CPU Cores'])
-            df_list = pool.map(partial(open.open_file, inp_options=inp_opts), new_list)
+            df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts), new_list)
             for i in range(len(new_list)):
                 if not df_list[i][0].empty:
-                    li.append(df_list[i][0])
+                    frame_class = FileFrame(df_list[i][0], df_list[i][1], df_list[i][2])
+                    li.append(frame_class)
                     answer.append(df_list[i][1])
-                    li_dict[df_list[i][1]] = (len(li) - 1)
-                    NA_head_dict[df_list[i][1]] = df_list[i][2]
                 else:
                     print(df_list[i][1] + ' didn\'t have the certian input requirements.')
         else:
@@ -194,35 +163,36 @@ def open_files(func=1):
             for file in loc_answer:
                 if file not in answer:
                     try:
-                        dataframe = open.open_file(file, inp_opts)
+                        dataframe = OpenFile.open_file(file, inp_opts)
                         # #frame , location/key, (cols:NA_Fill vals
                         if not dataframe[0].empty:
-                            li.append(dataframe[0])
+                            frame_class = FileFrame(dataframe[0],dataframe[1], dataframe[2])
+                            li.append(frame_class)
                             answer.append(file)
-                            li_dict[file] = (len(li) - 1)
-                            NA_head_dict[dataframe[1]] = dataframe[2]
-                        else:
-                            temp_f = file.split('/')
-                            new_f = temp_f[(len(temp_f) - 1)]
-                            del_list.append(new_f)
                     except PermissionError as e:
                         print(e)
         except KeyboardInterrupt as e:
             print(e)
-        ents2 = form2.make(footer, answer, 2, NAdict=NA_head_dict)
+        ents2 = file_frame(footer, answer)
         footer.pack()
 
 def resort():
+    """
+    Refresh main window footer to have file and entry to start Resort.
+    """
     global answer, footer, ents2
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
-    ents3 = form2.make(footer, answer, 6)
+    ents3 = form2.make(footer, answer, 1,1)
     b1 = Button(footer, text='Save Order', command=(lambda e=root: resort_p2(ents3)))
     b1.pack(side=RIGHT, padx=5, pady=5)
     footer.pack()
 
 def resort_p2(ents3):
+    """
+    Refresh main window footer to have original layout with new order.
+    """
     global answer, footer, ents2, li, form2
     temp_list = []
     for i in ents3:
@@ -234,120 +204,230 @@ def resort_p2(ents3):
         temp2_list.append(i[0])
     temp_li = []
     for file in temp2_list:
-        temp_li.append(li[li_dict[file]])
+        ind = answer.index(file)
+        temp_li.append(li[ind])
     li = temp_li
+    del temp_li
     answer = temp2_list
-    form2.li_dict = li_dict
-    form2.li = li
-    for file in answer:
-        li_dict[file] = answer.index(file)
 
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
-    ents2 = form2.make(footer, answer, 2, NAdict=NA_head_dict)
+    ents2 = file_frame(footer, answer)
+    form2.answer = answer
     footer.pack()
 
 def sort_second(val):
     return val[1]
 
-def get_inp_opts():
-    gen_rules = {}
-    var_file = shelve.open('var_file')
-    try:
-        for gen_set in var_file['opt_gen_rules']:
-            if gen_set[0] == 'Delimiter':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    gen_rules['Delimiter'] = ','
-                else:
-                    gen_rules['Delimiter'] = gen_set[1]
-            elif gen_set[0] == 'Terminator':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    gen_rules['Terminator'] = None
-                else:
-                    gen_rules['Terminator'] = gen_set[1]
-            elif gen_set[0] == 'Header Line':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    gen_rules['Header Line'] = 0
-                else:
-                    gen_rules['Header Line'] = int(gen_set[1])
-            elif gen_set[0] == 'Index Column':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    gen_rules['Index Column'] = None
-                else:
-                    gen_rules['Index Column'] = int(gen_set[1])
-            elif gen_set[0] == 'Chunk':
-                if gen_set[1] == 'DV' or gen_set[1] == '':
-                    gen_rules['Chunk'] = None
-                else:
-                    gen_rules['Chunk'] = int(gen_set[1])
-            elif gen_set[0] == 'CPU Cores':
-                if gen_set[1] == 1 or gen_set[1] == '':
-                    gen_rules['CPU Cores'] = 1
-                else:
-                    gen_rules['CPU Cores'] = int(gen_set[1])
-            elif gen_set[0] == 'Verbose':
-                if gen_set[1] == 0:
-                    gen_rules['Verbose'] = False
-                else:
-                    gen_rules['Verbose'] = True
-            elif gen_set[0] == 'Header Func':
-                if gen_set[1] == 0:
-                    gen_rules['Header Func'] = False
-                else:
-                    gen_rules['Header Func'] = True
-            elif gen_set[0] == 'Main Win Criteria':
-                if gen_set[1] == 0:
-                    gen_rules['Main Win Criteria'] = False
-                else:
-                    gen_rules['Main Win Criteria'] = True
-    except KeyError:
-        gen_rules['Delimiter'] = ','
-        gen_rules['Terminator'] = None
-        gen_rules['Header Line'] = 0
-        gen_rules['Index Column'] = None
-        gen_rules['Chunk'] = None
-        gen_rules['CPU Cores'] = 1
-        gen_rules['Verbose'] = False
-        gen_rules['Header Func'] = False
-        gen_rules['Main Win Criteria'] = False
-    try:
-        only_cols = var_file['spec_col_rules']
-    except KeyError:
-        only_cols = None
-    try:
-        dtypes = var_file['col_dtypes']
-        for key, value in dtypes.items():
-            if value == 'Text':
-                dtypes[key] = str
-            elif value == 'Number':
-                dtypes[key] = float
-    except KeyError:
-        dtypes = None
-    try:
-        head_func_dtypes = var_file['head_func_types']
-    except KeyError:
-        head_func_dtypes = None
-    var_file.close()
-    return gen_rules,only_cols,dtypes,head_func_dtypes
-
 def err_dialog():
-    global err_dial_pressed
-    err_window = Toplevel()
-    err_window.title("Info Dialog")
-    t = Text(err_window)
-    t.pack()
-    p1 = PrintLogger(t)
-    t.see('end')
-    sys.stdout = p1
-    err_dial_pressed = True
+    """
+    Redirects print commands to output in newly generated Dialog window .
+    """
+    global err_dial_pressed, err_window
+    try:
+        win_exists_var = Toplevel.winfo_exists(err_window)
+    except NameError:
+        win_exists_var = 0
+    if win_exists_var != 1:
+        err_window = Toplevel()
+        err_window.title("Info Dialog")
+        t = Text(err_window)
+        t.pack()
+        p1 = PrintLogger(t)
+        t.see('end')
+        sys.stdout = p1
+        err_dial_pressed = True
+
+def file_frame(rootx, fields):
+    """
+    Generates footer Frame of main window with opened files listed.
+    :param rootx: Parent Frame.
+    :param fields: List of open files.
+    :return: List of Files with checkbutton Status.
+    """
+    lrow = Frame(rootx)
+    Label(lrow, text=' --- Files / Search Order --- ').pack()
+    lrow.pack()
+    entries = []
+    for field in fields:
+        temp_field = field.split('/')
+        new_field = 'Search:  ' + temp_field[(len(temp_field) - 1)]
+        vrow = Frame(rootx)
+        var1 = IntVar()
+        var1.set(1)
+        ent = Checkbutton(vrow, text=new_field, variable=var1)
+        bx = Button(vrow, text='Headers', command=(lambda e=field: header_button(key=e)))
+        vrow.pack(side=TOP, fill=X, padx=5, pady=2)
+        ent.pack(side=LEFT)
+        bx.pack(side=RIGHT)
+        entries.append((field, ent, var1))
+    return entries
+
+def page_func(list,p_frame,row_c, func, file, bod, set_info=None):
+    """
+    Creates Next/Last page buttons for Header windows if they are needed
+    :param list: Values list generated to Header window
+    :param p_frame: Parent Frame to generate buttons
+    :param row_c: Row number to apply buttons
+    :param func: Command/Function to Generate with each Button
+    :param file: Name of the file for generated header list
+    :param bod: Parent Frames Parent Frame - for refreshing window
+    :param set_info: Selected Column
+    :return: True if one of the buttons are generated - for updating the row count for next buttons
+    """
+    temp_count = False
+    if len(list[:x2]) / 45 > 1:
+        Button(p_frame, text='Previous Page',
+               command=(lambda e=file: func(e, bod, set_info, 'prev'))).grid(row=row_c, column=1, padx=1)
+        temp_count = True
+    if len(list) > len(list[:x2]):
+        Button(p_frame, text='Next Page',
+               command=(lambda e=file: func(e, bod, set_info, 'next'))).grid(row=row_c, column=2, padx=1)
+        temp_count = True
+    return temp_count
+
+def header_button(key, root2=None, set_info=None, func=0):
+    """
+    Generates a window with the headers from associated file listed.
+    :param key: File Name
+    :param root2: Parent Frame
+    :param set_info: Place holder variable to make input more uniform with header_values input for button function
+    :param func: Function to specify if generating Next or Last page
+    """
+    global opt_window, x, x2
+    ind = answer.index(key)
+    field = li[ind].df.columns.values
+    temp_field = key.split('/')
+    new_field = temp_field[(len(temp_field) - 1)]
+    if root2 is not None:
+        root2.destroy()
+    else:
+        try:
+            win_exists_var = Toplevel.winfo_exists(opt_window)
+        except NameError:
+            win_exists_var = 0
+        if win_exists_var != 1:
+            opt_window = Toplevel()
+            opt_window.title(new_field)
+        else:
+            opt_window.destroy()
+            opt_window = Toplevel()
+            opt_window.title(new_field)
+    body = Frame(opt_window)
+    scrollable_body = Scrollable(body)
+    body.pack()
+    if func == 'next':
+        x += 45
+        x2 += 45
+    elif func == 'prev':
+        x -= 45
+        x2 -= 45
+    else:
+        x = 0
+        x2 = 45
+    count = 0
+    for f in field[x:x2]:
+        count += 1
+        Button(scrollable_body, text=f,
+               command=(lambda e=f: GenFuncs.update_entry(opt_window, e, ents[0][1], 1))).grid(row=count, column=1,
+                                                                                     padx=1)
+        Button(scrollable_body, text='Result\'s within Column',
+               command=(lambda e=f: header_values(key, body, e))).grid(row=count, column=2, padx=1)
+    count += 1
+    temp_count = page_func(field,scrollable_body,count, header_button, key, body)
+    if temp_count:
+        count += 1
+    Button(scrollable_body, text="Exit", command=(lambda e=root2: e.destroy())).grid(column=2)
+    scrollable_body.update()
+    opt_window.mainloop()
+
+def header_values(key, root2, set_info, func=0):
+    """
+    Generates a window with the values from clicked header.
+    :param key: File Name
+    :param root2: Parent Frame
+    :param set_info: Column Name
+    :param func: Function to specify if generating Next or Last page
+    """
+    global opt_window, ents, ents2, x, x2
+    ents[0][1].delete(0, END)
+    ents[0][1].insert(0, (str(set_info)))
+    ents[1][1].delete(0, END)
+    root2.destroy()
+    body3 = Frame(opt_window)
+    temp_field = key.split('/')
+    new_field = temp_field[(len(temp_field) - 1)]
+    opt_window.title(new_field + ' / ' + str(set_info))
+    scrollable_body = Scrollable(body3)
+    body3.pack()
+    slimmed_list, count_dict = get_col_vals(key, set_info)
+    if func == 'next':
+        x += 45
+        x2 += 45
+    elif func == 'prev':
+        x -= 45
+        x2 -=45
+    else:
+        x = 0
+        x2 = 45
+    count = 0
+    for field in slimmed_list[x:x2]:
+        count += 1
+        ind = answer.index(key)
+        if set_info in li[ind].fill_val:
+            if field == li[ind].fill_val[set_info]:
+                new_field = 'Blank'
+            else:
+                new_field = field
+        else:
+            if pd.isnull(field):
+                new_field = 'Blank'
+            else:
+                new_field = field
+        Button(scrollable_body, text=new_field,
+               command=(lambda e=field: GenFuncs.update_entry(body, e, ents[1][1]))).grid(row=count, column=1,
+                                                                                      padx=1)
+        Label(scrollable_body, width=15,
+              text=("Total Results: " + str(count_dict[field]))).grid(row=count, column=2, pady=5, padx=1)
+
+    count += 1
+    temp_count = page_func(slimmed_list, scrollable_body, count, header_values, key, body3, set_info)
+    if temp_count:
+        count += 1
+    Button(scrollable_body, text="Reset Items",
+           command=(lambda e="nothing": GenFuncs.update_entry(opt_window, e, ents[1][1], 2))).grid(row=count, column=1, padx=1)
+    Button(scrollable_body, text="Exit",
+           command=(lambda e=opt_window: e.destroy())).grid(row=count, column=2, pady=5, padx=1)
+    scrollable_body.update()
+    opt_window.mainloop()
+
+def get_col_vals(key, col):
+    """
+    Creates List of values from within column with Dictionary indicating Value counts - List is returned in Descending
+    Count order.
+    :param key: File Name
+    :param col: Column Name
+    :return: Returns List (in Descending count order) and Dictionary with count
+    """
+    ind = answer.index(key)
+    col_val_list = li[ind].df[col].values
+    count_dict = {}
+    slimmed_list = []
+    for value in col_val_list:
+        try:
+            count_dict[value] += 1
+        except KeyError:
+            count_dict[value] = 1
+    for key1, value in sorted(count_dict.items(), key=lambda item: item[1])[::-1]:
+        slimmed_list.append(key1)
+    return slimmed_list, count_dict
 
 if __name__ == '__main__':
    multiprocessing.freeze_support()
    root = Tk()
-   root.title("File_Pal_1.0")
-   #root.iconbitmap(r'C:\Users\SsDamurai\Desktop\newP.ico')
-   global auto_open_box, ents,header, body, footer, form1, form2
+   root.title("File_Pal_1.1")
+   global auto_open_box, ents,header, body, footer, form2
 
    header = Frame(root)
    body = Frame(root)
@@ -355,23 +435,19 @@ if __name__ == '__main__':
    footer = Frame(root)
 
    answer = []
-   opt_form = MakeForm()
-   inp = Retrieve_Input()
-   form1 = MakeForm()
-   ents = form1.make(header, fields,1)
-   form2= MakeForm(data_frames=li,frame_keys=li_dict, input_box1=ents[0][1],input_box2=ents[1][1])
-   ents2 = form2.make(footer, answer,2, NAdict=NA_head_dict)
-   opt_form = MakeForm()
+   form2 = MakeForm()
+   ents = form2.make(header, fields,1)
+   form2= MakeForm(answer_in=answer)
+   ents2 = file_frame(footer, answer)
 
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root, tearoff=0)
-   #submenu.add_command(label="Input Options", command=(lambda e=ents: opt_form.make(func=7)))
    submenu.add_command(label="Select File", command=(lambda e=ents: open_files()))
    submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
    filemenu.add_command(label="Save Selected", command=(lambda e='no value': df_to_hdf()))
    filemenu.add_cascade(label="Open", menu=submenu)
-   filemenu.add_command(label="Options", command=(lambda e=ents: opt_form.make(func=7)))
+   filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
    filemenu.add_separator()
    filemenu.add_command(label="Exit", command=root.quit)
@@ -379,25 +455,19 @@ if __name__ == '__main__':
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=donothing())
    helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
-   helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0])))
+   helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
-   root.bind('<Return>', (lambda event, e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx', NA_head_dict)))
-   b4 = Button(body, text=' Search ',
-               command=(lambda e=ents: inp.row_frames(e, ents2, li, auto_open_box, 'xlsx', NA_head_dict)))
+   root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx', answer)))
+   b4 = Button(body, text=' Search ', command=(lambda e=ents: Retrieve_R.ow_frames(e, ents2, li,
+                                                                                   auto_open_box, 'xlsx', answer)))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
    auto_open_box.set(1)
    open_var = Checkbutton(body, text='Auto Open', variable=auto_open_box)
    open_var.pack(side=LEFT)
-   b5 = Button(body, text='Sort Files',
-               command=(lambda e=root: resort()))
+   b5 = Button(body, text='Sort Files',command=(lambda e=root: resort()))
    b5.pack(side=LEFT, padx=5, pady=5)
-   and_var = IntVar(body)
-   and_var.set(1)
-   a = OptionMenu(body,and_var, *range(1,5))
-   and_var.trace("w", partial(changed, widget=and_var))
-   #a.pack(side=RIGHT)
    body.pack()
    header.pack()
    footer.pack()
