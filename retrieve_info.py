@@ -6,7 +6,10 @@ from SearchDF import SearchDataFrame
 import pandas as pd
 import shelve, os, time
 import xlsxwriter
+from sys import platform
 from func_file import GenFuncs
+if platform == "linux" or platform == "linux2":
+    import subprocess, sys
 class Retrieve_R:
     def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list):
         """
@@ -68,7 +71,11 @@ class Retrieve_R:
 
                     writer_orig.save()
                 if auto_open_var.get() == 1:
-                    os.startfile(output_directory, 'open')
+                    if platform == "linux" or platform == "linux2":
+                        opener = "open" if sys.platform == "darwin" else "xdg-open"
+                        subprocess.call([opener, output_directory])
+                    else:
+                        os.startfile(output_directory, 'open')
                     end = time.time()
                     print('-------' + str(end - start) + '-------')
                 else:
