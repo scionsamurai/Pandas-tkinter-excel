@@ -164,7 +164,7 @@ class GenFuncs:
     def exp_imp_func(file, edom):
         """
         For reading/writing output settings to txt file
-        :param edom: Mode: 'r'=Read, 'w'=Write
+        :param edom:mode 'r'=Read, 'w'=Write
         """
         if edom == 'r':
             file_name = file
@@ -281,6 +281,7 @@ class GenFuncs:
                 output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
         else:
             output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
+        output_dir = output_dir.replace('\t','_')
 
         var_file = shelve.open('var_file')
         try:
