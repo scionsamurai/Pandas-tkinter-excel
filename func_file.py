@@ -266,22 +266,23 @@ class GenFuncs:
         var_file.close()
         return temp_dict
 
-    def get_out_opts(input_crit, search_col, out_type):
+    def get_out_opts(input_crit, search_col, out_type, func=0):
         """
         Get Output options from shelve file
         :param input_crit: Search Column and Search Item(s)
         :param search_col: Stripped Search Column
         :param out_type: type of output - set to xlsx for a while
         """
-        if not isinstance(Split_Entry.split(input_crit[1][1].get()), str):
-            if len(Split_Entry.split(input_crit[1][1].get())) > 1:
-                output_dir = search_col + "(" + str(
-                    len(Split_Entry.split(input_crit[1][1].get()))) + ")." + out_type
+        if func == 0:
+            if not isinstance(Split_Entry.split(input_crit[1][1].get()), str):
+                if len(Split_Entry.split(input_crit[1][1].get())) > 1:
+                    output_dir = search_col + "(" + str(
+                        len(Split_Entry.split(input_crit[1][1].get()))) + ")." + out_type
+                else:
+                    output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
             else:
                 output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
-        else:
-            output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
-        output_dir = output_dir.replace('\t','_')
+            output_dir = output_dir.replace('\t','_')
 
         var_file = shelve.open('var_file')
         try:
@@ -293,10 +294,17 @@ class GenFuncs:
         except KeyError:
             zeros_dict = {}
         try:
-            output_path = var_file['dir_location']
-            output_directory = os.path.join(output_path, output_dir)
+            if func == 0:
+                output_path = var_file['dir_location']
+                output_directory = os.path.join(output_path, output_dir)
+            else:
+                output_path = var_file['dir_location']
+                output_directory = os.path.join(output_path, "remove_dup_test.xlsx")
         except KeyError:
-            output_directory = output_dir
+            if func == 0:
+                output_directory = output_dir
+            else:
+                output_directory = "remove_dup_test.xlsx"
         try:
             font_rules = var_file['font_rules']
         except KeyError:
