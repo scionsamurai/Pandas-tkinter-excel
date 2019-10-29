@@ -89,13 +89,13 @@ def drop_dups():
         keep_all_Q = messagebox.askyesno("Drop Duplicates", "Keep all results?")
         if not keep_all_Q:
             for key, value in counter_dict.items():
-                output_file_Q = messagebox.askyesno("Drop Duplicates", "Keep rows from file " + key + "?")
+                output_file_Q = messagebox.askyesno("Drop Duplicates", "Keep rows from " + key + "?")
                 if not output_file_Q:
                     delete_list.append(counter_dict[key])
                     counter_dict[key] = []
         for list in delete_list:
-            new_new_output.drop(new_new_output.index[(new_new_output['Counter'] > list[0]) &
-                                                     (new_new_output['Counter'] < list[1])], inplace=True)
+            new_new_output.drop(new_new_output.index[(new_new_output['Counter'] >= list[0]) &
+                                                     (new_new_output['Counter'] <= list[1])], inplace=True)
         del new_new_output['Counter']
         Retrieve_R.ow_frames("", new_new_output, "", auto_open_box, 'xlsx', "", func=1)
 def df_to_hdf():
