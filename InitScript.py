@@ -11,7 +11,7 @@ from tkinter import *
 import multiprocessing
 from multiprocessing import Pool
 from tkinter import filedialog, simpledialog, messagebox
-import os, warnings, tables
+import os, warnings, tables, shelve
 import pandas as pd
 import numpy as np
 from file_frame import FileFrame
@@ -63,6 +63,12 @@ def drop_dups():
     else:
         first_last = "last"
     if initiateQ:
+        var_file = shelve.open('var_file')
+        try:
+            zeros_dict = var_file['lead_zeroes']
+        except KeyError:
+            zeros_dict = {}
+        var_file.close()
         for key in answer:
             if ents2[answer.index(key)][2].get() == 1:
                 if li[answer.index(key)].fill_val != {}:
@@ -72,13 +78,14 @@ def drop_dups():
                     temp_df['Counter'] = range(counter_count, len(temp_df) +counter_count)
                     counter_dict[key] = [counter_count,len(temp_df)+counter_count]
                     counter_count += len(temp_df)
-                    new_output.append(temp_df)
                 else:
-                    ph = li[answer.index(key)].df
+                    ph = li[answer.index(key)].df.copy()
                     ph['Counter'] = range(counter_count, len(ph) +counter_count)
                     counter_dict[key] = [counter_count, len(ph)+counter_count]
                     counter_count += len(ph)
-                    new_output.append(li[answer.index(key)].df)
+                    temp_df = li[answer.index(key)].df
+                GenFuncs.add_lead_0s(temp_df, zeros_dict)
+                new_output.append(temp_df)
         try:
             new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
         except ValueError:
@@ -98,6 +105,7 @@ def drop_dups():
                                                      (new_new_output['Counter'] <= list[1])], inplace=True)
         del new_new_output['Counter']
         Retrieve_R.ow_frames("", new_new_output, "", auto_open_box, 'xlsx', "", func=1)
+
 def df_to_hdf():
    """
    Save Dataframes that are checked in main window to a single file.
