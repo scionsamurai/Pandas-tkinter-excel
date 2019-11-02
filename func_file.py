@@ -5,6 +5,25 @@ import shelve, os, re
 from SplitEntry import Split_Entry
 from tkinter import END
 class GenFuncs:
+    def add_lead_0s(df, zeros_dict):
+        for key1, val in zeros_dict.items():  # Apply Leading Zeros rules to output
+            key = key1.strip()
+            try:
+                temp_str = '{0:0>' + str(val) + '}'
+                if str(df[key].dtype)[:3] == 'int' or str(df[key].dtype)[:3] == 'uin' or \
+                        str(df[key].dtype)[:5] == 'float':  # For Numbers
+                    df[key] = df[key].apply(lambda x: temp_str.format(x))
+                elif str(df[key].dtype)[:3] == 'cat':
+                    df[key] = df[key].astype('object')
+                    df[key] = df[key].str.zfill(int(val))
+                else:  # For Strings
+                    try:
+                        df[key] = df[key].str.zfill(int(val))
+                    except AttributeError:
+                        pass
+            except KeyError:  # Catch if Rule Header wasn't in output results
+                pass
+        return df
     def get_inp_opts():
         """
         Get Input options from shelve File
