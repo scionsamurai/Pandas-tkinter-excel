@@ -285,7 +285,7 @@ class GenFuncs:
         var_file.close()
         return temp_dict
 
-    def get_out_opts(input_crit, search_col, out_type, func=0):
+    def get_out_opts(input_crit, search_col, out_type, func=0, file_name=''):
         """
         Get Output options from shelve file
         :param input_crit: Search Column and Search Item(s)
@@ -318,7 +318,7 @@ class GenFuncs:
                 output_directory = os.path.join(output_path, output_dir)
             else:
                 output_path = var_file['dir_location']
-                output_directory = os.path.join(output_path, "remove_dup_test.xlsx")
+                output_directory = os.path.join(output_path, (file_name + "." + out_type))
         except KeyError:
             if func == 0:
                 output_directory = output_dir
