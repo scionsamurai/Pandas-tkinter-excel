@@ -14,6 +14,7 @@ from tkinter import filedialog, simpledialog, messagebox
 import os, warnings, tables, shelve
 import pandas as pd
 import numpy as np
+import importlib,pkgutil
 from file_frame import FileFrame
 from retrieve_info import Retrieve_R
 from functools import partial
@@ -29,11 +30,25 @@ warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 my_filetypes = [('all files', '.*'), ('CSV files', '.csv')]
 output_filetypes = [('HD5', '.h5'), ('CSV files', '.csv')]
 fields = 'Header To Search', '   Search Item(s)   '
+plugz = []
+plug_ind = []
 li = []
 answer = []
 err_dial_pressed = False
 x = 0
 x2 = 45
+
+def get_class_name(mod_name):
+    """Return the class name from a plugin name"""
+    output = ""
+
+    # Split on the _ and ignore the 1st word plugin
+    words = mod_name.split("_")[1:]
+
+    # Capitalise the first letter of each word and add to string
+    for word in words:
+        output += word.title()
+    return output
 
 def fetch(pandas_obj):
    """
@@ -50,93 +65,13 @@ def fetch(pandas_obj):
    print('----header_W/filler_value : filler_value----')
    print(answer)
 
-def drop_dups():
-    global auto_open_box
-    initiateQ = messagebox.askyesno("Drop Duplicates","Would you like to drop duplicates from the checked files?")
-    new_output = []
-    first_last_Q = messagebox.askyesno("Drop Duplicates","Would you like to keep the first occurrence?\n (Last occurrence kept if \"No\")")
-    counter_count = 0
-    delete_list = []
-    counter_dict = {}
-    if first_last_Q:
-        first_last = "first"
-    else:
-        first_last = "last"
-    if initiateQ:
-        var_file = shelve.open('var_file')
-        try:
-            zeros_dict = var_file['lead_zeroes']
-        except KeyError:
-            zeros_dict = {}
-        var_file.close()
-        for key in answer:
-            if ents2[answer.index(key)][2].get() == 1:
-                if li[answer.index(key)].fill_val != {}:
-                    temp_df = li[answer.index(key)].df.copy()
-                    for col, val in li[answer.index(key)].fill_val.items():
-                        temp_df[col].replace(val, np.NaN, inplace=True)
-                    temp_df['Counter'] = range(counter_count, len(temp_df) +counter_count)
-                    counter_dict[key] = [counter_count,len(temp_df)+counter_count]
-                    counter_count += len(temp_df)
-                else:
-                    ph = li[answer.index(key)].df.copy()
-                    ph['Counter'] = range(counter_count, len(ph) +counter_count)
-                    counter_dict[key] = [counter_count, len(ph)+counter_count]
-                    counter_count += len(ph)
-                    temp_df = li[answer.index(key)].df
-                GenFuncs.add_lead_0s(temp_df, zeros_dict)
-                new_output.append(temp_df)
-        try:
-            new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
-        except ValueError:
-            new_new_output = new_output
-        ask_headers = simpledialog.askstring("Drop Duplicates","What Columns would you like to check for duplicates?")
-        headers_list = Split_Entry.split(ask_headers)
-        new_new_output.drop_duplicates(headers_list, first_last,inplace=True)
-        keep_all_Q = messagebox.askyesno("Drop Duplicates", "Keep all results?")
-        if not keep_all_Q:
-            for key, value in counter_dict.items():
-                output_file_Q = messagebox.askyesno("Drop Duplicates", "Keep rows from " + key + "?")
-                if not output_file_Q:
-                    delete_list.append(counter_dict[key])
-                    counter_dict[key] = []
-        for list in delete_list:
-            new_new_output.drop(new_new_output.index[(new_new_output['Counter'] >= list[0]) &
-                                                     (new_new_output['Counter'] <= list[1])], inplace=True)
-        del new_new_output['Counter']
-        Retrieve_R.ow_frames("", new_new_output, "", auto_open_box, 'xlsx', "", func=1)
+def print_l():
+    x =open(os.path.join(p_license(globals()), "LICENSE")).read()
+    print(x)
 
-def df_to_hdf():
-   """
-   Save Dataframes that are checked in main window to a single file.
-   """
-   global ents2
-   new_output = []
-   save_answer = filedialog.asksaveasfilename(initialdir=os.getcwd(),
-                                         title="Please select save location and name:",
-                                         filetypes=output_filetypes,
-                                         defaultextension='.h5')
-   for key in answer:
-       if ents2[answer.index(key)][2].get() == 1:
-           if li[answer.index(key)].fill_val != {}:
-               temp_df = li[answer.index(key)].df.copy()
-               for col, val in li[answer.index(key)].fill_val.items():
-                   temp_df[col].replace(val, np.NaN, inplace=True)
-               new_output.append(temp_df)
-   try:
-       new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
-   except ValueError:
-       new_new_output = new_output
-   if save_answer[-3:] == '.h5':
-      new_new_output.to_hdf(save_answer, key='df', mode='w', format='table')
-   elif save_answer[-4:] == '.csv':
-      new_new_output.to_csv(save_answer, index=False)
-   print('saved')
-   del new_output
-
-def donothing():
-    x=0
-    return x
+def p_license(gdict):
+    filename = gdict["__file__"]
+    return os.path.dirname(filename)
 
 def close_files(toor):
     """
@@ -489,6 +424,23 @@ if __name__ == '__main__':
    row = Frame(root)
    footer = Frame(root)
 
+   path = os.path.join(os.path.dirname(__file__), "plugins")
+   modules = pkgutil.iter_modules(path=[path])
+
+   for loader, mod_name, ispkg in modules:
+       # Ensure that module isn't already loaded
+       if mod_name not in sys.modules:
+           # Import module
+           loaded_mod = __import__(path + "." + mod_name, fromlist=[mod_name])
+
+           # Load class from imported module
+           class_name = get_class_name(mod_name)
+           loaded_class = getattr(loaded_mod, class_name)
+
+           # Create an instance of the class
+           plugz.append([class_name, loaded_class()])
+           plug_ind.append(class_name)
+
    answer = []
    form2 = MakeForm()
    ents = form2.make(header, fields,1)
@@ -498,18 +450,21 @@ if __name__ == '__main__':
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root, tearoff=0)
+   submenu2 = Menu(root, tearoff=0)
    submenu.add_command(label="Select File", command=(lambda e=ents: open_files()))
    submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
-   filemenu.add_command(label="Save Selected", command=(lambda e='no value': df_to_hdf()))
    filemenu.add_cascade(label="Open", menu=submenu)
-   filemenu.add_command(label="Drop Duplicates", command=(lambda e='no value': drop_dups()))
+   filemenu.add_cascade(label="Plugins", menu=submenu2)
+   for name, instance in plugz:
+       ind = plug_ind.index(name)
+       submenu2.add_command(label=name, command=(lambda e=ind: plugz[e][1].run(li,answer,ents2,auto_open_box)))
    filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
    filemenu.add_separator()
    filemenu.add_command(label="Exit", command=root.quit)
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
-   helpmenu.add_command(label="License", command=donothing())
+   helpmenu.add_command(label="License", command=(lambda e=ents: print_l()))
    helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
    helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
@@ -522,6 +477,8 @@ if __name__ == '__main__':
    auto_open_box.set(1)
    open_var = Checkbutton(body, text='Auto Open', variable=auto_open_box)
    open_var.pack(side=LEFT)
+
+
    b5 = Button(body, text='Sort Files',command=(lambda e=root: resort()))
    b5.pack(side=LEFT, padx=5, pady=5)
    body.pack()
