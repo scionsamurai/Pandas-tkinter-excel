@@ -11,7 +11,7 @@ from func_file import GenFuncs
 if platform == "linux" or platform == "linux2":
     import subprocess, sys
 class Retrieve_R:
-    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list, func=0):
+    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list, func=0, file_name='default'):
         """
         Search Open Files by Input Criteria and output file
         :param input_criteria: Search Column and Search Item(s)
@@ -23,19 +23,25 @@ class Retrieve_R:
         """
         start = time.time()
         new_output = []  # Search results per DataFrame
-        if func == 0:
-
-            print('Searching:\n' + input_criteria[1][1].get())
-            search_column = (input_criteria[0][1].get()).strip()
-            output_directory, zeros_dict, font_type_size, \
-            col_width, dec_rules, dec_place = GenFuncs.get_out_opts(input_criteria, search_column,
-                                                                    output_type)  # Load Settings
+        if func == 0 or func == 3:
+            if func == 0:
+                print('Searching:\n' + input_criteria[1][1].get())
+                search_column = (input_criteria[0][1].get()).strip()
+                output_directory, zeros_dict, font_type_size, col_width, dec_rules,\
+                dec_place = GenFuncs.get_out_opts(input_criteria, search_column,output_type)  # Load Settings
+            elif func == 3:
+                output_directory, zeros_dict, font_type_size, col_width, dec_rules,\
+                dec_place = GenFuncs.get_out_opts(input_criteria, input_criteria[0],output_type, func=1, file_name=file_name)  # Load Settings
 
             for file in file_list:  # Iterate through DataFrames using i as index
                 ind = file_list.index(file)
-                if opened_files[ind][
-                    2].get() == 1:  # If tkinter checkbutton next to file name is checked -> Open the file
-                    results = data_frames[ind].search_col(search_column, input_criteria[1][1].get(), zeros_dict)
+                if opened_files[ind][2].get() == 1:  # If tkinter checkbutton next to file name is checked -> Open the file
+                    if func != 3:
+                        results = data_frames[ind].search_col(search_column, input_criteria[1][1].get(),
+                                                              zeros_dict) #<-need to move
+                    else:
+                        results = data_frames[ind].search_col(input_criteria[0], input_criteria[1],
+                                                              zeros_dict)
                     try:
                         if not results.empty:
                             new_output.append(results)
@@ -45,54 +51,53 @@ class Retrieve_R:
             new_new_output = opened_files
             output_type = 'xlsx'
             output_directory, zeros_dict, font_type_size, \
-            col_width, dec_rules, dec_place = GenFuncs.get_out_opts("", "",output_type, func=1)  # Load Settings
+            col_width, dec_rules, dec_place = GenFuncs.get_out_opts("", "",output_type, func=1, file_name=file_name)  # Load Settings
+
         if dec_place != False:
             dec_var = '%.' + str(dec_place) + 'f'
         else:
             dec_var = "%.2f"
         try:
-            try:
-                if func == 0:
-                    new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
-                if output_type == 'csv':
-                    new_new_output.to_csv(output_directory, index=False)
-                elif output_type == 'xlsx':
-                    writer_orig = pd.ExcelWriter(output_directory, engine='xlsxwriter')
-                    new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput', float_format=dec_var)
-                    workbook = writer_orig.book
-                    worksheet = writer_orig.sheets['SearchOutput']
-                    size = 10
-                    if font_type_size != {}: # Set Global Font Size / Type
-                        try:
-                            size = int(list(font_type_size.values())[0])
-                            workbook.formats[0].set_font_size(size)
-                            workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
-                        except IndexError:
-                            pass
-                    if len(col_width) > 0: # Set Column / Widths
-                        for rule in col_width.items():
-                            worksheet.set_column(rule[0], int(rule[1]))
-                    if len(dec_rules) > 0: # Set Column / Decimal places
-                        for key, val in dec_rules.items():
-                            num_format = workbook.add_format({'num_format': val})
-                            worksheet.set_column(key, size, num_format)
-
-
-                    writer_orig.save()
-                if auto_open_var.get() == 1:
-                    if platform == "linux" or platform == "linux2":
-                        opener = "open" if sys.platform == "darwin" else "xdg-open"
-                        subprocess.call([opener, output_directory])
-                    else:
-                        os.startfile(output_directory, 'open')
-                    end = time.time()
-                    print('-------' + str(end - start) + '-------')
+            if func == 0 or func == 3:
+                new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+            cols_index = []
+            for col in new_new_output:
+                cols_index.append(col)
+            if output_type == 'csv':
+                new_new_output.to_csv(output_directory, index=False)
+            elif output_type == 'xlsx':
+                writer_orig = pd.ExcelWriter(output_directory, engine='xlsxwriter')
+                new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput', float_format=dec_var)
+                workbook = writer_orig.book
+                worksheet = writer_orig.sheets['SearchOutput']
+                size = 10
+                if font_type_size != {}:  # Set Global Font Size / Type
+                    try:
+                        size = int(list(font_type_size.values())[0])
+                        workbook.formats[0].set_font_size(size)
+                        workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
+                    except IndexError:
+                        pass
+                if len(col_width) > 0:  # Set Column / Widths
+                    for rule in col_width.items():
+                        worksheet.set_column(rule[0], int(rule[1]))
+                if len(dec_rules) > 0:  # Set Column / Decimal places
+                    for key, val in dec_rules.items():
+                        num_format = workbook.add_format({'num_format': val})
+                        worksheet.set_column(key, size, num_format)
+                writer_orig.save()
+            if auto_open_var.get() == 1:
+                if platform == "linux" or platform == "linux2":
+                    opener = "open" if sys.platform == "darwin" else "xdg-open"
+                    subprocess.call([opener, output_directory])
                 else:
-                    end = time.time()
-                    print('-------' + str(end - start) + '-------')
-                    print('done')
-            except ValueError as e:
-                print(e) #"No Matches")
+                    os.startfile(output_directory, 'open')
+                end = time.time()
+                print('-------' + str(end - start) + '-------')
+            else:
+                end = time.time()
+                print('-------' + str(end - start) + '-------')
+                print('done')
 
         except PermissionError as e:
             print(str(e)[:28] + ": Close File Before Searching")
