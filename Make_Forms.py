@@ -3,7 +3,7 @@ Class to store tkinter Frames that don't read from df classes
 """
 from tkinter import *
 from scrollbarClass import Scrollable
-import shelve, os, sys, re
+import shelve, os, sys
 import pandas as pd
 from functools import partial
 from func_file import GenFuncs
@@ -191,7 +191,7 @@ class MakeForm:
             last_row.pack(fill=X)
         elif func == 6:
             """
-            Geneeral options List Frame
+            General options List Frame
             :param NAdict['label']: Label above list and below input field
             :param NAdict['but_name']: Button Label
             :param NAdict['list_opts']: Drop down list options
