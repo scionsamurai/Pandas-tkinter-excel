@@ -6,9 +6,12 @@ from SearchDF import SearchDataFrame
 import pandas as pd
 import shelve, os, time
 import xlsxwriter
+from sys import platform
 from func_file import GenFuncs
+if platform == "linux" or platform == "linux2":
+    import subprocess, sys
 class Retrieve_R:
-    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list):
+    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list, func=0):
         """
         Search Open Files by Input Criteria and output file
         :param input_criteria: Search Column and Search Item(s)
@@ -19,29 +22,38 @@ class Retrieve_R:
         :param file_list: Search Order List
         """
         start = time.time()
-        new_output = [] # Search results per DataFrame
+        new_output = []  # Search results per DataFrame
+        if func == 0:
 
-        print('Searching:\n' + input_criteria[1][1].get())
-        search_column = (input_criteria[0][1].get()).strip()
-        output_directory, zeros_dict, font_type_size, \
-        col_width, dec_rules, dec_place = GenFuncs.get_out_opts(input_criteria, search_column, output_type) # Load Settings
+            print('Searching:\n' + input_criteria[1][1].get())
+            search_column = (input_criteria[0][1].get()).strip()
+            output_directory, zeros_dict, font_type_size, \
+            col_width, dec_rules, dec_place = GenFuncs.get_out_opts(input_criteria, search_column,
+                                                                    output_type)  # Load Settings
+
+            for file in file_list:  # Iterate through DataFrames using i as index
+                ind = file_list.index(file)
+                if opened_files[ind][
+                    2].get() == 1:  # If tkinter checkbutton next to file name is checked -> Open the file
+                    results = data_frames[ind].search_col(search_column, input_criteria[1][1].get(), zeros_dict)
+                    try:
+                        if not results.empty:
+                            new_output.append(results)
+                    except AttributeError:
+                        pass
+        else:
+            new_new_output = opened_files
+            output_type = 'xlsx'
+            output_directory, zeros_dict, font_type_size, \
+            col_width, dec_rules, dec_place = GenFuncs.get_out_opts("", "",output_type, func=1)  # Load Settings
         if dec_place != False:
             dec_var = '%.' + str(dec_place) + 'f'
         else:
             dec_var = "%.2f"
-        for file in file_list: # Iterate through DataFrames using i as index
-            ind = file_list.index(file)
-            if opened_files[ind][2].get() == 1: # If tkinter checkbutton next to file name is checked -> Open the file
-                results = data_frames[ind].search_col(search_column, input_criteria[1][1].get(),zeros_dict)
-                try:
-                    if not results.empty:
-                        new_output.append(results)
-                except AttributeError:
-                    pass
-
         try:
             try:
-                new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+                if func == 0:
+                    new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
                 if output_type == 'csv':
                     new_new_output.to_csv(output_directory, index=False)
                 elif output_type == 'xlsx':
@@ -68,7 +80,11 @@ class Retrieve_R:
 
                     writer_orig.save()
                 if auto_open_var.get() == 1:
-                    os.startfile(output_directory, 'open')
+                    if platform == "linux" or platform == "linux2":
+                        opener = "open" if sys.platform == "darwin" else "xdg-open"
+                        subprocess.call([opener, output_directory])
+                    else:
+                        os.startfile(output_directory, 'open')
                     end = time.time()
                     print('-------' + str(end - start) + '-------')
                 else:

@@ -1,5 +1,8 @@
+"""
+For splitting input into list separated by \n and \t's
+"""
 class Split_Entry:
-    def split(entry):
+    def split(entry, func=0):
         def remove_dups(xlist):
             xlist = list(dict.fromkeys(xlist)) # Remove duplicates due to Dicts only able to have 1 key per item
             if '' in xlist:
@@ -14,6 +17,8 @@ class Split_Entry:
             if removeDups:
                 n_list = remove_dups(n_list) # Remove duplicates from list if set removeDupes=True
             return n_list
+        if func == 1:
+            return remove_dups(entry)
         if len(entry.split('\t')) > 1 and len(entry.split('\n')) > 1: # If list contains tabs and new lines
             t_split_l = entry.split('\t')
             split_l = []

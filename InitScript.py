@@ -8,11 +8,10 @@ Provides
 """
 # Put together by James Ruikka
 from tkinter import *
-from tkinter import messagebox
 import multiprocessing
 from multiprocessing import Pool
-from tkinter import filedialog, simpledialog
-import os, warnings, tables
+from tkinter import filedialog, simpledialog, messagebox
+import os, warnings, tables, shelve
 import pandas as pd
 import numpy as np
 from file_frame import FileFrame
@@ -50,6 +49,62 @@ def fetch(pandas_obj):
    print(pandas_obj.info(verbose=True))
    print('----header_W/filler_value : filler_value----')
    print(answer)
+
+def drop_dups():
+    global auto_open_box
+    initiateQ = messagebox.askyesno("Drop Duplicates","Would you like to drop duplicates from the checked files?")
+    new_output = []
+    first_last_Q = messagebox.askyesno("Drop Duplicates","Would you like to keep the first occurrence?\n (Last occurrence kept if \"No\")")
+    counter_count = 0
+    delete_list = []
+    counter_dict = {}
+    if first_last_Q:
+        first_last = "first"
+    else:
+        first_last = "last"
+    if initiateQ:
+        var_file = shelve.open('var_file')
+        try:
+            zeros_dict = var_file['lead_zeroes']
+        except KeyError:
+            zeros_dict = {}
+        var_file.close()
+        for key in answer:
+            if ents2[answer.index(key)][2].get() == 1:
+                if li[answer.index(key)].fill_val != {}:
+                    temp_df = li[answer.index(key)].df.copy()
+                    for col, val in li[answer.index(key)].fill_val.items():
+                        temp_df[col].replace(val, np.NaN, inplace=True)
+                    temp_df['Counter'] = range(counter_count, len(temp_df) +counter_count)
+                    counter_dict[key] = [counter_count,len(temp_df)+counter_count]
+                    counter_count += len(temp_df)
+                else:
+                    ph = li[answer.index(key)].df.copy()
+                    ph['Counter'] = range(counter_count, len(ph) +counter_count)
+                    counter_dict[key] = [counter_count, len(ph)+counter_count]
+                    counter_count += len(ph)
+                    temp_df = li[answer.index(key)].df
+                GenFuncs.add_lead_0s(temp_df, zeros_dict)
+                new_output.append(temp_df)
+        try:
+            new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+        except ValueError:
+            new_new_output = new_output
+        ask_headers = simpledialog.askstring("Drop Duplicates","What Columns would you like to check for duplicates?")
+        headers_list = Split_Entry.split(ask_headers)
+        new_new_output.drop_duplicates(headers_list, first_last,inplace=True)
+        keep_all_Q = messagebox.askyesno("Drop Duplicates", "Keep all results?")
+        if not keep_all_Q:
+            for key, value in counter_dict.items():
+                output_file_Q = messagebox.askyesno("Drop Duplicates", "Keep rows from " + key + "?")
+                if not output_file_Q:
+                    delete_list.append(counter_dict[key])
+                    counter_dict[key] = []
+        for list in delete_list:
+            new_new_output.drop(new_new_output.index[(new_new_output['Counter'] >= list[0]) &
+                                                     (new_new_output['Counter'] <= list[1])], inplace=True)
+        del new_new_output['Counter']
+        Retrieve_R.ow_frames("", new_new_output, "", auto_open_box, 'xlsx', "", func=1)
 
 def df_to_hdf():
    """
@@ -447,6 +502,7 @@ if __name__ == '__main__':
    submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
    filemenu.add_command(label="Save Selected", command=(lambda e='no value': df_to_hdf()))
    filemenu.add_cascade(label="Open", menu=submenu)
+   filemenu.add_command(label="Drop Duplicates", command=(lambda e='no value': drop_dups()))
    filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
    filemenu.add_separator()

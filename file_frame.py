@@ -19,14 +19,14 @@ class FileFrame:
         :param values: Search Item(s) - copied from main window.
         :param zeros_dict: Dictionary from Output settings for columns that user wants x leading zeros.
         :return: Returns a DataFrame with resulting columns from Search or None if no results.
-        """
+         #""
         real_list = Split_Entry.split(values)  # If able splits main window Search Item(s) into list
         if not isinstance(real_list, str):
             func_var = 2
         else:
-            func_var = 1
+            func_var = 1"""
         try:
-            temp_output = SearchDataFrame.criteria_by_column(col, real_list, self.name, func_var, self.df).copy()
+            temp_output = SearchDataFrame.criteria_by_column(col, values, self.name, self.df).copy()
             if not temp_output.empty:
                 for col in self.fill_val:  # Strip space saving Filler Values from output
                     dtype_var = temp_output[col].dtype
@@ -51,6 +51,6 @@ class FileFrame:
                         pass
             return temp_output
         except (TypeError, AttributeError): # Catch AttributeError from SearchDataFrame.copy when result is noneType
-            pass #print('No results in ' + self.name)
+            pass
 
 

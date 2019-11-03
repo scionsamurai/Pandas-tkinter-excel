@@ -5,6 +5,25 @@ import shelve, os, re
 from SplitEntry import Split_Entry
 from tkinter import END
 class GenFuncs:
+    def add_lead_0s(df, zeros_dict):
+        for key1, val in zeros_dict.items():  # Apply Leading Zeros rules to output
+            key = key1.strip()
+            try:
+                temp_str = '{0:0>' + str(val) + '}'
+                if str(df[key].dtype)[:3] == 'int' or str(df[key].dtype)[:3] == 'uin' or \
+                        str(df[key].dtype)[:5] == 'float':  # For Numbers
+                    df[key] = df[key].apply(lambda x: temp_str.format(x))
+                elif str(df[key].dtype)[:3] == 'cat':
+                    df[key] = df[key].astype('object')
+                    df[key] = df[key].str.zfill(int(val))
+                else:  # For Strings
+                    try:
+                        df[key] = df[key].str.zfill(int(val))
+                    except AttributeError:
+                        pass
+            except KeyError:  # Catch if Rule Header wasn't in output results
+                pass
+        return df
     def get_inp_opts():
         """
         Get Input options from shelve File
@@ -164,7 +183,7 @@ class GenFuncs:
     def exp_imp_func(file, edom):
         """
         For reading/writing output settings to txt file
-        :param edom: Mode: 'r'=Read, 'w'=Write
+        :param edom:mode 'r'=Read, 'w'=Write
         """
         if edom == 'r':
             file_name = file
@@ -266,21 +285,23 @@ class GenFuncs:
         var_file.close()
         return temp_dict
 
-    def get_out_opts(input_crit, search_col, out_type):
+    def get_out_opts(input_crit, search_col, out_type, func=0):
         """
         Get Output options from shelve file
         :param input_crit: Search Column and Search Item(s)
         :param search_col: Stripped Search Column
         :param out_type: type of output - set to xlsx for a while
         """
-        if not isinstance(Split_Entry.split(input_crit[1][1].get()), str):
-            if len(Split_Entry.split(input_crit[1][1].get())) > 1:
-                output_dir = search_col + "(" + str(
-                    len(Split_Entry.split(input_crit[1][1].get()))) + ")." + out_type
+        if func == 0:
+            if not isinstance(Split_Entry.split(input_crit[1][1].get()), str):
+                if len(Split_Entry.split(input_crit[1][1].get())) > 1:
+                    output_dir = search_col + "(" + str(
+                        len(Split_Entry.split(input_crit[1][1].get()))) + ")." + out_type
+                else:
+                    output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
             else:
                 output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
-        else:
-            output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
+            output_dir = output_dir.replace('\t','_')
 
         var_file = shelve.open('var_file')
         try:
@@ -292,10 +313,17 @@ class GenFuncs:
         except KeyError:
             zeros_dict = {}
         try:
-            output_path = var_file['dir_location']
-            output_directory = os.path.join(output_path, output_dir)
+            if func == 0:
+                output_path = var_file['dir_location']
+                output_directory = os.path.join(output_path, output_dir)
+            else:
+                output_path = var_file['dir_location']
+                output_directory = os.path.join(output_path, "remove_dup_test.xlsx")
         except KeyError:
-            output_directory = output_dir
+            if func == 0:
+                output_directory = output_dir
+            else:
+                output_directory = "remove_dup_test.xlsx"
         try:
             font_rules = var_file['font_rules']
         except KeyError:
