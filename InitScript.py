@@ -424,7 +424,7 @@ if __name__ == '__main__':
    row = Frame(root)
    footer = Frame(root)
 
-   path = os.path.join(os.path.dirname(__file__), "plugins")
+   path = "plugins"
    modules = pkgutil.iter_modules(path=[path])
 
    for loader, mod_name, ispkg in modules:
