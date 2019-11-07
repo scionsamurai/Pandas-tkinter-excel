@@ -8,6 +8,7 @@ import shelve, os, time
 import xlsxwriter
 from sys import platform
 from func_file import GenFuncs
+import tkinter as tk
 if platform == "linux" or platform == "linux2":
     import subprocess, sys
 class Retrieve_R:
@@ -60,6 +61,18 @@ class Retrieve_R:
         try:
             if func == 0 or func == 3:
                 new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+
+            var_file = shelve.open('var_file')
+            try:
+                plug_dicts = var_file['plug_lists']
+                var_file.close()
+                for key, value in plug_dicts.items():
+                    if value[0] == 1:
+                        new_new_output = value[1].run(new_new_output)
+            except KeyError:
+                var_file.close()
+                print('fail retrieve_info')
+
             cols_index = []
             for col in new_new_output:
                 cols_index.append(col)
