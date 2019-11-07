@@ -28,10 +28,10 @@ warnings.filterwarnings("error")
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 my_filetypes = [('all files', '.*'), ('CSV files', '.csv')]
-output_filetypes = [('HD5', '.h5'), ('CSV files', '.csv')]
 fields = 'Header To Search', '   Search Item(s)   '
 plugz = []
 plug_ind = []
+checkable_butts = []
 li = []
 answer = []
 err_dial_pressed = False
@@ -413,6 +413,39 @@ def get_col_vals(key, col):
         slimmed_list.append(key1)
     return slimmed_list, count_dict
 
+def get_plugz(path):
+    modules = pkgutil.iter_modules(path=[path])
+
+    for loader, mod_name, ispkg in modules:
+        # Ensure that module isn't already loaded
+        if mod_name not in sys.modules:
+            # Import module
+            loaded_mod = __import__(path + "." + mod_name, fromlist=[mod_name])
+
+            # Load class from imported module
+            class_name = get_class_name(mod_name)
+            loaded_class = getattr(loaded_mod, class_name)
+
+            # Create an instance of the class
+            if path == "plugins":
+                plugz.append([class_name, loaded_class()])
+                plug_ind.append(class_name)
+            elif path == "checkable_sets":
+                checkable_butts.append([class_name, loaded_class()])
+
+def changed(*args, var, plug_name, code):
+    update_plugs_list(var,plug_name,code)
+
+def update_plugs_list (var, plug_name, code):
+    var_file = shelve.open('var_file')
+    try:
+        plug_l = var_file['plug_lists']
+    except KeyError:
+        plug_l = {}
+    plug_l[plug_name] = [var.get(), code]
+    var_file['plug_lists'] = plug_l
+    var_file.close()
+
 if __name__ == '__main__':
    multiprocessing.freeze_support()
    root = Tk()
@@ -424,22 +457,8 @@ if __name__ == '__main__':
    row = Frame(root)
    footer = Frame(root)
 
-   path = "plugins"
-   modules = pkgutil.iter_modules(path=[path])
-
-   for loader, mod_name, ispkg in modules:
-       # Ensure that module isn't already loaded
-       if mod_name not in sys.modules:
-           # Import module
-           loaded_mod = __import__(path + "." + mod_name, fromlist=[mod_name])
-
-           # Load class from imported module
-           class_name = get_class_name(mod_name)
-           loaded_class = getattr(loaded_mod, class_name)
-
-           # Create an instance of the class
-           plugz.append([class_name, loaded_class()])
-           plug_ind.append(class_name)
+   get_plugz("plugins")
+   get_plugz("checkable_sets")
 
    answer = []
    form2 = MakeForm()
@@ -451,6 +470,7 @@ if __name__ == '__main__':
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root, tearoff=0)
    submenu2 = Menu(root, tearoff=0)
+   submenu3 = Menu(root, tearoff=0)
    submenu.add_command(label="Select File", command=(lambda e=ents: open_files()))
    submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
    filemenu.add_cascade(label="Open", menu=submenu)
@@ -458,7 +478,15 @@ if __name__ == '__main__':
    for name, instance in plugz:
        ind = plug_ind.index(name)
        submenu2.add_command(label=name, command=(lambda e=ind: plugz[e][1].run(li,answer,ents2,auto_open_box)))
-   filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
+   filemenu.add_cascade(label="Options", menu=submenu3)
+   for name, instance in checkable_butts:
+       temp_var = IntVar()
+       temp_var.set(0)
+       update_plugs_list(temp_var, name, instance)
+       temp_var.trace("w", partial(changed, var=temp_var, plug_name=name, code=instance))
+       submenu3.add_checkbutton(label=name, variable=temp_var)
+
+   submenu3.add_command(label="More >", command=(lambda e=ents: form2.make(func=2)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
    filemenu.add_separator()
    filemenu.add_command(label="Exit", command=root.quit)
