@@ -4,10 +4,13 @@ Per file Open functions
 import pandas as pd
 import numpy as np
 import time
+from tkinter.ttk import Progressbar
+from tkinter import HORIZONTAL, StringVar, Label, Frame, X
+import mmap
 from func_file import GenFuncs
 from retrieve_info import Retrieve_R
 class OpenFile:
-    def open_file(entry1, inp_options1):
+    def open_file(entry1, inp_options1, root):
         """
         :param entry1: Directory/FileName
         :param inp_options1: Input options
@@ -16,6 +19,54 @@ class OpenFile:
         new_field = GenFuncs.strip_dir(entry1)
         print('Opening ' + new_field)
         start1 = time.time()
+        progress = Progressbar(root, orient=HORIZONTAL, length=100, mode='determinate')
+        progress.pack(fill=X)
+        temp_df = []
+        v = StringVar()
+        Label(root, text=new_field).pack()
+        Label(root, textvariable=v).pack()
+
+        def get_num_lines(file_path):
+            fp = open(file_path, "r+")
+            buf = mmap.mmap(fp.fileno(), 0)
+            lines = 0
+            while buf.readline():
+                lines += 1
+            return lines
+
+        total_lines = get_num_lines(entry1)
+
+        def readExcel(file_name, nrows, func=0, sets=[], line_count=0):
+            xl = pd.ExcelFile(file_name)
+            sheetname = xl.sheet_names[0]
+            df_header = pd.read_excel(file_name, sheet_name=sheetname,nrows=1)
+            chunks = []
+            i_chunk = 0
+            skiprows = 1
+            while True:
+                if func == 0:
+                    df_chunk = pd.read_excel(file_name,sheet_name=sheetname,header=sets[1], index_col=sets[3],
+                             usecols=sets[4], dtype=sets[5], skiprows=skiprows, nrows=nrows, verbose=sets[7])
+                else:
+                    df_chunk = pd.read_excel(file_name,sheet_name=sheetname,header=sets[1], names=sets[2],
+                                             index_col=sets[3], dtype=sets[5], skiprows=skiprows, nrows=nrows,
+                                             verbose=sets[7])
+                skiprows += nrows
+                if not df_chunk.shape[0]:
+                    break
+                else:
+                    chunks.append(df_chunk)
+                i_chunk += 1
+                line_count += df_chunk.shape[0]
+                progress['value'] = (line_count / total_lines) * 100
+                v.set(str(line_count) + " : " + str(total_lines))
+                root.update_idletasks()
+            df_chunks = pd.concat(chunks,sort=False)
+            columns = {i: col for i, col in enumerate(df_header.columns.tolist())}
+            df_chunks.rename(columns=columns, inplace=True)
+            dfx = pd.concat([df_header, df_chunks], sort=False)
+
+            return dfx
 
         def reduce_mem_usage(props):
             """
@@ -187,6 +238,7 @@ class OpenFile:
             skip_cols = 0
             name = None
             var = verbose
+            line_count = 0
 
             only_cols = inp_options[1]
             dtypes = inp_options[2]
@@ -251,17 +303,28 @@ class OpenFile:
                 try:
                     header_line = skip_rows
                     if func == 0:
-                        data = pd.read_csv(entry, sep=delimiter, header=header_line, index_col=index_col,
-                                           usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
+                        for gm_chunk in pd.read_csv(entry, sep=delimiter, chunksize=chunk, header=header_line,
+                                           index_col=index_col,usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
+                                           lineterminator=terminator, low_memory=False):
+                            line_count += gm_chunk.shape[0]
+                            temp_df.append(gm_chunk)
+                            progress['value'] = (line_count/total_lines)*100
+                            v.set(str(line_count) + " : " + str(total_lines))
+                            root.update_idletasks()
+                        data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 1:
-                        data = pd.read_csv(entry, header=header_line, chunksize=chunk, index_col=index_col,
+                        for gm_chunk in pd.read_csv(entry, header=header_line, chunksize=chunk, index_col=index_col,
                                            usecols=new_only_cols, dtype=new_dtypes, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
+                                           lineterminator=terminator, low_memory=False):
+                            line_count += gm_chunk.shape[0]
+                            temp_df.append(gm_chunk)
+                            progress['value'] = (line_count/total_lines)*100
+                            v.set(str(line_count) + " : " + str(total_lines))
+                            root.update_idletasks()
+                        data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 2:
-                        data = pd.read_excel(entry, sheet_name=0, header=header_line, index_col=index_col,
-                                             usecols=new_only_cols, dtype=new_dtypes, skiprows=skip_rows,
-                                             verbose=verbose)
+                        settings = [entry, header_line, name, index_col, new_only_cols, new_dtypes, skip_rows, verbose, line_count]
+                        data = readExcel(entry,chunk,0,settings)
                     try:
                         data.columns = [col.strip() for col in data.columns]
                     except AttributeError:  # 'int'object has no attribute 'strip'  < - files with int headers
@@ -281,16 +344,28 @@ class OpenFile:
                     if name != None:
                         header_line = 0
                     if func == 0:
-                        data = pd.read_csv(entry, sep=delimiter, header=header_line, names=name, index_col=index_col,
-                                           dtype=new_dtypes, skiprows=skip_rows, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
+                        for gm_chunk in pd.read_csv(entry, sep=delimiter, header=header_line, names=name,chunksize=chunk,
+                                           index_col=index_col,dtype=new_dtypes, skiprows=skip_rows, verbose=verbose,
+                                           lineterminator=terminator, low_memory=False):
+                            line_count += gm_chunk.shape[0]
+                            temp_df.append(gm_chunk)
+                            progress['value'] = (line_count/total_lines)*100
+                            v.set(str(line_count) + " : " + str(total_lines))
+                            root.update_idletasks()
+                        data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 1:
-                        data = pd.read_csv(entry, header=header_line, names=name, chunksize=chunk, index_col=index_col,
+                        for gm_chunk in pd.read_csv(entry, header=header_line, names=name, chunksize=chunk, index_col=index_col,
                                            dtype=new_dtypes, skiprows=skip_rows, verbose=verbose,
-                                           lineterminator=terminator, low_memory=False)
+                                           lineterminator=terminator, low_memory=False):
+                            line_count += gm_chunk.shape[0]
+                            temp_df.append(gm_chunk)
+                            progress['value'] = (line_count/total_lines)*100
+                            v.set(str(line_count) + " : " + str(total_lines))
+                            root.update_idletasks()
+                        data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 2:
-                        data = pd.read_excel(entry, sheet_name=0, header=header_line, names=name, index_col=index_col,
-                                             dtype=new_dtypes, skiprows=skip_rows, verbose=verbose)
+                        settings = [entry, header_line, name, index_col, new_only_cols, new_dtypes, skip_rows, verbose, line_count]
+                        data = readExcel(entry, chunk, 1, settings)
                     if skip_cols > 0:
                         for i in range(skip_cols):
                             data.drop(data.columns[1], axis=1)
