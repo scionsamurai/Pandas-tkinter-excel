@@ -1,6 +1,9 @@
 import pandas as pd
 from tkinter import simpledialog, messagebox
 from SplitEntry import Split_Entry
+from dupes_popup import DupesPopup
+from tkinter import Toplevel
+import shelve
 class DropDupes:
     def run(self,df):
         """
@@ -8,13 +11,28 @@ class DropDupes:
         :param df: Input dataframe
         :return: updated dataframe
         """
-        first_last_Q = messagebox.askyesno("Drop Duplicates",
-                                           "Would you like to keep the first occurrence?\n (Last occurrence kept if \"No\")")
-        if first_last_Q:
-            first_last = "first"
+
+        var_file = shelve.open('var_file')
+        plug_l = var_file['plug_lists']
+        dupes_plug = plug_l['DropDupes']
+        var = dupes_plug[0]
+        code = dupes_plug[1]
+        save_set = dupes_plug[2]
+        if save_set == False:
+            popup_win = DupesPopup()
+            usr_inp = (popup_win.output1,popup_win.output2, popup_win.save)
+            headers_list = Split_Entry.split(usr_inp[0])
+            df.drop_duplicates(headers_list, usr_inp[1], inplace=True)
+            print(usr_inp[2])
+            if usr_inp[2]:
+                save_set = [usr_inp[1], headers_list]
+                plug_l['DropDupes'] = [var, code, save_set]
+                var_file['plug_lists'] = plug_l
+            else:
+                plug_l['DropDupes'] = [var, code, False]
+                var_file['plug_lists'] = plug_l
         else:
-            first_last = "last"
-        ask_headers = simpledialog.askstring("Drop Duplicates", "What Columns would you like to check for duplicates?")
-        headers_list = Split_Entry.split(ask_headers)
-        df.drop_duplicates(headers_list, first_last, inplace=True)
+            df.drop_duplicates(save_set[1], save_set[0], inplace=True)
+
+        var_file.close()
         return df
