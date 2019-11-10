@@ -133,13 +133,9 @@ def open_files(func=1):
             real_list = Split_Entry.split(ents[1][1].get())
             temp_opts.extend((search_column, real_list))
             inp_opts = temp_opts
-
-        footer.pack_forget()
-        footer.destroy()
-        footer = Frame(root)
         if (len(new_list) > 1) and (inp_opts[0]['CPU Cores'] > 1):
             pool = Pool(processes=inp_opts[0]['CPU Cores'])
-            df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts), new_list)
+            df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts, root=footer), new_list)
             for i in range(len(new_list)):
                 if not df_list[i][0].empty:
                     frame_class = FileFrame(df_list[i][0], df_list[i][1], df_list[i][2])
@@ -153,18 +149,22 @@ def open_files(func=1):
             for file in loc_answer:
                 if file not in answer:
                     try:
-                        dataframe = OpenFile.open_file(file, inp_opts)
+                        dataframe = OpenFile.open_file(file, inp_opts, footer)
                         # #frame , location/key, (cols:NA_Fill vals
                         if not dataframe[0].empty:
                             frame_class = FileFrame(dataframe[0],dataframe[1], dataframe[2])
                             li.append(frame_class)
                             answer.append(file)
+
+                        footer.pack_forget()
+                        footer.destroy()
+                        footer = Frame(root)
+                        footer.pack()
                     except PermissionError as e:
                         print(e)
         except KeyboardInterrupt as e:
             print(e)
         ents2 = file_frame(footer, answer)
-        footer.pack()
 
 def resort():
     """
@@ -436,13 +436,13 @@ def get_plugz(path):
 def changed(*args, var, plug_name, code):
     update_plugs_list(var,plug_name,code)
 
-def update_plugs_list (var, plug_name, code):
+def update_plugs_list (var, plug_name, code, save_set=False):
     var_file = shelve.open('var_file')
     try:
         plug_l = var_file['plug_lists']
     except KeyError:
         plug_l = {}
-    plug_l[plug_name] = [var.get(), code]
+    plug_l[plug_name] = [var.get(), code, save_set]
     var_file['plug_lists'] = plug_l
     var_file.close()
 
