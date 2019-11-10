@@ -60,7 +60,7 @@ class GenFuncs:
                         gen_rules['Index Column'] = int(gen_set[1])
                 elif gen_set[0] == 'Chunk':
                     if gen_set[1] == 'DV' or gen_set[1] == '':
-                        gen_rules['Chunk'] = None
+                        gen_rules['Chunk'] = 10000
                     else:
                         gen_rules['Chunk'] = int(gen_set[1])
                 elif gen_set[0] == 'CPU Cores':
@@ -88,7 +88,7 @@ class GenFuncs:
             gen_rules['Terminator'] = None
             gen_rules['Header Line'] = 0
             gen_rules['Index Column'] = None
-            gen_rules['Chunk'] = None
+            gen_rules['Chunk'] = 10000
             gen_rules['CPU Cores'] = 1
             gen_rules['Verbose'] = False
             gen_rules['Header Func'] = False
