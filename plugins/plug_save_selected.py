@@ -8,7 +8,7 @@ class SaveSelected:
         self.fnl = []
         self.cl = []
         self.ap = 0
-    def run(self, opened_files, file_name_list, checked_list, auto_open):
+    def run(self, opened_files, file_name_list, checked_list, auto_open, root):
         self.of = opened_files
         self.fnl = file_name_list
         self.cl = checked_list
