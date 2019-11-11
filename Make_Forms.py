@@ -227,6 +227,91 @@ class MakeForm:
             var_file.close()
             self.footer.pack()
             return 'usecols', ent
+        elif func == 7:
+            """
+                Generates footer Frame of main window with opened files listed.
+                :param rootx: Parent Frame.
+                :param fields: List of open files.
+                :return: List of Files with checkbutton Status.
+                """
+            lrow = Frame(root)
+            Label(lrow, text=' --- Files / Search Order --- ').pack()
+            lrow.pack()
+            entries = []
+            for field in fields:
+                temp_field = field.split('/')
+                new_field = 'Search:  ' + temp_field[(len(temp_field) - 1)]
+                vrow = Frame(root)
+                var1 = IntVar()
+                var1.set(1)
+                ent = Checkbutton(vrow, text=new_field, variable=var1)
+                bx = Button(vrow, text='Headers', command=(lambda e=field: header_button(key=e)))
+                vrow.pack(side=TOP, fill=X, padx=5, pady=2)
+                ent.pack(side=LEFT)
+                bx.pack(side=RIGHT)
+                entries.append((field, ent, var1))
+            return entries
+        elif func == 8:
+            var_file = shelve.open('var_file')
+            try:
+                profs = var_file['Profilez']
+            except KeyError:
+                profs = {}
+            var_file.close()
+
+            def save_prof(name):
+                global opt_footer, inp_ents
+                var_file = shelve.open('var_file')
+                space_dict = var_file['col_spacing']
+                zero_dict = var_file['lead_zeroes']
+                font_dict = var_file['font_rules']
+                dec_dict = var_file['decimal_places']
+                glob_dec = var_file['glob_dec_place']
+                profs[name.get()] = [space_dict, zero_dict, font_dict, dec_dict, glob_dec, name.get()]
+                var_file['Profilez'] = profs
+                var_file.close()
+                opt_footer.pack_forget()
+                opt_footer.destroy()
+                opt_footer = Frame(opt_window)
+                opt_footer.pack()
+                inp_ents = self.make(opt_footer, func=8)
+
+            def imp_prof(name):
+                var_file = shelve.open('var_file')
+                loadin_sets = profs[name]
+                var_file['col_spacing'] = loadin_sets[0]
+                var_file['lead_zeroes'] = loadin_sets[1]
+                var_file['font_rules'] = loadin_sets[2]
+                var_file['decimal_places'] = loadin_sets[3]
+                var_file['glob_dec_place'] = loadin_sets[4]
+                var_file.close()
+
+            def del_prof(name):
+                global opt_footer, inp_ents
+                var_file = shelve.open('var_file')
+                temp_profs = var_file['Profilez']
+                del temp_profs[name]
+                var_file['Profilez'] = temp_profs
+                var_file.close()
+                opt_footer.pack_forget()
+                opt_footer.destroy()
+                opt_footer = Frame(opt_window)
+                opt_footer.pack()
+                inp_ents = self.make(opt_footer, func=8)
+
+            for p, v in profs.items():
+                rowx = Frame(opt_footer)
+                rowx.pack()
+                import_settings = Button(rowx, text=v[5], command=(lambda e='dont get lambda': imp_prof(v[5])))
+                import_settings.pack(side=LEFT)
+                del_but = Button(rowx, text="Delete", command=(lambda e=v[5]: del_prof(e)))
+                del_but.pack(side=LEFT)
+            brow = Frame(opt_footer)
+            brow.pack()
+            lbut = Button(brow, text="Save Profile", command=(lambda e='dont get lambda': save_prof(ent2)))
+            ent2 = Entry(brow, width=15)
+            lbut.pack(side=LEFT)
+            ent2.pack(side=LEFT)
 
     def opt_rule(self, func=1):
         """
@@ -268,7 +353,8 @@ class MakeForm:
             supply_dict['change_func'] = self.changed_2
             inp_ents = self.make(footer_1, func=4, NAdict=supply_dict)
         elif widget.get() == 'Search Output':
-            supply_dict['in_list'] = 'General', 'Column Lead Zeros', 'Column Spacing', 'Round Decimal Place'
+            supply_dict['in_list'] = 'Profiles', 'General', 'Column Lead Zeros', 'Column Spacing',\
+                                     'Round Decimal Place'
             supply_dict['change_func'] = self.changed_3
             inp_ents = self.make(footer_1, func=4, NAdict=supply_dict)
         footer_1.pack()
@@ -311,7 +397,9 @@ class MakeForm:
         opt_footer.pack_forget()
         opt_footer.destroy()
         opt_footer = Frame(opt_window)
-        if widget.get() == 'General':
+        if widget.get() == 'Profiles':
+            inp_ents = self.make(opt_footer, func=8)
+        elif widget.get() == 'General':
             inp_ents = self.make(opt_footer, func=5)
         elif widget.get() == 'Column Lead Zeros':
             supply_dict = {}
