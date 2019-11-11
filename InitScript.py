@@ -14,6 +14,7 @@ from tkinter import filedialog, simpledialog, messagebox
 import os, warnings, tables, shelve
 import pandas as pd
 import numpy as np
+from footer_frame import MakeFooter
 import importlib,pkgutil
 from file_frame import FileFrame
 from retrieve_info import Retrieve_R
@@ -21,7 +22,6 @@ from functools import partial
 from open_file_2 import OpenFile
 from Make_Forms import MakeForm
 from SplitEntry import Split_Entry
-from scrollbarClass import Scrollable
 from func_file import GenFuncs
 from PLogger import PrintLogger
 warnings.filterwarnings("error")
@@ -35,8 +35,6 @@ checkable_butts = []
 li = []
 answer = []
 err_dial_pressed = False
-x = 0
-x2 = 45
 
 def get_class_name(mod_name):
     """Return the class name from a plugin name"""
@@ -88,7 +86,7 @@ def close_files(toor):
         footer.pack_forget()
         footer.destroy()
         footer = Frame(toor)
-        ents2 = file_frame(footer, answer)
+        ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
         form2.answer = answer
         footer.pack()
 
@@ -164,7 +162,7 @@ def open_files(func=1):
                         print(e)
         except KeyboardInterrupt as e:
             print(e)
-        ents2 = file_frame(footer, answer)
+        ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
 
 def resort():
     """
@@ -203,7 +201,7 @@ def resort_p2(ents3):
     footer.pack_forget()
     footer.destroy()
     footer = Frame(root)
-    ents2 = file_frame(footer, answer)
+    ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
     form2.answer = answer
     footer.pack()
 
@@ -228,190 +226,6 @@ def err_dialog():
         t.see('end')
         sys.stdout = p1
         err_dial_pressed = True
-
-def file_frame(rootx, fields):
-    """
-    Generates footer Frame of main window with opened files listed.
-    :param rootx: Parent Frame.
-    :param fields: List of open files.
-    :return: List of Files with checkbutton Status.
-    """
-    lrow = Frame(rootx)
-    Label(lrow, text=' --- Files / Search Order --- ').pack()
-    lrow.pack()
-    entries = []
-    for field in fields:
-        temp_field = field.split('/')
-        new_field = 'Search:  ' + temp_field[(len(temp_field) - 1)]
-        vrow = Frame(rootx)
-        var1 = IntVar()
-        var1.set(1)
-        ent = Checkbutton(vrow, text=new_field, variable=var1)
-        bx = Button(vrow, text='Headers', command=(lambda e=field: header_button(key=e)))
-        vrow.pack(side=TOP, fill=X, padx=5, pady=2)
-        ent.pack(side=LEFT)
-        bx.pack(side=RIGHT)
-        entries.append((field, ent, var1))
-    return entries
-
-def page_func(list,p_frame,row_c, func, file, bod, set_info=None):
-    """
-    Creates Next/Last page buttons for Header windows if they are needed
-    :param list: Values list generated to Header window
-    :param p_frame: Parent Frame to generate buttons
-    :param row_c: Row number to apply buttons
-    :param func: Command/Function to Generate with each Button
-    :param file: Name of the file for generated header list
-    :param bod: Parent Frames Parent Frame - for refreshing window
-    :param set_info: Selected Column
-    :return: True if one of the buttons are generated - for updating the row count for next buttons
-    """
-    temp_count = False
-    if len(list[:x2]) / 45 > 1:
-        Button(p_frame, text='Previous Page',
-               command=(lambda e=file: func(e, bod, set_info, 'prev'))).grid(row=row_c, column=1, padx=1)
-        temp_count = True
-    if len(list) > len(list[:x2]):
-        Button(p_frame, text='Next Page',
-               command=(lambda e=file: func(e, bod, set_info, 'next'))).grid(row=row_c, column=2, padx=1)
-        temp_count = True
-    return temp_count
-
-def header_button(key, root2=None, set_info=None, func=0):
-    """
-    Generates a window with the headers from associated file listed.
-    :param key: File Name
-    :param root2: Parent Frame
-    :param set_info: Place holder variable to make input more uniform with header_values input for button function
-    :param func: Function to specify if generating Next or Last page
-    """
-    global opt_window, x, x2
-    ind = answer.index(key)
-    field = li[ind].df.columns.values
-    temp_field = key.split('/')
-    new_field = temp_field[(len(temp_field) - 1)]
-    if root2 is not None:
-        root2.destroy()
-    else:
-        try:
-            win_exists_var = Toplevel.winfo_exists(opt_window)
-        except NameError:
-            win_exists_var = 0
-        if win_exists_var != 1:
-            opt_window = Toplevel()
-            opt_window.title(new_field)
-        else:
-            opt_window.destroy()
-            opt_window = Toplevel()
-            opt_window.title(new_field)
-    body = Frame(opt_window)
-    scrollable_body = Scrollable(body)
-    body.pack()
-    if func == 'next':
-        x += 45
-        x2 += 45
-    elif func == 'prev':
-        x -= 45
-        x2 -= 45
-    else:
-        x = 0
-        x2 = 45
-    count = 0
-    for f in field[x:x2]:
-        count += 1
-        Button(scrollable_body, text=f,
-               command=(lambda e=f: GenFuncs.update_entry(opt_window, e, ents[0][1], 1))).grid(row=count, column=1,
-                                                                                     padx=1)
-        Button(scrollable_body, text='Result\'s within Column',
-               command=(lambda e=f: header_values(key, body, e))).grid(row=count, column=2, padx=1)
-    count += 1
-    temp_count = page_func(field,scrollable_body,count, header_button, key, body)
-    if temp_count:
-        count += 1
-    Button(scrollable_body, text="Exit", command=(lambda e=root2: e.destroy())).grid(column=2)
-    scrollable_body.update()
-    opt_window.mainloop()
-
-def header_values(key, root2, set_info, func=0):
-    """
-    Generates a window with the values from clicked header.
-    :param key: File Name
-    :param root2: Parent Frame
-    :param set_info: Column Name
-    :param func: Function to specify if generating Next or Last page
-    """
-    global opt_window, ents, ents2, x, x2
-    ents[0][1].delete(0, END)
-    ents[0][1].insert(0, (str(set_info)))
-    ents[1][1].delete(0, END)
-    root2.destroy()
-    body3 = Frame(opt_window)
-    temp_field = key.split('/')
-    new_field = temp_field[(len(temp_field) - 1)]
-    opt_window.title(new_field + ' / ' + str(set_info))
-    scrollable_body = Scrollable(body3)
-    body3.pack()
-    slimmed_list, count_dict = get_col_vals(key, set_info)
-    if func == 'next':
-        x += 45
-        x2 += 45
-    elif func == 'prev':
-        x -= 45
-        x2 -=45
-    else:
-        x = 0
-        x2 = 45
-    count = 0
-    for field in slimmed_list[x:x2]:
-        count += 1
-        ind = answer.index(key)
-        if set_info in li[ind].fill_val:
-            if field == li[ind].fill_val[set_info]:
-                new_field = 'Blank'
-            else:
-                new_field = field
-        else:
-            if pd.isnull(field):
-                new_field = 'Blank'
-            else:
-                new_field = field
-        Button(scrollable_body, text=new_field,
-               command=(lambda e=field: GenFuncs.update_entry(body, e, ents[1][1]))).grid(row=count, column=1,
-                                                                                      padx=1)
-        Label(scrollable_body, width=15,
-              text=("Total Results: " + str(count_dict[field]))).grid(row=count, column=2, pady=5, padx=1)
-
-    count += 1
-    temp_count = page_func(slimmed_list, scrollable_body, count, header_values, key, body3, set_info)
-    if temp_count:
-        count += 1
-    Button(scrollable_body, text="Reset Items",
-           command=(lambda e="nothing": GenFuncs.update_entry(opt_window, e, ents[1][1], 2))).grid(row=count, column=1, padx=1)
-    Button(scrollable_body, text="Exit",
-           command=(lambda e=opt_window: e.destroy())).grid(row=count, column=2, pady=5, padx=1)
-    scrollable_body.update()
-    opt_window.mainloop()
-
-def get_col_vals(key, col):
-    """
-    Creates List of values from within column with Dictionary indicating Value counts - List is returned in Descending
-    Count order.
-    :param key: File Name
-    :param col: Column Name
-    :return: Returns List (in Descending count order) and Dictionary with count
-    """
-    ind = answer.index(key)
-    col_val_list = li[ind].df[col].values
-    count_dict = {}
-    slimmed_list = []
-    for value in col_val_list:
-        try:
-            count_dict[value] += 1
-        except KeyError:
-            count_dict[value] = 1
-    for key1, value in sorted(count_dict.items(), key=lambda item: item[1])[::-1]:
-        slimmed_list.append(key1)
-    return slimmed_list, count_dict
 
 def get_plugz(path):
     modules = pkgutil.iter_modules(path=[path])
@@ -464,7 +278,7 @@ if __name__ == '__main__':
    form2 = MakeForm()
    ents = form2.make(header, fields,1)
    form2= MakeForm(answer_in=answer)
-   ents2 = file_frame(footer, answer)
+   ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
 
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
@@ -477,7 +291,7 @@ if __name__ == '__main__':
    filemenu.add_cascade(label="Plugins", menu=submenu2)
    for name, instance in plugz:
        ind = plug_ind.index(name)
-       submenu2.add_command(label=name, command=(lambda e=ind: plugz[e][1].run(li,answer,ents2,auto_open_box)))
+       submenu2.add_command(label=name, command=(lambda e=ind: plugz[e][1].run(li,answer,ents2,auto_open_box, root)))
    filemenu.add_cascade(label="Options", menu=submenu3)
    for name, instance in checkable_butts:
        temp_var = IntVar()
@@ -497,9 +311,10 @@ if __name__ == '__main__':
    helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
-   root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx', answer)))
-   b4 = Button(body, text=' Search ', command=(lambda e=ents: Retrieve_R.ow_frames(e, ents2, li,
-                                                                                   auto_open_box, 'xlsx', answer)))
+   root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
+                                                                     answer, root)))
+   b4 = Button(body, text=' Search ', command=(lambda e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
+                                                                                   answer, root)))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
    auto_open_box.set(1)
