@@ -6,13 +6,15 @@ from SearchDF import SearchDataFrame
 import pandas as pd
 import shelve, os, time
 import xlsxwriter
+from tkinter.ttk import Progressbar
+from tkinter import HORIZONTAL, StringVar, Label, Frame, X
 from sys import platform
 from func_file import GenFuncs
 import tkinter as tk
 if platform == "linux" or platform == "linux2":
     import subprocess, sys
 class Retrieve_R:
-    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list, func=0, file_name='default'):
+    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list, root2, func=0, file_name='default'):
         """
         Search Open Files by Input Criteria and output file
         :param input_criteria: Search Column and Search Item(s)
@@ -23,7 +25,21 @@ class Retrieve_R:
         :param file_list: Search Order List
         """
         start = time.time()
+        root = Frame(root2)
         new_output = []  # Search results per DataFrame
+        progress = Progressbar(root, orient=HORIZONTAL, length=300, mode='determinate')
+        progress.pack(fill=X)
+        v = StringVar()
+        Label(root, textvariable=v).pack()
+        root.pack()
+
+        def get_checked_l():
+            checked_list = []
+            for file in file_list:  # Iterate through DataFrames using i as index
+                ind = file_list.index(file)
+                if opened_files[ind][2].get() == 1:
+                    checked_list.append(file)
+            return checked_list
         if func == 0 or func == 3:
             if func == 0:
                 print('Searching:\n' + input_criteria[1][1].get())
@@ -34,20 +50,25 @@ class Retrieve_R:
                 output_directory, zeros_dict, font_type_size, col_width, dec_rules,\
                 dec_place = GenFuncs.get_out_opts(input_criteria, input_criteria[0],output_type, func=1, file_name=file_name)  # Load Settings
 
-            for file in file_list:  # Iterate through DataFrames using i as index
+            checked_l = get_checked_l()
+
+            for file in checked_l:
                 ind = file_list.index(file)
-                if opened_files[ind][2].get() == 1:  # If tkinter checkbutton next to file name is checked -> Open the file
-                    if func != 3:
-                        results = data_frames[ind].search_col(search_column, input_criteria[1][1].get(),
-                                                              zeros_dict) #<-need to move
-                    else:
-                        results = data_frames[ind].search_col(input_criteria[0], input_criteria[1],
-                                                              zeros_dict)
-                    try:
-                        if not results.empty:
-                            new_output.append(results)
-                    except AttributeError:
-                        pass
+                progress_bar_ind = checked_l.index(file)
+                progress['value'] = (((progress_bar_ind+1)/len(checked_l))*100)/2
+                v.set("Searching : " + GenFuncs.strip_dir(file))
+                root.update_idletasks()
+                if func != 3:
+                    results = data_frames[ind].search_col(search_column, input_criteria[1][1].get(),
+                                                          zeros_dict)  # <-need to move
+                else:
+                    results = data_frames[ind].search_col(input_criteria[0], input_criteria[1],
+                                                          zeros_dict)
+                try:
+                    if not results.empty:
+                        new_output.append(results)
+                except AttributeError:
+                    pass
         else:
             new_new_output = opened_files
             output_type = 'xlsx'
@@ -58,6 +79,7 @@ class Retrieve_R:
             dec_var = '%.' + str(dec_place) + 'f'
         else:
             dec_var = "%.2f"
+        v.set("Formatting Output")
         try:
             if func == 0 or func == 3:
                 new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
@@ -84,20 +106,34 @@ class Retrieve_R:
                 workbook = writer_orig.book
                 worksheet = writer_orig.sheets['SearchOutput']
                 size = 10
+                f_rule_cnt = len(font_type_size) + len(col_width) + len(dec_rules)
+                crnt_rule = 0
                 if font_type_size != {}:  # Set Global Font Size / Type
                     try:
                         size = int(list(font_type_size.values())[0])
                         workbook.formats[0].set_font_size(size)
                         workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
+                        progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
+                        crnt_rule += 1
+                        v.set(v.get()+".")
+                        root.update_idletasks()
                     except IndexError:
                         pass
                 if len(col_width) > 0:  # Set Column / Widths
                     for rule in col_width.items():
                         worksheet.set_column(rule[0], int(rule[1]))
+                        progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
+                        crnt_rule += 1
+                        v.set(v.get()+".")
+                        root.update_idletasks()
                 if len(dec_rules) > 0:  # Set Column / Decimal places
                     for key, val in dec_rules.items():
                         num_format = workbook.add_format({'num_format': val})
                         worksheet.set_column(key, size, num_format)
+                        progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
+                        crnt_rule += 1
+                        v.set(v.get()+".")
+                        root.update_idletasks()
                 writer_orig.save()
             if auto_open_var.get() == 1:
                 if platform == "linux" or platform == "linux2":
@@ -111,6 +147,7 @@ class Retrieve_R:
                 end = time.time()
                 print('-------' + str(end - start) + '-------')
                 print('done')
+            root.destroy()
 
         except PermissionError as e:
             print(str(e)[:28] + ": Close File Before Searching")
