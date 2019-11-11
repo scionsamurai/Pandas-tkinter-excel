@@ -13,7 +13,7 @@ class SECritFile:
         self.fnl = []
         self.cl = []
         self.ap = 0
-    def run(self, opened_files, file_name_list, checked_list, auto_open):
+    def run(self, opened_files, file_name_list, checked_list, auto_open, root):
         self.of = opened_files
         self.fnl = file_name_list
         self.cl = checked_list
@@ -53,4 +53,4 @@ class SECritFile:
 
         f_name = (GenFuncs.strip_dir(file_key)).split('.')[0]
         ents = [h_values, s_values]
-        Retrieve_R.ow_frames(ents, self.cl, self.of, self.ap, 'xlsx', self.fnl, func=3, file_name=f_name)
+        Retrieve_R.ow_frames(ents, self.cl, self.of, self.ap, 'xlsx', self.fnl, root, func=3, file_name=f_name)
