@@ -24,6 +24,7 @@ class GenFuncs:
             except KeyError:  # Catch if Rule Header wasn't in output results
                 pass
         return df
+
     def get_inp_opts():
         """
         Get Input options from shelve File
@@ -337,10 +338,14 @@ class GenFuncs:
                 dec_place = var_file['glob_dec_place'].strip()
             except AttributeError:
                 dec_place = var_file['glob_dec_place']
+            try:
+                dec_place = int(dec_place)
+            except:
+                pass
         except KeyError:
             dec_place = False
         var_file.close()
-        return output_directory, zeros_dict, font_rules, col_width, dec_rules, int(dec_place)
+        return output_directory, zeros_dict, font_rules, col_width, dec_rules, dec_place
 
     def strip_dir(file_dir):
         """
