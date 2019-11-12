@@ -32,6 +32,7 @@ class OpenFile:
             lines = 0
             while buf.readline():
                 lines += 1
+            fp.close()
             return lines
 
         total_lines = get_num_lines(entry1)
