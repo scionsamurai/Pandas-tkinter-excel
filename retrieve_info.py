@@ -111,8 +111,10 @@ class Retrieve_R:
                 if font_type_size != {}:  # Set Global Font Size / Type
                     try:
                         size = int(list(font_type_size.values())[0])
-                        workbook.formats[0].set_font_size(size)
-                        workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
+                        if size != False:
+                            workbook.formats[0].set_font_size(size)
+                        if list(font_type_size.keys())[0] != False:
+                            workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
                         progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
                         crnt_rule += 1
                         v.set(v.get()+".")
