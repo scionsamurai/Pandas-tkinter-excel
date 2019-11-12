@@ -80,9 +80,19 @@ class Retrieve_R:
         else:
             dec_var = "%.2f"
         v.set("Formatting Output")
+        root.update_idletasks()
         try:
             if func == 0 or func == 3:
-                new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+                try:
+                    new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
+                except:
+                    print("No results")
+                    progress.destroy()
+                    v.set("No results")
+                    root.update_idletasks()
+                    time.sleep(2)
+                    root.destroy()
+                    return
 
             var_file = shelve.open('var_file')
             try:
