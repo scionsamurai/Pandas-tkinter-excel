@@ -262,11 +262,26 @@ class MakeForm:
             def save_prof(name):
                 global opt_footer, inp_ents
                 var_file = shelve.open('var_file')
-                space_dict = var_file['col_spacing']
-                zero_dict = var_file['lead_zeroes']
-                font_dict = var_file['font_rules']
-                dec_dict = var_file['decimal_places']
-                glob_dec = var_file['glob_dec_place']
+                try:
+                    space_dict = var_file['col_spacing']
+                except:
+                    space_dict = {}
+                try:
+                    zero_dict = var_file['lead_zeroes']
+                except:
+                    zero_dict = {}
+                try:
+                    font_dict = var_file['font_rules']
+                except:
+                    font_dict = {}
+                try:
+                    dec_dict = var_file['decimal_places']
+                except:
+                    dec_dict = {}
+                try:
+                    glob_dec = var_file['glob_dec_place']
+                except:
+                    glob_dec = False
                 profs[name.get()] = [space_dict, zero_dict, font_dict, dec_dict, glob_dec, name.get()]
                 var_file['Profilez'] = profs
                 var_file.close()
@@ -570,8 +585,19 @@ class MakeForm:
         :param glob_dec_place: Global Decimal Places
         """
         var_file = shelve.open('var_file')
-        var_file['font_rules'] = {style.get(): size.get()}
-        var_file['glob_dec_place'] = glob_dec_place.get()
+        if style.get() != "":
+            nstyle = style.get()
+        else:
+            nstyle = False
+        if size.get() != "":
+            nsize = size.get()
+        else:
+            nsize = False
+        var_file['font_rules'] = {nstyle: nsize}
+        if glob_dec_place.get()  != '':
+            var_file['glob_dec_place'] = glob_dec_place.get()
+        else:
+            var_file['glob_dec_place'] = False
         var_file.close()
 
     def update_dir(self, root, roots_root):
