@@ -82,7 +82,7 @@ class MakeFooter:
                        command=(lambda e=f: GenFuncs.update_entry(opt_window, e, ents[0][1], 1))).grid(row=count,
                                                                                                        column=1,
                                                                                                        padx=1)
-                Button(scrollable_body, text='Result\'s within Column',
+                Button(scrollable_body, text='Results within Column',
                        command=(lambda e=f: header_values(key, body, e))).grid(row=count, column=2, padx=1)
             count += 1
             temp_count = page_func(field, scrollable_body, count, header_button, key, body)
