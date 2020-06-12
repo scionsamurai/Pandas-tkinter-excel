@@ -1,5 +1,5 @@
 from tkinter import simpledialog, messagebox
-import shelve
+import shelve, os
 import numpy as np
 import pandas as pd
 from func_file import GenFuncs
@@ -28,7 +28,7 @@ class DropDupes:
         else:
             first_last = "last"
         if initiateQ:
-            var_file = shelve.open('var_file')
+            var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
             try:
                 zeros_dict = var_file['lead_zeroes']
             except KeyError:
