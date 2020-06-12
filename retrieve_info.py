@@ -94,7 +94,7 @@ class Retrieve_R:
                     root.destroy()
                     return
 
-            var_file = shelve.open('var_file')
+            var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
             try:
                 plug_dicts = var_file['plug_lists']
                 var_file.close()
