@@ -254,9 +254,9 @@ def update_plugs_list (var, plug_name, code, save_set=False):
     try:
     	var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
     	try:
-        	plug_l = var_file['plug_lists']
+            plug_l = var_file['plug_lists']
     	except KeyError:
-        	plug_l = {}
+            plug_l = {}
     	plug_l[plug_name] = [var.get(), code, save_set]
     	var_file['plug_lists'] = plug_l
     	var_file.close()
