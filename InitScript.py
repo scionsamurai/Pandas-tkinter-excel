@@ -251,14 +251,17 @@ def changed(*args, var, plug_name, code):
     update_plugs_list(var,plug_name,code)
 
 def update_plugs_list (var, plug_name, code, save_set=False):
-    var_file = shelve.open('var_file')
     try:
-        plug_l = var_file['plug_lists']
-    except KeyError:
-        plug_l = {}
-    plug_l[plug_name] = [var.get(), code, save_set]
-    var_file['plug_lists'] = plug_l
-    var_file.close()
+    	var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+    	try:
+        	plug_l = var_file['plug_lists']
+    	except KeyError:
+        	plug_l = {}
+    	plug_l[plug_name] = [var.get(), code, save_set]
+    	var_file['plug_lists'] = plug_l
+    	var_file.close()
+    except:
+    	print("error at line 255 opening var_file")
 
 if __name__ == '__main__':
    multiprocessing.freeze_support()
