@@ -322,7 +322,7 @@ class GenFuncs:
                 output_directory = os.path.join(output_path, (file_name + "." + out_type))
         except KeyError:
             if func == 0:
-                output_directory = output_dir
+                output_directory = os.path.join(os.environ['HOME'],output_dir)
             else:
                 output_directory = "remove_dup_test.xlsx"
         try:
