@@ -3,9 +3,9 @@ Per file Open functions
 """
 import pandas as pd
 import numpy as np
-import time
+import time, os
 from tkinter.ttk import Progressbar
-from tkinter import HORIZONTAL, StringVar, Label, Frame, X
+from tkinter import HORIZONTAL, StringVar, Label, Frame, X, messagebox 
 import mmap
 from func_file import GenFuncs
 from retrieve_info import Retrieve_R
@@ -401,9 +401,17 @@ class OpenFile:
                 data, NA_list = open_func(entry1, df1, inp_options1, start1, func=1)
                 return data, entry1, NA_list
         elif (entry1[-4:] == 'xlsx') or (entry1[-4:] == '.xls') or ((entry1[-4:])[:3] == 'xls'):
-            df1 = pd.read_excel(entry1, sheet_name=0, nrows=50)
-            data, NA_list = open_func(entry1, df1, inp_options1, start1, func=2)
-            return data, entry1, NA_list
+            file_stats = os.stat(entry1)
+            if (file_stats.st_size / (1024*1024)) > 10: # check if xls file is larger than 10mb - don't open if so until large file support is added
+                messagebox.showinfo('Access is denied', 'xls Error: Size not yet supported\nConsider saving the file as .csv\nLarge csv files are supported')
+                df_empty = pd.DataFrame({'A':[]})
+                end = time.time()
+                print('-------'+ str(end-start1) +'-------')
+                return df_empty, 'non_val'
+            else:
+                df1 = pd.read_excel(entry1, sheet_name=0, nrows=50)
+                data, NA_list = open_func(entry1, df1, inp_options1, start1, func=2)
+                return data, entry1, NA_list
         elif entry1[-3:] == '.h5':
             data = pd.read_hdf(entry1,'df')
             filter_results = False
