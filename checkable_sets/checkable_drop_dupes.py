@@ -3,7 +3,7 @@ from tkinter import simpledialog, messagebox
 from SplitEntry import Split_Entry
 from dupes_popup import DupesPopup
 from tkinter import Toplevel
-import shelve
+import shelve, os
 class DropDupes:
     def run(self,df):
         """
@@ -12,7 +12,7 @@ class DropDupes:
         :return: updated dataframe
         """
 
-        var_file = shelve.open('var_file')
+        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
         plug_l = var_file['plug_lists']
         dupes_plug = plug_l['DropDupes']
         var = dupes_plug[0]
