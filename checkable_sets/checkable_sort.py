@@ -2,7 +2,7 @@ import pandas as pd
 from tkinter import simpledialog
 from SplitEntry import Split_Entry
 from sort_popup import SortPopup
-import shelve
+import shelve, os
 class Sort:
     def run(self,df):
         """
@@ -10,7 +10,7 @@ class Sort:
         :param df: Input dataframe
         :return: updated dataframe
         """
-        var_file = shelve.open('var_file')
+        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
         plug_l = var_file['plug_lists']
         dupes_plug = plug_l['Sort']
         var = dupes_plug[0]
