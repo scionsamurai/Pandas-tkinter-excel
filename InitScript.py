@@ -160,6 +160,8 @@ def open_files(func=1):
                         footer.pack()
                     except PermissionError as e:
                         print(e)
+                    except ValueError as e:
+                        print(e)
         except KeyboardInterrupt as e:
             print(e)
         ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
@@ -311,7 +313,7 @@ if __name__ == '__main__':
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=(lambda e=ents: print_l()))
    helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
-   helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
+   #helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
    root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
