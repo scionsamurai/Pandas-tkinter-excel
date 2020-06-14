@@ -94,7 +94,7 @@ class Retrieve_R:
                     root.destroy()
                     return
 
-            var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+            var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
             try:
                 plug_dicts = var_file['plug_lists']
                 var_file.close()
@@ -103,7 +103,7 @@ class Retrieve_R:
                         new_new_output = value[1].run(new_new_output)
             except KeyError:
                 var_file.close()
-                print('fail retrieve_info')
+                #print('fail retrieve_info')
 
             cols_index = []
             for col in new_new_output:
@@ -148,11 +148,14 @@ class Retrieve_R:
                         root.update_idletasks()
                 writer_orig.save()
             if auto_open_var.get() == 1:
-                if platform == "linux" or platform == "linux2":
-                    opener = "open" if sys.platform == "darwin" else "xdg-open"
-                    subprocess.call([opener, output_directory])
-                else:
-                    os.startfile(output_directory, 'open')
+                try:
+                    if platform == "linux" or platform == "linux2":
+                        opener = "open" if sys.platform == "darwin" else "xdg-open"
+                        subprocess.call([opener, output_directory])
+                    else:
+                        os.startfile(output_directory, 'open')
+                except:
+                    print('Error while trying to open application\nPlease set default xlsx application')
                 end = time.time()
                 print('-------' + str(end - start) + '-------')
             else:
