@@ -58,7 +58,7 @@ In this pop-up we can select a header to set in our main window by clicking one 
 
 ![FP_Headers](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_Headers.png)
 
-If you selected "Results within Column" then you'll get a list total results per value. You can click on these values to add them to your search items.
+If you selected "Results within Column" then you'll get a list of total results per value. You can click on these values to add them to your search items.
 
 ![FP_w_Search_Criteria](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_w_Search_Criteria.png)
 
@@ -68,15 +68,15 @@ Now lets close the "Headers" pop-up. If you selected values (or entered them man
 
 If you choose to change the search order for your files and you clicked "Sort Files" you will be presented with an input box to enter the order you want. Note: If you have more than ten files you will want to use double digits for the first 9 numbers as well, for some reason it can impact the sort if the digit amount isn't the same. (e.g. 01 02 03 04 05 06 07 08 09 10 11 12...)
 
-When you are ready and have clicked Search (or pressed Enter) the application will do it's thing. Another note is if you don't want the search to search a file you can unclick the check box next to the file.
+When you are ready and have clicked Search (or pressed Enter) the application will do it's thing. Another note is if you don't want the search to search a specific file you can unclick the check box next to the file.
 
 ![Search_Output](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/Search_Output.png)
 
-After the application has done it's searching if you left the "Auto Open" checked on the main screen then the output file will automatically open in your preferred spreadsheet software.
+After the application has done it's searching, if you left the "Auto Open" box checked on the main screen then the output file will automatically open in your preferred spreadsheet software.
 
 ![Copy_From_Output](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/Copy_From_Output.png)
 
-If you are like me and work out of the same files all day then you can use these output files (or the original files) to copy your search headers and item(s) right into the application. You don't have to worrry about the extra tabs that are copied from spreadsheets when you want to copy your header or Search item(s) from there, The application will move and/or split them for you. And you don't have to worry about deleting duplicate search items from your search items since the application will do that for you too. But if you are searching by more than 500 items then i'd suggest removing duplicates in your spreadsheet software before copying them into the application. I'd also suggest limiting your Search Items to be less than 6000. When you start pasteing 1000+ items into the "Search Item(s)" input box it can take a little while for them to all paste, and the search itself will likely take a while. Once i add SQL functionality searching this amount will go faster (from SQL database searches). You probably wont often be searching by 1000+ items but it is nicer to filter one file with just relevant data in a spreadsheet software than it is to have to search multiple spreadsheets. 
+If you are like me and work out of the same files all day then you can use these output files (or the original files) to copy your search headers and item(s) right into the application. You don't have to worry about the extra tabs that are copied from spreadsheets when you want to copy your header or Search item(s) from there, the application will remove and/or split them for you. And you don't have to worry about deleting duplicate search items from your search items since the application will do that for you too. But if you are searching by more than 500 items then i'd suggest removing duplicates in your spreadsheet software before copying them into the application. I'd also suggest limiting your Search Items to be less than 6000. When you start pasteing 1000+ items into the "Search Item(s)" input box it can take a little while for them to all paste, and the search itself will likely take a while. Once i add SQL functionality searching this amount will go faster (from SQL database searches). You probably wont often be searching by 1000+ items but it is nicer to filter one file with just relevant data in a spreadsheet software than it is to have to search multiple files. 
 
 Please let me know if you have questions, suggestions, or would like my help automating some boring stuff! I'll try to get the information added for the extra Search Output and File input options soon!
 
