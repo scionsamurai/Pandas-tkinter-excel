@@ -54,7 +54,7 @@ This image shows (in the background shell window) that it took 8-9.2 seconds to 
 
 Now if it's your first time using the application i'd suggest clicking on one of the "Headers" buttons next to one of the files. It will generate another pop-up with Headers associated with that file. If the headers aren't seperated like they are in this image then there is a chance our File input delimiter is set incorrectly. You can change this by going to File>Options>File_Input>General and then setting the delimiter to match your file. (And don't forget to click save before leaving) Soon i'll create a more in depth tutorial on what the rest of the settings are supposed to do for file Input and Search Output.
 
-In this pop-up we can select a header to set in our main window by clicking one of the headers on the left or go deaper to see what results may be available under that header by selecting "Results within Column" on the right.
+In this pop-up we can select a header to set in our main window by clicking one of the headers on the left or go deeper to see what results may be available under that header by selecting "Results within Column" on the right.
 
 ![FP_Headers](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_Headers.png)
 
