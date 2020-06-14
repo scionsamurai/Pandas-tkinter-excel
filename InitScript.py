@@ -160,8 +160,11 @@ def open_files(func=1):
                         footer.pack()
                     except PermissionError as e:
                         print(e)
+                        print('This file is currently locked.')
+                        clear_footer()
                     except ValueError as e:
                         print(e)
+                        clear_footer()
         except KeyboardInterrupt as e:
             print(e)
         ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
@@ -205,6 +208,14 @@ def resort_p2(ents3):
     footer = Frame(root)
     ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
     form2.answer = answer
+    footer.pack()
+
+def clear_footer():
+    global footer, answer, ents2, li
+    footer.pack_forget()
+    footer.destroy()
+    footer = Frame(root)
+    ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
     footer.pack()
 
 def sort_second(val):
@@ -254,7 +265,7 @@ def changed(*args, var, plug_name, code):
 
 def update_plugs_list (var, plug_name, code, save_set=False):
     try:
-    	var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+    	var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
     	try:
             plug_l = var_file['plug_lists']
     	except KeyError:
@@ -288,16 +299,16 @@ if __name__ == '__main__':
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root, tearoff=0)
-   submenu2 = Menu(root, tearoff=0)
+   #submenu2 = Menu(root, tearoff=0)
    submenu3 = Menu(root, tearoff=0)
    submenu.add_command(label="Select File", command=(lambda e=ents: open_files()))
    submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
    filemenu.add_cascade(label="Open", menu=submenu)
-   filemenu.add_cascade(label="Plugins", menu=submenu2)
-   for name, instance in plugz:
-       ind = plug_ind.index(name)
-       submenu2.add_command(label=name, command=(lambda e=ind: plugz[e][1].run(li,answer,ents2,auto_open_box, root)))
-   filemenu.add_cascade(label="Options", menu=submenu3)
+   #filemenu.add_cascade(label="Plugins", menu=submenu2)
+   #for name, instance in plugz:
+   #    ind = plug_ind.index(name)
+   #    submenu2.add_command(label=name, command=(lambda e=ind: plugz[e][1].run(li,answer,ents2,auto_open_box, root)))
+   filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
    for name, instance in checkable_butts:
        temp_var = IntVar()
        temp_var.set(0)
@@ -305,21 +316,22 @@ if __name__ == '__main__':
        temp_var.trace("w", partial(changed, var=temp_var, plug_name=name, code=instance))
        submenu3.add_checkbutton(label=name, variable=temp_var)
 
-   submenu3.add_command(label="More >", command=(lambda e=ents: form2.make(func=2)))
+   #submenu3.add_command(label="More >", command=(lambda e=ents: form2.make(func=2)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
    filemenu.add_separator()
    filemenu.add_command(label="Exit", command=root.quit)
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="License", command=(lambda e=ents: print_l()))
-   helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
+   #helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
    #helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
    root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                     answer, root)))
+                                                                     answer, footer)))
+   root.bind('<Control-c>', (lambda event: clear_footer()))
    b4 = Button(body, text=' Search ', command=(lambda e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                                   answer, root)))
+                                                                                   answer, footer)))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
    auto_open_box.set(1)
