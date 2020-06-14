@@ -398,7 +398,7 @@ class OpenFile:
                 return data, entry1, NA_list
         elif (entry1[-4:] == 'xlsx') or (entry1[-4:] == '.xls') or ((entry1[-4:])[:3] == 'xls'):
             file_stats = os.stat(entry1)
-            if (file_stats.st_size / (1024*1024)) > 10: # check if xls file is larger than 10mb - don't open if so until large file support is added
+            if (file_stats.st_size / (1024*1024)) > 2: # check if xls file is larger than 2mb - don't open if so until large file support is added
                 messagebox.showinfo('Access is denied', 'xls Error: Size not yet supported\nConsider saving the file as .csv\nLarge csv files are supported')
                 df_empty = pd.DataFrame({'A':[]})
                 end = time.time()
