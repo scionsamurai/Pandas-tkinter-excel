@@ -36,7 +36,7 @@ class GenFuncs:
         :return: head_func_dtypes   -List of Example Column/Data_type's from header_func
         """
         gen_rules = {}
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         try:
             for gen_set in var_file['opt_gen_rules']:
                 if gen_set[0] == 'Delimiter':
@@ -192,7 +192,7 @@ class GenFuncs:
             file_name =file.name
             file.close()
         setting_file = open(file_name, edom)
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         rule_list = []
         if edom == 'r':
             space_dict = {}
@@ -257,7 +257,7 @@ class GenFuncs:
         For loading Input settings from shelve file
         :return: Dictionary with General input settings
         """
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         temp_dict = {}
         try:
             rules = var_file['opt_gen_rules']
@@ -304,7 +304,7 @@ class GenFuncs:
                 output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
             output_dir = output_dir.replace('\t','_')
 
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         try:
             col_width = var_file['col_spacing']
         except KeyError:
@@ -322,7 +322,7 @@ class GenFuncs:
                 output_directory = os.path.join(output_path, (file_name + "." + out_type))
         except KeyError:
             if func == 0:
-                output_directory = os.path.join(os.environ['HOME'],output_dir)
+                output_directory = os.path.join(os.path.expanduser('~'),output_dir)
             else:
                 output_directory = "remove_dup_test.xlsx"
         try:
