@@ -42,8 +42,7 @@ class OpenFile:
             sheetname = xl.sheet_names[0]
             df_header = pd.read_excel(file_name, sheet_name=sheetname,nrows=1)
             chunks = []
-            i_chunk = 0
-            skiprows = 1
+            skiprows = 0
             while True:
                 if func == 0:
                     df_chunk = pd.read_excel(file_name,sheet_name=sheetname,header=sets[1], index_col=sets[3],
@@ -57,7 +56,6 @@ class OpenFile:
                     break
                 else:
                     chunks.append(df_chunk)
-                i_chunk += 1
                 line_count += df_chunk.shape[0]
                 progress['value'] = (line_count / total_lines) * 100
                 v.set(str(line_count) + " : " + str(total_lines))
@@ -65,9 +63,7 @@ class OpenFile:
             df_chunks = pd.concat(chunks,sort=False)
             columns = {i: col for i, col in enumerate(df_header.columns.tolist())}
             df_chunks.rename(columns=columns, inplace=True)
-            dfx = pd.concat([df_header, df_chunks], sort=False)
-
-            return dfx
+            return df_chunks
 
         def reduce_mem_usage(props):
             """
