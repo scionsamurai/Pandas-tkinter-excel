@@ -94,15 +94,15 @@ class Retrieve_R:
                     root.destroy()
                     return
 
-            var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
-            try:
-                plug_dicts = var_file['plug_lists']
-                var_file.close()
-                for key, value in plug_dicts.items():
-                    if value[0] == 1:
-                        new_new_output = value[1].run(new_new_output)
-            except KeyError:
-                var_file.close()
+            #var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
+            #try:
+            #    plug_dicts = var_file['plug_lists']
+            #    var_file.close()
+            #    for key, value in plug_dicts.items():
+            #        if value[0] == 1:
+            #            new_new_output = value[1].run(new_new_output)
+            #except KeyError:
+            #    var_file.close()
                 #print('fail retrieve_info')
 
             cols_index = []
