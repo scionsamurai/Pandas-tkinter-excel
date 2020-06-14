@@ -26,7 +26,6 @@ class SearchDataFrame:
 
         if not isinstance(cols, str):
             input_list = Split_Entry.split(search_items.split('\n'), 1)  # Split input by newline chars
-
             for c in cols:  # Strip leading/trailing whitespace from search Cols
                 strip_col_vals(c)
             new_df = []
@@ -39,8 +38,11 @@ class SearchDataFrame:
                 return new_new_df
             else:
                 exec_str, search_vars = search_command(input_list, cols)
-                new_new_df = data.query(exec_str)
-                return new_new_df
+                try:
+                    new_new_df = data.query(exec_str)
+                    return new_new_df
+                except:
+                    print("Error in SearchDF")
 
         search_item, int_str = split_s_vals(search_items)
         if int_str == 1:

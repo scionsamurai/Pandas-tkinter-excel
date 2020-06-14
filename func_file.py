@@ -24,6 +24,7 @@ class GenFuncs:
             except KeyError:  # Catch if Rule Header wasn't in output results
                 pass
         return df
+
     def get_inp_opts():
         """
         Get Input options from shelve File
@@ -35,7 +36,7 @@ class GenFuncs:
         :return: head_func_dtypes   -List of Example Column/Data_type's from header_func
         """
         gen_rules = {}
-        var_file = shelve.open('var_file')
+        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
         try:
             for gen_set in var_file['opt_gen_rules']:
                 if gen_set[0] == 'Delimiter':
@@ -60,7 +61,7 @@ class GenFuncs:
                         gen_rules['Index Column'] = int(gen_set[1])
                 elif gen_set[0] == 'Chunk':
                     if gen_set[1] == 'DV' or gen_set[1] == '':
-                        gen_rules['Chunk'] = None
+                        gen_rules['Chunk'] = 10000
                     else:
                         gen_rules['Chunk'] = int(gen_set[1])
                 elif gen_set[0] == 'CPU Cores':
@@ -88,7 +89,7 @@ class GenFuncs:
             gen_rules['Terminator'] = None
             gen_rules['Header Line'] = 0
             gen_rules['Index Column'] = None
-            gen_rules['Chunk'] = None
+            gen_rules['Chunk'] = 10000
             gen_rules['CPU Cores'] = 1
             gen_rules['Verbose'] = False
             gen_rules['Header Func'] = False
@@ -191,7 +192,7 @@ class GenFuncs:
             file_name =file.name
             file.close()
         setting_file = open(file_name, edom)
-        var_file = shelve.open('var_file')
+        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
         rule_list = []
         if edom == 'r':
             space_dict = {}
@@ -256,7 +257,7 @@ class GenFuncs:
         For loading Input settings from shelve file
         :return: Dictionary with General input settings
         """
-        var_file = shelve.open('var_file')
+        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
         temp_dict = {}
         try:
             rules = var_file['opt_gen_rules']
@@ -285,7 +286,7 @@ class GenFuncs:
         var_file.close()
         return temp_dict
 
-    def get_out_opts(input_crit, search_col, out_type, func=0):
+    def get_out_opts(input_crit, search_col, out_type, func=0, file_name=''):
         """
         Get Output options from shelve file
         :param input_crit: Search Column and Search Item(s)
@@ -303,7 +304,7 @@ class GenFuncs:
                 output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
             output_dir = output_dir.replace('\t','_')
 
-        var_file = shelve.open('var_file')
+        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
         try:
             col_width = var_file['col_spacing']
         except KeyError:
@@ -318,10 +319,10 @@ class GenFuncs:
                 output_directory = os.path.join(output_path, output_dir)
             else:
                 output_path = var_file['dir_location']
-                output_directory = os.path.join(output_path, "remove_dup_test.xlsx")
+                output_directory = os.path.join(output_path, (file_name + "." + out_type))
         except KeyError:
             if func == 0:
-                output_directory = output_dir
+                output_directory = os.path.join(os.environ['HOME'],output_dir)
             else:
                 output_directory = "remove_dup_test.xlsx"
         try:
@@ -337,10 +338,14 @@ class GenFuncs:
                 dec_place = var_file['glob_dec_place'].strip()
             except AttributeError:
                 dec_place = var_file['glob_dec_place']
+            try:
+                dec_place = int(dec_place)
+            except:
+                pass
         except KeyError:
             dec_place = False
         var_file.close()
-        return output_directory, zeros_dict, font_rules, col_width, dec_rules, int(dec_place)
+        return output_directory, zeros_dict, font_rules, col_width, dec_rules, dec_place
 
     def strip_dir(file_dir):
         """
