@@ -137,7 +137,7 @@ class MakeForm:
             """
             General Output Options Frame
             """
-            var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+            var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
             try:
                 dir_loc = var_file['dir_location']
             except KeyError:
@@ -215,7 +215,7 @@ class MakeForm:
                 w = OptionMenu(row, variable, *NAdict['list_opts'])
                 w.pack(side=LEFT)
 
-            var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+            var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
             try:
                 rules = var_file[NAdict['dict/list']]
                 self.print_lab(rules, NAdict['dict/list'])
@@ -252,7 +252,7 @@ class MakeForm:
                 entries.append((field, ent, var1))
             return entries
         elif func == 8:
-            var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+            var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
             try:
                 profs = var_file['Profilez']
             except KeyError:
@@ -261,7 +261,7 @@ class MakeForm:
 
             def save_prof(name):
                 global opt_footer, inp_ents
-                var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+                var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
                 try:
                     space_dict = var_file['col_spacing']
                 except:
@@ -292,7 +292,7 @@ class MakeForm:
                 inp_ents = self.make(opt_footer, func=8)
 
             def imp_prof(name):
-                var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+                var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
                 loadin_sets = profs[name]
                 var_file['col_spacing'] = loadin_sets[0]
                 var_file['lead_zeroes'] = loadin_sets[1]
@@ -303,7 +303,7 @@ class MakeForm:
 
             def del_prof(name):
                 global opt_footer, inp_ents
-                var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+                var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
                 temp_profs = var_file['Profilez']
                 del temp_profs[name]
                 var_file['Profilez'] = temp_profs
@@ -333,7 +333,7 @@ class MakeForm:
         Save/Reset General Input Settings
         :param func: 1=Save 0=Reset
         """
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         rules = []
         if func == 1:
             for entry in self.entries:
@@ -368,8 +368,8 @@ class MakeForm:
             supply_dict['change_func'] = self.changed_2
             inp_ents = self.make(footer_1, func=4, NAdict=supply_dict)
         elif widget.get() == 'Search Output':
-            supply_dict['in_list'] = 'Profiles', 'General', 'Column Lead Zeros', 'Column Spacing',\
-                                     'Round Decimal Place'
+            supply_dict['in_list'] = 'General', 'Column Lead Zeros', 'Column Spacing',\
+                                     'Round Decimal Place' #'Profiles', 
             supply_dict['change_func'] = self.changed_3
             inp_ents = self.make(footer_1, func=4, NAdict=supply_dict)
         footer_1.pack()
@@ -447,7 +447,7 @@ class MakeForm:
         :param var: Traced checkbutton variable
         """
         self.footer = Frame(root)
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         try:
             state = var_file['head_func_state']
         except KeyError:
@@ -507,7 +507,7 @@ class MakeForm:
         self.footer.pack_forget()
         self.footer.destroy()
         self.footer = Frame(root)
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         try:
             rules = var_file[lisct]
         except KeyError:
@@ -549,7 +549,7 @@ class MakeForm:
         :param lisct: shelve dict/list name
         """
         try:
-            var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+            var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
             del var_file[lisct]
             var_file.close()
             self.footer.pack_forget()
@@ -584,7 +584,7 @@ class MakeForm:
         :param size: Font Size
         :param glob_dec_place: Global Decimal Places
         """
-        var_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         if style.get() != "":
             nstyle = style.get()
         else:
@@ -612,7 +612,7 @@ class MakeForm:
         root.pack_forget()
         root.destroy()
         root = Frame(roots_root)
-        var1_file = shelve.open(os.path.join(os.environ['HOME'],'var_file'))
+        var1_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
         var1_file['dir_location'] = directory
         var1_file.close()
         bchange_dir = Button(root, text='Output Dir',
