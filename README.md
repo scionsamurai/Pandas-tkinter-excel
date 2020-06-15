@@ -66,7 +66,7 @@ Now lets close the "Headers" pop-up. If you selected values (or entered them man
 
 ![Sort_Files](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/Sort_Files.png)
 
-If you choose to change the search order for your files and you clicked "Sort Files" you will be presented with an input box to enter the order you want. Note: If you have more than ten files you will want to use double digits for the first 9 numbers as well, for some reason it can impact the sort if the digit amount isn't the same. (e.g. 01 02 03 04 05 06 07 08 09 10 11 12...)
+If you choose to change the search order for your files and you clicked "Sort Files" you will be presented with an input box to enter the order you want. If you have more than ten files you will want to use double digits for the first 9 numbers as well, for some reason it can impact the sort if the digit amount isn't the same. (e.g. 01 02 03 04 05 06 07 08 09 10 11 12...)
 
 When you are ready and have clicked Search (or pressed Enter) the application will do it's thing. Another note is if you don't want the search to search a specific file you can unclick the check box next to the file.
 
