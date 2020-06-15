@@ -3,7 +3,7 @@ Class to store tkinter Frames that don't read from df classes
 """
 from tkinter import *
 from scrollbarClass import Scrollable
-import shelve, os, sys
+import shelve, os, sys, tempfile
 import pandas as pd
 from functools import partial
 from func_file import GenFuncs
@@ -141,7 +141,7 @@ class MakeForm:
             try:
                 dir_loc = var_file['dir_location']
             except KeyError:
-                dir_loc = os.getcwd()
+                dir_loc = tempfile.gettempdir()
             try:
                 glob_dec_place = var_file['glob_dec_place']
             except KeyError:
