@@ -1,7 +1,7 @@
 """
 General Functions Pulled to trim primary code
 """
-import shelve, os, re
+import shelve, os, re, tempfile
 from SplitEntry import Split_Entry
 from tkinter import END
 class GenFuncs:
@@ -322,7 +322,7 @@ class GenFuncs:
                 output_directory = os.path.join(output_path, (file_name + "." + out_type))
         except KeyError:
             if func == 0:
-                output_directory = os.path.join(os.path.expanduser('~'),output_dir)
+                output_directory = os.path.join(tempfile.gettempdir(),output_dir)
             else:
                 output_directory = "remove_dup_test.xlsx"
         try:
