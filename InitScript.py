@@ -11,7 +11,7 @@ from tkinter import *
 import multiprocessing
 from multiprocessing import Pool
 from tkinter import filedialog, simpledialog, messagebox
-import os, warnings, tables, shelve
+import os, warnings, tables, shelve, webbrowser
 import pandas as pd
 import numpy as np
 from footer_frame import MakeFooter
@@ -218,6 +218,9 @@ def clear_footer():
     ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
     footer.pack()
 
+def open_help_gs():
+    webbrowser.open_new(r"https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/README.md")
+
 def sort_second(val):
     return val[1]
 
@@ -322,6 +325,7 @@ if __name__ == '__main__':
    filemenu.add_command(label="Exit", command=root.quit)
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
+   helpmenu.add_command(label="Getting Started", command=(lambda e=ents: open_help_gs()))
    helpmenu.add_command(label="License", command=(lambda e=ents: print_l()))
    #helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
    #helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
