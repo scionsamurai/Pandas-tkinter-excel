@@ -1,6 +1,6 @@
 ## File_Pal
 
-
+Note: If the progress bar gets stuck due to an error you can click ctrl+c to remove, but be careful not to click into the cmd/shell window and press ctrl+c since it will close the whole application.
 
 This tool is used to load large CSV files and search multiple files with the same criteria.
 
