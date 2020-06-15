@@ -62,7 +62,7 @@ If you selected "Results within Column" then you'll get a list of total results 
 
 ![FP_w_Search_Criteria](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_w_Search_Criteria.png)
 
-Now lets close the "Headers" pop-up. If you selected values (or entered them manually) you can click search or press "Enter" and let the application do it's thing. It will search in the order the files are listed on the main screen going from top down. If they opened in the incorrect order you can click the "Sort Files" button to change the search order.
+Now lets close the "Headers" pop-up. If you selected values (or entered them manually) you can click search or press "Enter" and let the application do it's thing. It will search in the order the files are listed on the main screen going from top down. If they opened in the incorrect order you can click the "Sort Files" button, enter the desired order, and then click "Save Order".
 
 ![Sort_Files](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/Sort_Files.png)
 
