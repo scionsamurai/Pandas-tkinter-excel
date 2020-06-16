@@ -44,10 +44,10 @@ class Retrieve_R:
             if func == 0:
                 print('Searching:\n' + input_criteria[1][1].get())
                 search_column = (input_criteria[0][1].get()).strip()
-                output_directory, zeros_dict, font_type_size, col_width, dec_rules,\
+                out_d_and_n, zeros_dict, font_type_size, col_width, dec_rules,\
                 dec_place = GenFuncs.get_out_opts(input_criteria, search_column,output_type)  # Load Settings
             elif func == 3:
-                output_directory, zeros_dict, font_type_size, col_width, dec_rules,\
+                out_d_and_n, zeros_dict, font_type_size, col_width, dec_rules,\
                 dec_place = GenFuncs.get_out_opts(input_criteria, input_criteria[0],output_type, func=1, file_name=file_name)  # Load Settings
 
             checked_l = get_checked_l()
@@ -72,8 +72,17 @@ class Retrieve_R:
         else:
             new_new_output = opened_files
             output_type = 'xlsx'
-            output_directory, zeros_dict, font_type_size, \
+            out_d_and_n, zeros_dict, font_type_size, \
             col_width, dec_rules, dec_place = GenFuncs.get_out_opts("", "",output_type, func=1, file_name=file_name)  # Load Settings
+
+        output_directory = os.path.dirname(out_d_and_n)
+
+        for FP_out in os.listdir(output_directory): # Clean output folder of past search items
+            if FP_out.endswith("FP_out.xlsx"):
+                try:
+                    os.remove(os.path.join(output_directory, FP_out))
+                except PermissionError:
+                    pass
 
         if dec_place != False:
             dec_var = '%.' + str(dec_place) + 'f'
@@ -109,9 +118,9 @@ class Retrieve_R:
             for col in new_new_output:
                 cols_index.append(col)
             if output_type == 'csv':
-                new_new_output.to_csv(output_directory, index=False)
+                new_new_output.to_csv(out_d_and_n, index=False)
             elif output_type == 'xlsx':
-                writer_orig = pd.ExcelWriter(output_directory, engine='xlsxwriter')
+                writer_orig = pd.ExcelWriter(out_d_and_n, engine='xlsxwriter')
                 new_new_output.to_excel(writer_orig, index=False, sheet_name='SearchOutput', float_format=dec_var)
                 workbook = writer_orig.book
                 worksheet = writer_orig.sheets['SearchOutput']
@@ -146,14 +155,17 @@ class Retrieve_R:
                         crnt_rule += 1
                         v.set(v.get()+".")
                         root.update_idletasks()
-                writer_orig.save()
+                try:
+                    writer_orig.save()
+                except xlsxwriter.exceptions.FileCreateError:
+                    print("File with same criteria already open. Please close to regenerate")
             if auto_open_var.get() == 1:
                 try:
                     if platform == "linux" or platform == "linux2":
                         opener = "open" if sys.platform == "darwin" else "xdg-open"
-                        subprocess.call([opener, output_directory])
+                        subprocess.call([opener, out_d_and_n])
                     else:
-                        os.startfile(output_directory, 'open')
+                        os.startfile(out_d_and_n, 'open')
                 except:
                     print('Error while trying to open application\nPlease set default xlsx application')
                 end = time.time()
