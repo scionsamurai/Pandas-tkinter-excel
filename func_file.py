@@ -293,15 +293,22 @@ class GenFuncs:
         :param search_col: Stripped Search Column
         :param out_type: type of output - set to xlsx for a while
         """
+        main_f_name = input_crit[1][1].get()
+        
+        if "\\" in main_f_name: # Clean File name of slashes
+            main_f_name = main_f_name.replace("\\","")
+        if "/" in main_f_name:
+            main_f_name = main_f_name.replace("/","")
+
         if func == 0:
             if not isinstance(Split_Entry.split(input_crit[1][1].get()), str):
                 if len(Split_Entry.split(input_crit[1][1].get())) > 1:
                     output_dir = search_col + "(" + str(
-                        len(Split_Entry.split(input_crit[1][1].get()))) + ")." + out_type
+                        len(Split_Entry.split(input_crit[1][1].get()))) + ")" + "FP_out." + out_type
                 else:
-                    output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
+                    output_dir = Split_Entry.split(main_f_name) + "FP_out" + "." + out_type
             else:
-                output_dir = Split_Entry.split(input_crit[1][1].get()) + "." + out_type
+                output_dir = Split_Entry.split(main_f_name) + "FP_out" + "." + out_type
             output_dir = output_dir.replace('\t','_')
 
         var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
@@ -319,7 +326,7 @@ class GenFuncs:
                 output_directory = os.path.join(output_path, output_dir)
             else:
                 output_path = var_file['dir_location']
-                output_directory = os.path.join(output_path, (file_name + "." + out_type))
+                output_directory = os.path.join(output_path, (file_name + "FP_out" + "." + out_type))
         except KeyError:
             if func == 0:
                 output_directory = os.path.join(tempfile.gettempdir(),output_dir)
