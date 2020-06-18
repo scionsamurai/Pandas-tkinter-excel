@@ -63,10 +63,6 @@ def fetch(pandas_obj):
    print('----header_W/filler_value : filler_value----')
    print(answer)
 
-def print_l():
-    x =open(os.path.join(p_license(globals()), "LICENSE")).read()
-    print(x)
-
 def p_license(gdict):
     filename = gdict["__file__"]
     return os.path.dirname(filename)
@@ -218,8 +214,11 @@ def clear_footer():
     ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
     footer.pack()
 
-def open_help_gs():
-    webbrowser.open_new(r"https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/README.md")
+def open_help_gs(func=1):
+    if func == 1:
+        webbrowser.open_new(r"https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/README.md")
+    else:
+        webbrowser.open_new(r"https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/LICENSE")
 
 def sort_second(val):
     return val[1]
@@ -326,7 +325,7 @@ if __name__ == '__main__':
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="Getting Started", command=(lambda e=ents: open_help_gs()))
-   helpmenu.add_command(label="License", command=(lambda e=ents: print_l()))
+   helpmenu.add_command(label="License", command=(lambda e=ents: open_help_gs(2)))
    #helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
    #helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
