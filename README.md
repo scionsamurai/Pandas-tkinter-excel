@@ -1,10 +1,10 @@
 ## File_Pal
 
+This tool is used to load large CSV files and search multiple files with the specified criteria.
+
 Note: If the progress bar gets stuck due to an error you can click ctrl+c to remove, but be careful not to click into the cmd/shell window and press ctrl+c since it will close the whole application.
 
 Note2: I built this with time series files in mind. So when you search by multiple files it will stack the output based on each files column header. If the headers match then the values on file 2 will be in the same column as the values from file 1, but if file 2 has a header that file 1 doesn't have then the output will have the inserted file 2 column with blank values until the file 2 results start appearing. If the files you have open have different headers completely then you may get a more desired output by searching the files one at a time (by unchecking the box next to the file before clicking search).
-
-This tool is used to load large CSV files and search multiple files with the same criteria.
 
 ### Getting Started
 
