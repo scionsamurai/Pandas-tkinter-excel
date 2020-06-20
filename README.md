@@ -12,6 +12,8 @@ Note2: I built this with time series files in mind. So when you search by multip
 
 This is one of my first tutorial write ups so please go easy on me. (But i'd appreciate any constructive feedback)
 
+(If you want the files to be dropped into a specific folder you can follow along with this beginning, otherwise the files will automatically be dropped into your temporary folder). The files are automatically deleted on the next search (if they aren't still open) so you can skip to opening files if you don't want to specify the output directory.
+
 ![File_pal_Options](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/File_Pal_Options.png)
 
 First we'd want to click File>Options.
@@ -26,11 +28,7 @@ After that we'll want to choose "General".
 
 ![FP_SO_General2](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_SO_General2.png)
 
-Now we can enter some general file output preferences. (Don't forget to click Save) I would also recommend clicking the "Output Dir" button so that we can set where our files will be generated.
-
-![FP_SO_G_OutputDir](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_SO_G_OutputDir.png)
-
-I'd also recommend creating a folder on your desktop named "File_Pal_Output" or "Trash_Stuff" so that you see it often and can get reminded to delete these output files. (I'll be adding an Auto-Delete checkbutton to the main window at one point)
+Now we can enter some general file output preferences. (Don't forget to click Save) If you would like to set the file output directory you can by clicking the "Output Dir" button.
 
 ![FP_SO_G_OutputDir2](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_SO_G_OutputDir2.png)
 
@@ -40,9 +38,11 @@ Here is my output folder selected.
 
 And here's an updated picture of File>Options>Search_Output>General to show my new output location is set.
 
+### Opening Files
+
 ![File_Open_SelectFile](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/File_Open_SelectFile.png)
 
-Now we can start opening our files by going to File>Open>Select_File. I would suggest only using this application with CSV files for now. I set a restriction on xlsx files to only allow up to 2MB because they open super slow right now. Adding support for larger xls files is my next objective. (And then i'll be thinking about adding SQL functionality)
+We can start opening our files by going to File>Open>Select_File. I would suggest only using this application with CSV files for now. I set a restriction on xlsx files to only allow up to 2MB because they open super slow right now.
 
 ![FP_Select_Files](https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/pics/FP_Select_Files.png)
 
