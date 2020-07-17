@@ -144,7 +144,6 @@ def open_files(func=1):
                 if file not in answer:
                     try:
                         dataframe = OpenFile.open_file(file, inp_opts, footer)
-                        # #frame , location/key, (cols:NA_Fill vals
                         if not dataframe[0].empty:
                             frame_class = FileFrame(dataframe[0],dataframe[1], dataframe[2])
                             li.append(frame_class)
@@ -320,8 +319,6 @@ if __name__ == '__main__':
 
    #submenu3.add_command(label="More >", command=(lambda e=ents: form2.make(func=2)))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
-   filemenu.add_separator()
-   filemenu.add_command(label="Exit", command=root.quit)
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="Getting Started", command=(lambda e=ents: open_help_gs()))
@@ -331,10 +328,10 @@ if __name__ == '__main__':
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
    root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                     answer, footer)))
+                                                                     answer, row)))
    root.bind('<Control-c>', (lambda event: clear_footer()))
    b4 = Button(body, text=' Search ', command=(lambda e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                                   answer, footer)))
+                                                                                   answer, row)))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
    auto_open_box.set(1)
@@ -343,8 +340,10 @@ if __name__ == '__main__':
 
 
    b5 = Button(body, text='Sort Files',command=(lambda e=root: resort()))
+   Label(row, text=' --- Files / Search Order --- ').pack()
    b5.pack(side=LEFT, padx=5, pady=5)
    body.pack()
    header.pack()
+   row.pack()
    footer.pack()
    root.mainloop()
