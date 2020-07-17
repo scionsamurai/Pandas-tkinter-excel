@@ -147,14 +147,6 @@ class Retrieve_R:
                         crnt_rule += 1
                         v.set(v.get()+".")
                         root.update_idletasks()
-                if len(dec_rules) > 0:  # Set Column / Decimal places
-                    for key, val in dec_rules.items():
-                        num_format = workbook.add_format({'num_format': val})
-                        worksheet.set_column(key, size, num_format)
-                        progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
-                        crnt_rule += 1
-                        v.set(v.get()+".")
-                        root.update_idletasks()
                 try:
                     writer_orig.save()
                 except xlsxwriter.exceptions.FileCreateError:
