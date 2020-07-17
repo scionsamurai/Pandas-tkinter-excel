@@ -131,7 +131,26 @@ class GenFuncs:
         elif func == 2:
             field_to_update.delete(0, END)
         else:
-            field_to_update.insert(0, (str(set_info) + "\t"))
+            def isint(x):
+                try:
+                    a = float(x)
+                    b = int(a)
+                except ValueError:
+                    return False
+                else:
+                    return a==b
+            try:
+                if isint(set_info):
+                    field_to_update.insert(0, (str(set_info) + "\t"))
+                else:
+                    try:
+                        if float(set_info):
+                            print('Can\'t insert value due to extra decimals in value on original file.')
+                    except:
+                        field_to_update.insert(0, (str(set_info) + "\t"))
+            except:
+                field_to_update.insert(0, (str(set_info) + "\t"))
+    
 
     def get_file_list(input_list, already_open_list, check_name=False, name_str=False, func=1):
         """
@@ -212,12 +231,16 @@ class GenFuncs:
                 elif new_list[0] == 'decimal_places':
                     dec_dict[new_list[1]] = new_list[2].strip()
                 elif new_list[0] == 'glob_dec_place':
-                    glob_dec = new_list[1]
+                    if new_list[1].strip() != 'False':
+                        glob_dec = new_list[1]
+                    else:
+                        glob_dec = False
             var_file['col_spacing'] = space_dict
             var_file['lead_zeroes'] = zero_dict
             var_file['font_rules'] = font_dict
             var_file['decimal_places'] = dec_dict
-            var_file['glob_dec_place'] = glob_dec
+            if glob_dec != False:
+                var_file['glob_dec_place'] = glob_dec
         else:
             try:
                 col_width = var_file['col_spacing']
@@ -343,12 +366,15 @@ class GenFuncs:
         try:
             try:
                 dec_place = var_file['glob_dec_place'].strip()
+                if dec_place == 'False':
+                    dec_place = False
             except AttributeError:
                 dec_place = var_file['glob_dec_place']
             try:
                 dec_place = int(dec_place)
             except:
-                pass
+                print('General Decimal places isn\'t a number. Not using setting.')
+                dec_place = False
         except KeyError:
             dec_place = False
         var_file.close()
