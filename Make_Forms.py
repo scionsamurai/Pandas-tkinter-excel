@@ -168,7 +168,7 @@ class MakeForm:
             if font_type_size != {}:
                 ent.insert(0,(str(list(font_type_size.keys())[0])))
                 ent1.insert(0,(str(list(font_type_size.values())[0])))
-            if glob_dec_place != False:
+            if glob_dec_place != False and glob_dec_place.strip() != 'False':
                 ent2.insert(0,(str(glob_dec_place)))
             row2 = Frame(opt_footer)
             bsave = Button(row2, text='Save Changes',
@@ -234,9 +234,6 @@ class MakeForm:
                 :param fields: List of open files.
                 :return: List of Files with checkbutton Status.
                 """
-            lrow = Frame(root)
-            Label(lrow, text=' --- Files / Search Order --- ').pack()
-            lrow.pack()
             entries = []
             for field in fields:
                 temp_field = field.split('/')
@@ -279,7 +276,10 @@ class MakeForm:
                 except:
                     dec_dict = {}
                 try:
-                    glob_dec = var_file['glob_dec_place']
+                    if glob_dec.strip() != 'False':
+                        glob_dec = var_file['glob_dec_place']
+                    else:
+                        glob_dec = False
                 except:
                     glob_dec = False
                 profs[name.get()] = [space_dict, zero_dict, font_dict, dec_dict, glob_dec, name.get()]
@@ -368,8 +368,8 @@ class MakeForm:
             supply_dict['change_func'] = self.changed_2
             inp_ents = self.make(footer_1, func=4, NAdict=supply_dict)
         elif widget.get() == 'Search Output':
-            supply_dict['in_list'] = 'General', 'Column Lead Zeros', 'Column Spacing',\
-                                     'Round Decimal Place' #'Profiles', 
+            supply_dict['in_list'] = 'General', 'Column Lead Zeros', 'Column Spacing'#,\
+                                     #'Round Decimal Place', 'Profiles', 
             supply_dict['change_func'] = self.changed_3
             inp_ents = self.make(footer_1, func=4, NAdict=supply_dict)
         footer_1.pack()
@@ -419,15 +419,15 @@ class MakeForm:
         elif widget.get() == 'Column Lead Zeros':
             supply_dict = {}
             supply_dict['label'] = 'Saved Column/Lead Zero Rules'
-            supply_dict['but_name'] = 'Col Name/# 0\'s'
-            supply_dict['list_opts'] = list(range(25))
+            supply_dict['but_name'] = 'Col Name/# Digit\'s'
+            supply_dict['list_opts'] = list(range(25))[1:]
             supply_dict['dict/list'] = 'lead_zeroes'
             inp_ents = self.make(opt_footer, func=6, NAdict=supply_dict)
         elif widget.get() == 'Column Spacing':
             supply_dict = {}
             supply_dict['label'] = 'Saved Column/Width Rules'
             supply_dict['but_name'] = 'Col Index/Width'
-            supply_dict['list_opts'] = list(range(25))
+            supply_dict['list_opts'] = list(range(25))[1:]
             supply_dict['dict/list'] = 'col_spacing'
             inp_ents = self.make(opt_footer, func=6, NAdict=supply_dict)
         elif widget.get() == 'Round Decimal Place':
@@ -517,7 +517,7 @@ class MakeForm:
                 rules = []
 
         if lisct == 'decimal_places':
-            if ent.get() not in rules:
+            if ent.get() not in rules and ent.get() != '':
                 if var.get() == 'tenths':
                     dec_format = '0.0'
                 elif var.get() == 'hundredths':
@@ -530,10 +530,17 @@ class MakeForm:
                     dec_format = '0.00000'
                 elif var.get() == 'millionths':
                     dec_format = '0.000000'
-                rules[ent.get()] = dec_format
+                if len(ent.get().split(':')) == 2:
+                    rules[ent.get()] = dec_format
         elif lisct != 'spec_col_rules':
-            if ent.get() not in rules:
-                rules[ent.get()] = var.get()
+            if ent.get() not in rules and ent.get() != '':
+                if lisct != 'col_spacing' and lisct != 'lead_zeroes':
+                    rules[ent.get()] = var.get()
+                elif lisct == 'lead_zeroes':
+                    if len(ent.get().split(':')) != 2:
+                        rules[ent.get()] = var.get()
+                elif len(ent.get().split(':')) == 2:
+                    rules[ent.get()] = var.get()
         else:
             rules.append(ent.get())
         var_file[lisct] = rules
