@@ -176,9 +176,6 @@ class MakeFooter:
             return slimmed_list, count_dict
 
 
-        lrow = Frame(rootx)
-        Label(lrow, text=' --- Files / Search Order --- ').pack()
-        lrow.pack()
         entries = []
         if len(fields) < 7:
             for field in fields:
