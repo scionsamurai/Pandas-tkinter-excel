@@ -531,18 +531,18 @@ class MakeForm:
                 elif var.get() == 'millionths':
                     dec_format = '0.000000'
                 if len(ent.get().split(':')) == 2:
-                    rules[ent.get()] = dec_format
+                    rules[ent.get().strip()] = dec_format
         elif lisct != 'spec_col_rules':
-            if ent.get() not in rules and ent.get() != '':
+            if ent.get().strip() not in rules and ent.get() != '':
                 if lisct != 'col_spacing' and lisct != 'lead_zeroes':
-                    rules[ent.get()] = var.get()
+                    rules[ent.get().strip()] = var.get()
                 elif lisct == 'lead_zeroes':
-                    if len(ent.get().split(':')) != 2:
-                        rules[ent.get()] = var.get()
-                elif len(ent.get().split(':')) == 2:
-                    rules[ent.get()] = var.get()
+                    if len(ent.get().strip().split(':')) != 2:
+                        rules[ent.get().strip()] = var.get()
+                elif len(ent.get().strip().split(':')) == 2:
+                    rules[ent.get().strip()] = var.get()
         else:
-            rules.append(ent.get())
+            rules.append(ent.get().strip())
         var_file[lisct] = rules
         var_file.close()
         self.print_lab(rules,lisct)
@@ -647,4 +647,6 @@ class MakeForm:
             place_holda = filedialog.asksaveasfile
 
         file_w_headers = place_holda(parent=root, initialdir=dir, title=eltit, filetypes=my_filetypes)
-        GenFuncs.exp_imp_func(file_w_headers,edom)
+        if file_w_headers:
+            GenFuncs.exp_imp_func(file_w_headers,edom)
+        
