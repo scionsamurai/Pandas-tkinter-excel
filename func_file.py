@@ -261,12 +261,6 @@ class GenFuncs:
             except KeyError:
                 pass
             try:
-                dec_places = var_file['decimal_places']
-                rule_list.append('decimal_places' + '::::' + list(dec_places.keys())[0] + '::::' +
-                                 str(list(dec_places.values())[0]) + '\n')
-            except KeyError:
-                pass
-            try:
                 glob_dec_places = var_file['glob_dec_place']
                 rule_list.append('glob_dec_place' + '::::' + str(glob_dec_places) + '\n')
             except KeyError:
