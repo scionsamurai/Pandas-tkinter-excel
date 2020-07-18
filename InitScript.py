@@ -29,24 +29,9 @@ warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 my_filetypes = [('all files', '.*'), ('CSV files', '.csv')]
 fields = 'Header To Search', '   Search Item(s)   '
-plugz = []
-plug_ind = []
-checkable_butts = []
 li = []
 answer = []
 err_dial_pressed = False
-
-def get_class_name(mod_name):
-    """Return the class name from a plugin name"""
-    output = ""
-
-    # Split on the _ and ignore the 1st word plugin
-    words = mod_name.split("_")[1:]
-
-    # Capitalise the first letter of each word and add to string
-    for word in words:
-        output += word.title()
-    return output
 
 def fetch(pandas_obj):
    """
@@ -79,12 +64,7 @@ def close_files(toor):
             if ents2[ind][2].get() == 1:
                 del li[ind]
                 answer.remove(file)
-        footer.pack_forget()
-        footer.destroy()
-        footer = Frame(toor)
-        ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
-        form2.answer = answer
-        footer.pack()
+        clear_footer()
 
 def open_files(func=1):
     """
@@ -92,7 +72,7 @@ def open_files(func=1):
     :param func: ==1 Open Selected files from within a folder .
     :param func: ==2 Open files within Selected Directory.
     """
-    global answer, footer,ents, ents2
+    global answer, footer,ents, ents2, row
     inp_opts = GenFuncs.get_inp_opts()
     new_list = []
     loc_answer = []
@@ -129,7 +109,7 @@ def open_files(func=1):
             inp_opts = temp_opts
         if (len(new_list) > 1) and (inp_opts[0]['CPU Cores'] > 1):
             pool = Pool(processes=inp_opts[0]['CPU Cores'])
-            df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts, root=footer), new_list)
+            df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts, root=row), new_list)
             for i in range(len(new_list)):
                 if not df_list[i][0].empty:
                     frame_class = FileFrame(df_list[i][0], df_list[i][1], df_list[i][2])
@@ -143,16 +123,13 @@ def open_files(func=1):
             for file in loc_answer:
                 if file not in answer:
                     try:
-                        dataframe = OpenFile.open_file(file, inp_opts, footer)
+                        dataframe = OpenFile.open_file(file, inp_opts, row)
                         if not dataframe[0].empty:
                             frame_class = FileFrame(dataframe[0],dataframe[1], dataframe[2])
                             li.append(frame_class)
                             answer.append(file)
 
-                        footer.pack_forget()
-                        footer.destroy()
-                        footer = Frame(root)
-                        footer.pack()
+                        clear_footer()
                     except PermissionError as e:
                         print(e)
                         print('This file is currently locked.')
@@ -162,7 +139,6 @@ def open_files(func=1):
                         clear_footer()
         except KeyboardInterrupt as e:
             print(e)
-        ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
 
 def resort():
     """
@@ -181,10 +157,15 @@ def resort_p2(ents3):
     """
     Refresh main window footer to have original layout with new order.
     """
-    global answer, footer, ents2, li, form2
+    global answer, footer, ents2, li, form2, row
     temp_list = []
     for i in ents3:
-        temp_list.append((i[0],i[1].get()))
+        try:
+            num = int(i[1].get())
+        except:
+            print(f"{i[1].get()} not a number? Defaulting to 0")
+            num = 0
+        temp_list.append((i[0],num))
     temp_list.sort(key= sort_second)
 
     temp2_list = []
@@ -198,20 +179,25 @@ def resort_p2(ents3):
     del temp_li
     answer = temp2_list
 
-    footer.pack_forget()
-    footer.destroy()
-    footer = Frame(root)
-    ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
     form2.answer = answer
-    footer.pack()
+    clear_footer()
 
 def clear_footer():
-    global footer, answer, ents2, li
+    global footer, answer, ents2, li, row
     footer.pack_forget()
     footer.destroy()
+    row.pack_forget()
+    row.destroy()
+    row = Frame(root)
     footer = Frame(root)
+    Label(row, text=' --- Files / Search Order --- ').pack()
     ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
+    row.pack()
     footer.pack()
+
+def clear_values():
+    ents[0][1].delete(0, END)
+    ents[1][1].delete(0, END)
 
 def open_help_gs(func=1):
     if func == 1:
@@ -221,6 +207,13 @@ def open_help_gs(func=1):
 
 def sort_second(val):
     return val[1]
+
+def ask_quit():
+    if messagebox.askyesno("Quit", "Do you want to quit now?"):
+        try:
+            root.destroy()
+        except:
+            pass
 
 def err_dialog():
     """
@@ -241,42 +234,6 @@ def err_dialog():
         sys.stdout = p1
         err_dial_pressed = True
 
-def get_plugz(path):
-    modules = pkgutil.iter_modules(path=[path])
-
-    for loader, mod_name, ispkg in modules:
-        # Ensure that module isn't already loaded
-        if mod_name not in sys.modules:
-            # Import module
-            loaded_mod = __import__(path + "." + mod_name, fromlist=[mod_name])
-
-            # Load class from imported module
-            class_name = get_class_name(mod_name)
-            loaded_class = getattr(loaded_mod, class_name)
-
-            # Create an instance of the class
-            if path == "plugins":
-                plugz.append([class_name, loaded_class()])
-                plug_ind.append(class_name)
-            elif path == "checkable_sets":
-                checkable_butts.append([class_name, loaded_class()])
-
-def changed(*args, var, plug_name, code):
-    update_plugs_list(var,plug_name,code)
-
-def update_plugs_list (var, plug_name, code, save_set=False):
-    try:
-    	var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
-    	try:
-            plug_l = var_file['plug_lists']
-    	except KeyError:
-            plug_l = {}
-    	plug_l[plug_name] = [var.get(), code, save_set]
-    	var_file['plug_lists'] = plug_l
-    	var_file.close()
-    except:
-    	print("error at line 255 opening var_file")
-
 if __name__ == '__main__':
    multiprocessing.freeze_support()
    root = Tk()
@@ -288,8 +245,6 @@ if __name__ == '__main__':
    row = Frame(root)
    footer = Frame(root)
 
-   get_plugz("plugins")
-   get_plugz("checkable_sets")
 
    answer = []
    form2 = MakeForm()
@@ -300,25 +255,12 @@ if __name__ == '__main__':
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root, tearoff=0)
-   #submenu2 = Menu(root, tearoff=0)
-   submenu3 = Menu(root, tearoff=0)
    submenu.add_command(label="Select File", command=(lambda e=ents: open_files()))
    submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
    filemenu.add_cascade(label="Open", menu=submenu)
-   #filemenu.add_cascade(label="Plugins", menu=submenu2)
-   #for name, instance in plugz:
-   #    ind = plug_ind.index(name)
-   #    submenu2.add_command(label=name, command=(lambda e=ind: plugz[e][1].run(li,answer,ents2,auto_open_box, root)))
-   filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
-   for name, instance in checkable_butts:
-       temp_var = IntVar()
-       temp_var.set(0)
-       update_plugs_list(temp_var, name, instance)
-       temp_var.trace("w", partial(changed, var=temp_var, plug_name=name, code=instance))
-       submenu3.add_checkbutton(label=name, variable=temp_var)
-
-   #submenu3.add_command(label="More >", command=(lambda e=ents: form2.make(func=2)))
+   filemenu.add_command(label="Sort Files", command=(lambda e=root: resort()))
    filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
+   filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
    helpmenu.add_command(label="Getting Started", command=(lambda e=ents: open_help_gs()))
@@ -339,11 +281,12 @@ if __name__ == '__main__':
    open_var.pack(side=LEFT)
 
 
-   b5 = Button(body, text='Sort Files',command=(lambda e=root: resort()))
+   b5 = Button(body, text='Clear Inputs',command=(lambda e=root: clear_values()))
    Label(row, text=' --- Files / Search Order --- ').pack()
    b5.pack(side=LEFT, padx=5, pady=5)
    body.pack()
    header.pack()
    row.pack()
    footer.pack()
+   root.protocol("WM_DELETE_WINDOW", ask_quit)
    root.mainloop()
