@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import time, os
 from tkinter.ttk import Progressbar
-from tkinter import HORIZONTAL, StringVar, Label, Frame, X, messagebox 
+from tkinter import HORIZONTAL, StringVar, Label, Frame, X, messagebox, simpledialog
 import mmap
 from func_file import GenFuncs
 from retrieve_info import Retrieve_R
@@ -388,18 +388,41 @@ class OpenFile:
                     print(e)
 
         if entry1[-4:] == '.csv':
-            if inp_options1[0]['Delimiter'] != ',':
-                df1 = pd.read_csv(entry1, sep=inp_options1[0]['Delimiter'], nrows=50, low_memory=False)
-                data, NA_list = open_func(entry1, df1, inp_options1, start1)
-                return data, entry1, NA_list
-            else:
-                df1 = pd.read_csv(entry1, nrows=50, low_memory=False)
-                data, NA_list = open_func(entry1, df1, inp_options1, start1, func=1)
-                return data, entry1, NA_list
-        elif (entry1[-4:] == 'xlsx') or (entry1[-4:] == '.xls') or ((entry1[-4:])[:3] == 'xls'):
+            while True:
+                if inp_options1[0]['Delimiter'] != ',':
+                    df1 = pd.read_csv(entry1, sep=inp_options1[0]['Delimiter'], nrows=50, low_memory=False)
+                    if len(df1.columns) == 1:
+                        if not messagebox.askyesno("Delimiter Error?", f"Is there only 1 Column in {new_field} file?"):
+                            print('Please consider changing delimiter in the input settings.')
+                            name_str = simpledialog.askstring("Set Delimiter",
+                                            "What delimiter should be used?", parent=root)
+                            inp_options1[0]['Delimiter'] = name_str.strip()
+                            continue
+                        else:
+                            data, NA_list = open_func(entry1, df1, inp_options1, start1)
+                            return data, entry1, NA_list
+                    else:
+                        data, NA_list = open_func(entry1, df1, inp_options1, start1)
+                        return data, entry1, NA_list
+                else:
+                    df1 = pd.read_csv(entry1, nrows=50, low_memory=False)
+                    if len(df1.columns) == 1:
+                        if not messagebox.askyesno("Delimiter Error?", f"Is there only 1 Column in {new_field} file?"):
+                            print('Please consider changing delimiter in the input settings.')
+                            name_str = simpledialog.askstring("Set Delimiter",
+                                            "What delimiter should be used?", parent=root)
+                            inp_options1[0]['Delimiter'] = name_str.strip()
+                            continue
+                        else:
+                            data, NA_list = open_func(entry1, df1, inp_options1, start1, func=1)
+                            return data, entry1, NA_list
+                    else:
+                        data, NA_list = open_func(entry1, df1, inp_options1, start1, func=1)
+                        return data, entry1, NA_list
+        elif (entry1[-4:] == 'xlsx') or (entry1[-4:] == '.xls') or ((entry1[-4:])[:3] == 'xls') or ((entry1[-4:])[:2] == 'xl'):
             file_stats = os.stat(entry1)
             if (file_stats.st_size / (1024*1024)) > 2: # check if xls file is larger than 2mb - don't open if so until large file support is added
-                messagebox.showinfo('Access is denied', 'xls Error: Size not yet supported\nConsider saving the file as .csv\nLarge csv files are supported')
+                messagebox.showinfo('Access is denied', 'xls Error: Size not supported\nConsider saving the file as .csv\nLarge csv files are supported')
                 df_empty = pd.DataFrame({'A':[]})
                 end = time.time()
                 print('-------'+ str(end-start1) +'-------')
