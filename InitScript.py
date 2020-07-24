@@ -10,12 +10,12 @@ Provides
 from tkinter import *
 import multiprocessing
 from multiprocessing import Pool
+from threading import Thread
 from tkinter import filedialog, simpledialog, messagebox
 import os, warnings, tables, shelve, webbrowser
 import pandas as pd
 import numpy as np
 from footer_frame import MakeFooter
-import importlib,pkgutil
 from file_frame import FileFrame
 from retrieve_info import Retrieve_R
 from functools import partial
@@ -32,6 +32,7 @@ fields = 'Header To Search', '   Search Item(s)   '
 li = []
 answer = []
 err_dial_pressed = False
+thread_busy = False
 
 def fetch(pandas_obj):
    """
@@ -72,86 +73,90 @@ def open_files(func=1):
     :param func: ==1 Open Selected files from within a folder .
     :param func: ==2 Open files within Selected Directory.
     """
-    global answer, footer,ents, ents2, row
-    inp_opts = GenFuncs.get_inp_opts()
-    new_list = []
-    loc_answer = []
-    if func==1:
-        files_answer = filedialog.askopenfilenames(parent=footer,
-                                                   initialdir=os.getcwd(),
-                                                   title="Please select one or more files:",
-                                                   filetypes=my_filetypes)
-        try:
-            new_list, loc_answer = GenFuncs.get_file_list(files_answer,answer,func=1)
-        except TypeError:
-            new_list, loc_answer = [], []
-    elif func==2:
-        check_name_temp = messagebox.askyesno("File_Pal_1.1", "Do you want to specify the first characters?")
-        if check_name_temp:
-            name_str = simpledialog.askstring("File_Pal_1.1",
-                                              "First part of name for the files you want to open?",
-                                              parent=root)
-        else:
-            name_str = ''
-        directory = filedialog.askdirectory(parent=root,
-                                            initialdir=os.getcwd(),
-                                            title="Please select Directory:")
-        try:
-            new_list, loc_answer = GenFuncs.get_file_list(directory, answer, check_name_temp, name_str, func=2)
-        except TypeError:
-            new_list, loc_answer = [], []
-    if (len(loc_answer) + len(new_list)) > 0:
-        if inp_opts[0]['Main Win Criteria']:
-            temp_opts = list(inp_opts)
-            search_column = (ents[0][1].get()).strip()
-            real_list = Split_Entry.split(ents[1][1].get())
-            temp_opts.extend((search_column, real_list))
-            inp_opts = temp_opts
-        if (len(new_list) > 1) and (inp_opts[0]['CPU Cores'] > 1):
-            pool = Pool(processes=inp_opts[0]['CPU Cores'])
-            df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts, root=row), new_list)
-            for i in range(len(new_list)):
-                if not df_list[i][0].empty:
-                    frame_class = FileFrame(df_list[i][0], df_list[i][1], df_list[i][2])
-                    li.append(frame_class)
-                    answer.append(df_list[i][1])
-                else:
-                    print(df_list[i][1] + ' didn\'t have the certian input requirements.')
-        else:
-            loc_answer.extend(new_list)
-        try:
-            for file in loc_answer:
-                if file not in answer:
-                    try:
-                        dataframe = OpenFile.open_file(file, inp_opts, row)
-                        if not dataframe[0].empty:
-                            frame_class = FileFrame(dataframe[0],dataframe[1], dataframe[2])
-                            li.append(frame_class)
-                            answer.append(file)
+    global answer, footer,ents, ents2, row, thread_busy
+    if not thread_busy:
+        thread_busy = True
+        inp_opts = GenFuncs.get_inp_opts()
+        new_list = []
+        loc_answer = []
+        if func==1:
+            files_answer = filedialog.askopenfilenames(parent=footer,
+                                                    initialdir=os.getcwd(),
+                                                    title="Please select one or more files:",
+                                                    filetypes=my_filetypes)
+            try:
+                new_list, loc_answer = GenFuncs.get_file_list(files_answer,answer,func=1)
+            except TypeError:
+                new_list, loc_answer = [], []
+        elif func==2:
+            check_name_temp = messagebox.askyesno("File_Pal_1.1", "Do you want to specify the first characters?")
+            if check_name_temp:
+                name_str = simpledialog.askstring("File_Pal_1.1",
+                                                "First part of name for the files you want to open?",
+                                                parent=root)
+            else:
+                name_str = ''
+            directory = filedialog.askdirectory(parent=root,
+                                                initialdir=os.getcwd(),
+                                                title="Please select Directory:")
+            try:
+                new_list, loc_answer = GenFuncs.get_file_list(directory, answer, check_name_temp, name_str, func=2)
+            except TypeError:
+                new_list, loc_answer = [], []
+        if (len(loc_answer) + len(new_list)) > 0:
+            if inp_opts[0]['Main Win Criteria']:
+                temp_opts = list(inp_opts)
+                search_column = (ents[0][1].get()).strip()
+                real_list = Split_Entry.split(ents[1][1].get())
+                temp_opts.extend((search_column, real_list))
+                inp_opts = temp_opts
+            if (len(new_list) > 1) and (inp_opts[0]['CPU Cores'] > 1):
+                pool = Pool(processes=inp_opts[0]['CPU Cores'])
+                df_list = pool.map(partial(OpenFile.open_file, inp_options=inp_opts, root=row), new_list)
+                for i in range(len(new_list)):
+                    if not df_list[i][0].empty:
+                        frame_class = FileFrame(df_list[i][0], df_list[i][1], df_list[i][2])
+                        li.append(frame_class)
+                        answer.append(df_list[i][1])
+                    else:
+                        print(df_list[i][1] + ' didn\'t have the certian input requirements.')
+            else:
+                loc_answer.extend(new_list)
+            try:
+                for file in loc_answer:
+                    if file not in answer:
+                        try:
+                            dataframe = OpenFile.open_file(file, inp_opts, row)
+                            if not dataframe[0].empty:
+                                frame_class = FileFrame(dataframe[0],dataframe[1], dataframe[2])
+                                li.append(frame_class)
+                                answer.append(file)
 
-                        clear_footer()
-                    except PermissionError as e:
-                        print(e)
-                        print('This file is currently locked.')
-                        clear_footer()
-                    except ValueError as e:
-                        print(e)
-                        clear_footer()
-        except KeyboardInterrupt as e:
-            print(e)
+                            clear_footer()
+                        except PermissionError as e:
+                            print(e)
+                            print('This file is currently locked.')
+                            clear_footer()
+                        except ValueError as e:
+                            print(e)
+                            clear_footer()
+            except KeyboardInterrupt as e:
+                print(e)
+        thread_busy = False
 
 def resort():
     """
     Refresh main window footer to have file and entry to start Resort.
     """
-    global answer, footer, ents2
-    footer.pack_forget()
-    footer.destroy()
-    footer = Frame(root)
-    ents3 = form2.make(footer, answer, 1,1)
-    b1 = Button(footer, text='Save Order', command=(lambda e=root: resort_p2(ents3)))
-    b1.pack(side=RIGHT, padx=5, pady=5)
-    footer.pack()
+    global answer, footer, ents2, thread_busy
+    if not thread_busy:
+        footer.pack_forget()
+        footer.destroy()
+        footer = Frame(root)
+        ents3 = form2.make(footer, answer, 1,1)
+        b1 = Button(footer, text='Save Order', command=(lambda e=root: resort_p2(ents3)))
+        b1.pack(side=RIGHT, padx=5, pady=5)
+        footer.pack()
 
 def resort_p2(ents3):
     """
@@ -183,7 +188,7 @@ def resort_p2(ents3):
     clear_footer()
 
 def clear_footer():
-    global footer, answer, ents2, li, row
+    global footer, answer, ents2, li, row, thread_busy
     footer.pack_forget()
     footer.destroy()
     row.pack_forget()
@@ -196,8 +201,10 @@ def clear_footer():
     footer.pack()
 
 def clear_values():
-    ents[0][1].delete(0, END)
-    ents[1][1].delete(0, END)
+    global thread_busy
+    if not thread_busy:
+        ents[0][1].delete(0, END)
+        ents[1][1].delete(0, END)
 
 def open_help_gs(func=1):
     if func == 1:
@@ -235,10 +242,10 @@ def err_dialog():
         err_dial_pressed = True
 
 if __name__ == '__main__':
-   multiprocessing.freeze_support()
+   global auto_open_box, ents,header, body, footer, form2
+   #multiprocessing.freeze_support()
    root = Tk()
    root.title("File_Pal_1.1")
-   global auto_open_box, ents,header, body, footer, form2
 
    header = Frame(root)
    body = Frame(root)
@@ -255,25 +262,25 @@ if __name__ == '__main__':
    menubar = Menu(root)
    filemenu = Menu(menubar, tearoff=0)
    submenu = Menu(root, tearoff=0)
-   submenu.add_command(label="Select File", command=(lambda e=ents: open_files()))
-   submenu.add_command(label="All in Dir", command=(lambda e='no value': open_files(2)))
+   submenu.add_command(label="Select File", command=(lambda : Thread(target=open_files).start()))
+   submenu.add_command(label="All in Dir", command=(lambda : Thread(target=open_files, args=(2,)).start()))
    filemenu.add_cascade(label="Open", menu=submenu)
-   filemenu.add_command(label="Sort Files", command=(lambda e=root: resort()))
-   filemenu.add_command(label="Close Selected", command=(lambda e=ents2: close_files(root)))
-   filemenu.add_command(label="Options", command=(lambda e=ents: form2.make(func=2)))
+   filemenu.add_command(label="Sort Files", command=(lambda : resort()))
+   filemenu.add_command(label="Close Selected", command=(lambda : close_files(root)))
+   filemenu.add_command(label="Options", command=(lambda : form2.make(func=2)))
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
-   helpmenu.add_command(label="Getting Started", command=(lambda e=ents: open_help_gs()))
-   helpmenu.add_command(label="License", command=(lambda e=ents: open_help_gs(2)))
-   #helpmenu.add_command(label="Info Dialog", command=(lambda e=ents2: err_dialog()))
-   #helpmenu.add_command(label="Fetch", command=(lambda e=ents: fetch(li[0].df)))
+   helpmenu.add_command(label="Getting Started", command=(lambda : open_help_gs()))
+   helpmenu.add_command(label="License", command=(lambda : open_help_gs(2)))
+   #helpmenu.add_command(label="Info Dialog", command=(lambda : err_dialog()))
+   #helpmenu.add_command(label="Fetch", command=(lambda : fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
    root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                     answer, row)))
+                                                                     answer, row, thread_busy)))
    root.bind('<Control-c>', (lambda event: clear_footer()))
    b4 = Button(body, text=' Search ', command=(lambda e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                                   answer, row)))
+                                                                                   answer, row, thread_busy)))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
    auto_open_box.set(1)
@@ -281,7 +288,7 @@ if __name__ == '__main__':
    open_var.pack(side=LEFT)
 
 
-   b5 = Button(body, text='Clear Inputs',command=(lambda e=root: clear_values()))
+   b5 = Button(body, text='Clear Inputs',command=(lambda : clear_values()))
    Label(row, text=' --- Files / Search Order --- ').pack()
    b5.pack(side=LEFT, padx=5, pady=5)
    body.pack()
