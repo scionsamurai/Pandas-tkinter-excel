@@ -1,8 +1,8 @@
 """
 Class for storing File data and fill values (generated when optimizing data size).
 """
-from SearchDF import SearchDataFrame
-from SplitEntry import Split_Entry
+from _funcs.SearchDF import SearchDataFrame
+from _funcs.SplitEntry import Split_Entry
 class FileFrame:
     def __init__(self, data_frame=[], file_location=None, fill_col_val={}):
         self.df = data_frame
