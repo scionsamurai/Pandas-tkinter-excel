@@ -57,15 +57,16 @@ def close_files(toor):
     """
     Close Dataframes that are checked in main window.
     """
-    global answer, footer, ents2, li
-    close_var = messagebox.askyesno("File_Pal_1.1", "Do you want to close checked files?")
-    if close_var:
-        for file in answer[::-1]:
-            ind = answer.index(file)
-            if ents2[ind][2].get() == 1:
-                del li[ind]
-                answer.remove(file)
-        clear_footer()
+    global answer, footer, ents2, li, thread_busy
+    if not thread_busy:
+        close_var = messagebox.askyesno("File_Pal_1.1", "Do you want to close checked files?")
+        if close_var:
+            for file in answer[::-1]:
+                ind = answer.index(file)
+                if ents2[ind][2].get() == 1:
+                    del li[ind]
+                    answer.remove(file)
+            footer = reset_frame(footer ,toor, True)
 
 def open_files(func=1):
     """
@@ -132,16 +133,17 @@ def open_files(func=1):
                                 li.append(frame_class)
                                 answer.append(file)
 
-                            clear_footer()
+                            row = reset_frame(row, root)
                         except PermissionError as e:
                             print(e)
                             print('This file is currently locked.')
-                            clear_footer()
+                            row = reset_frame(row, root)
                         except ValueError as e:
                             print(e)
-                            clear_footer()
+                            row = reset_frame(row, root)
             except KeyboardInterrupt as e:
                 print(e)
+        footer = reset_frame(footer, root, True)
         thread_busy = False
 
 def resort():
@@ -185,20 +187,20 @@ def resort_p2(ents3):
     answer = temp2_list
 
     form2.answer = answer
-    clear_footer()
+    footer = reset_frame(footer, root, True)
 
-def clear_footer():
-    global footer, answer, ents2, li, row, thread_busy
-    footer.pack_forget()
-    footer.destroy()
-    row.pack_forget()
-    row.destroy()
-    row = Frame(root)
-    footer = Frame(root)
-    Label(row, text=' --- Files / Search Order --- ').pack()
-    ents2 = MakeFooter.update_footer(footer, answer, li, ents, body)
-    row.pack()
-    footer.pack()
+def reset_frame(frame, rootf,footer=False):
+    global answer, ents2, li
+    frame.pack_forget()
+    frame.destroy()
+    frame = Frame(rootf)
+    if not footer:
+        Label(frame, text=' --- Files / Search Order --- ').pack()
+    else:
+        ents2 = MakeFooter.update_footer(frame, answer, li, ents, body)
+    frame.pack()
+    return frame
+    
 
 def clear_values():
     global thread_busy
@@ -241,6 +243,19 @@ def err_dialog():
         sys.stdout = p1
         err_dial_pressed = True
 
+def retriev_func(*args):
+    global thread_busy
+    if not thread_busy:
+        thread_busy = True
+        ents = args[0]
+        ents2 = args[1]
+        li = args[2]
+        auto_open_box = args[3]
+        answer = args[5]
+        row = args[6]
+        Retrieve_R.ow_frames(ents, ents2, li, auto_open_box, 'xlsx',answer, row)
+        thread_busy = False
+
 if __name__ == '__main__':
    global auto_open_box, ents,header, body, footer, form2
    #multiprocessing.freeze_support()
@@ -276,11 +291,11 @@ if __name__ == '__main__':
    #helpmenu.add_command(label="Fetch", command=(lambda : fetch(li[0].df)))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
-   root.bind('<Return>', (lambda event, e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                     answer, row, thread_busy)))
-   root.bind('<Control-c>', (lambda event: clear_footer()))
-   b4 = Button(body, text=' Search ', command=(lambda e=ents: Retrieve_R.ow_frames(e, ents2, li, auto_open_box, 'xlsx',
-                                                                                   answer, row, thread_busy)))
+   root.bind('<Return>', (lambda event, e=ents: Thread(target=retriev_func, args=(e, ents2, li, auto_open_box, 'xlsx',
+                                                                     answer, row, thread_busy).start())))
+   root.bind('<Control-c>', (lambda event: reset_frame(row, root)))
+   b4 = Button(body, text=' Search ', command=(lambda : Thread(target=retriev_func, args=(ents, ents2, li, auto_open_box, 'xlsx',
+                                                                                   answer, row, thread_busy)).start()))
    b4.pack(side=LEFT, padx=5, pady=5)
    auto_open_box = IntVar()
    auto_open_box.set(1)
