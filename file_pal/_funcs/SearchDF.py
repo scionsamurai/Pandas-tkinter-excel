@@ -1,4 +1,4 @@
-from SplitEntry import Split_Entry
+from _funcs.SplitEntry import Split_Entry
 from pandas import concat, DataFrame
 class SearchDataFrame:
     def criteria_by_column(search_column, search_items, new_field, data_frames):
@@ -22,6 +22,7 @@ class SearchDataFrame:
             search_vars = input_l.split('\t')
             query = ' and '.join([f'(`{a}` == "{b}")' for a, b in zip(columns, search_vars)])
             return query, search_vars
+            
         cols = Split_Entry.split(search_column)
 
         if not isinstance(cols, str):
