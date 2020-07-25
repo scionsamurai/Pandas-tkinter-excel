@@ -15,15 +15,16 @@ from tkinter import filedialog, simpledialog, messagebox
 import os, warnings, tables, shelve, webbrowser
 import pandas as pd
 import numpy as np
-from footer_frame import MakeFooter
-from file_frame import FileFrame
-from retrieve_info import Retrieve_R
+from _gui.footer_frame import MakeFooter
+from _funcs.file_frame import FileFrame
+from _funcs.retrieve_info import Retrieve_R
 from functools import partial
-from open_file_2 import OpenFile
-from Make_Forms import MakeForm
-from SplitEntry import Split_Entry
-from func_file import GenFuncs
-from PLogger import PrintLogger
+from _funcs.open_file_2 import OpenFile
+from _gui.Make_Forms import MakeForm
+from _funcs.SplitEntry import Split_Entry
+from _funcs.func_file import GenFuncs
+from _gui.PLogger import PrintLogger
+from _funcs._main_win.comms import Comm
 warnings.filterwarnings("error")
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
@@ -34,32 +35,13 @@ answer = []
 err_dial_pressed = False
 thread_busy = False
 
-def fetch(pandas_obj):
-   """
-   Print first Files Memory Usage and file list.
-   :param pandas_obj: Input DataFrame.
-   """
-   if isinstance(pandas_obj, pd.DataFrame):
-       usage_b = pandas_obj.memory_usage(deep=True).sum()
-   else:
-       usage_b = pandas_obj.memory_usage(deep=True)
-   usage_mb = usage_b / 1024 ** 2 # convert bytes to megabytes
-   print("{:03.2f} MB".format(usage_mb))
-   print(pandas_obj.info(verbose=True))
-   print('----header_W/filler_value : filler_value----')
-   print(answer)
-
-def p_license(gdict):
-    filename = gdict["__file__"]
-    return os.path.dirname(filename)
-
 def close_files(toor):
     """
     Close Dataframes that are checked in main window.
     """
     global answer, footer, ents2, li, thread_busy
     if not thread_busy:
-        close_var = messagebox.askyesno("File_Pal_1.1", "Do you want to close checked files?")
+        close_var = messagebox.askyesno("File_Pal_1.2", "Do you want to close checked files?")
         if close_var:
             for file in answer[::-1]:
                 ind = answer.index(file)
@@ -90,9 +72,9 @@ def open_files(func=1):
             except TypeError:
                 new_list, loc_answer = [], []
         elif func==2:
-            check_name_temp = messagebox.askyesno("File_Pal_1.1", "Do you want to specify the first characters?")
+            check_name_temp = messagebox.askyesno("File_Pal_1.2", "Do you want to specify the first characters?")
             if check_name_temp:
-                name_str = simpledialog.askstring("File_Pal_1.1",
+                name_str = simpledialog.askstring("File_Pal_1.2",
                                                 "First part of name for the files you want to open?",
                                                 parent=root)
             else:
@@ -201,19 +183,6 @@ def reset_frame(frame, rootf,footer=False):
     frame.pack()
     return frame
     
-
-def clear_values():
-    global thread_busy
-    if not thread_busy:
-        ents[0][1].delete(0, END)
-        ents[1][1].delete(0, END)
-
-def open_help_gs(func=1):
-    if func == 1:
-        webbrowser.open_new(r"https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/README.md")
-    else:
-        webbrowser.open_new(r"https://github.com/scionsamurai/Pandas-tkinter-excel/blob/Test/LICENSE")
-
 def sort_second(val):
     return val[1]
 
@@ -260,7 +229,7 @@ if __name__ == '__main__':
    global auto_open_box, ents,header, body, footer, form2
    #multiprocessing.freeze_support()
    root = Tk()
-   root.title("File_Pal_1.1")
+   root.title("File_Pal_1.2")
 
    header = Frame(root)
    body = Frame(root)
@@ -285,10 +254,10 @@ if __name__ == '__main__':
    filemenu.add_command(label="Options", command=(lambda : form2.make(func=2)))
    menubar.add_cascade(label="File", menu=filemenu)
    helpmenu = Menu(menubar, tearoff=0)
-   helpmenu.add_command(label="Getting Started", command=(lambda : open_help_gs()))
-   helpmenu.add_command(label="License", command=(lambda : open_help_gs(2)))
+   helpmenu.add_command(label="Getting Started", command=(lambda : Comm.open_brows(webbrowser)))
+   helpmenu.add_command(label="License", command=(lambda : Comm.open_brows(webbrowser, 2)))
    #helpmenu.add_command(label="Info Dialog", command=(lambda : err_dialog()))
-   #helpmenu.add_command(label="Fetch", command=(lambda : fetch(li[0].df)))
+   #helpmenu.add_command(label="Fetch", command=(lambda : Comm.fetch(li[0].df, pd)))
    menubar.add_cascade(label="Help", menu=helpmenu)
    root.config(menu=menubar)
    root.bind('<Return>', (lambda event, e=ents: Thread(target=retriev_func, args=(e, ents2, li, auto_open_box, 'xlsx',
@@ -303,7 +272,7 @@ if __name__ == '__main__':
    open_var.pack(side=LEFT)
 
 
-   b5 = Button(body, text='Clear Inputs',command=(lambda : clear_values()))
+   b5 = Button(body, text='Clear Inputs',command=(lambda : Comm.clear_values(thread_busy, ents, END)))
    Label(row, text=' --- Files / Search Order --- ').pack()
    b5.pack(side=LEFT, padx=5, pady=5)
    body.pack()
