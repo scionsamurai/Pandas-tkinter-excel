@@ -1,20 +1,23 @@
 """
 Retrieve Input Options and Output File
 """
-from SplitEntry import Split_Entry
-from SearchDF import SearchDataFrame
+from _funcs.SplitEntry import Split_Entry
+from _funcs.SearchDF import SearchDataFrame
 import pandas as pd
 import shelve, os, time
 import xlsxwriter
-from tkinter.ttk import Progressbar
-from tkinter import HORIZONTAL, StringVar, Label, Frame, X
 from sys import platform
-from func_file import GenFuncs
-import tkinter as tk
+from _funcs.func_file import GenFuncs
 if platform == "linux" or platform == "linux2":
     import subprocess, sys
+
+_test = False
+if not _test:
+    from tkinter.ttk import Progressbar
+    from tkinter import HORIZONTAL, StringVar, Label, Frame, X
+
 class Retrieve_R:
-    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list, root2, func=0, file_name='default'):
+    def ow_frames(input_criteria, opened_files, data_frames, auto_open_var, output_type, file_list, root2=False, func=0, file_name='default'):
         """
         Search Open Files by Input Criteria and output file
         :param input_criteria: Search Column and Search Item(s)
@@ -32,13 +35,14 @@ class Retrieve_R:
                     checked_list.append(file)
             return checked_list
         start = time.time()
-        root = Frame(root2)
         new_output = []  # Search results per DataFrame
-        progress = Progressbar(root, orient=HORIZONTAL, length=300, mode='determinate')
-        progress.pack(fill=X)
-        v = StringVar()
-        Label(root, textvariable=v).pack()
-        root.pack()
+        if not _test:
+            root = Frame(root2)
+            progress = Progressbar(root, orient=HORIZONTAL, length=300, mode='determinate')
+            progress.pack(fill=X)
+            v = StringVar()
+            Label(root, textvariable=v).pack()
+            root.pack()
 
         if func == 0 or func == 3:
             if func == 0:
@@ -54,10 +58,11 @@ class Retrieve_R:
 
             for file in checked_l:
                 ind = file_list.index(file)
-                progress_bar_ind = checked_l.index(file)
-                progress['value'] = (((progress_bar_ind+1)/len(checked_l))*100)/2
-                v.set("Searching : " + GenFuncs.strip_dir(file))
-                root.update_idletasks()
+                if not _test:
+                    progress_bar_ind = checked_l.index(file)
+                    progress['value'] = (((progress_bar_ind+1)/len(checked_l))*100)/2
+                    v.set("Searching : " + GenFuncs.strip_dir(file))
+                    root.update_idletasks()
                 if func != 3:
                     results = data_frames[ind].search_col(search_column, input_criteria[1][1].get(),
                                                         zeros_dict)  # <-need to move
@@ -88,19 +93,21 @@ class Retrieve_R:
             dec_var = '%.' + str(dec_place) + 'f'
         else:
             dec_var = "%.2f"
-        v.set("Formatting Output")
-        root.update_idletasks()
+        if not _test:
+            v.set("Formatting Output")
+            root.update_idletasks()
         try:
             if func == 0 or func == 3:
                 try:
                     new_new_output = pd.concat(new_output, axis=0, sort=False, ignore_index=True)
                 except:
                     print("No results")
-                    progress.destroy()
-                    v.set("No results")
-                    root.update_idletasks()
-                    time.sleep(2)
-                    root.destroy()
+                    if not _test:
+                        progress.destroy()
+                        v.set("No results")
+                        root.update_idletasks()
+                        time.sleep(2)
+                        root.destroy()
                     return
 
             #var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
@@ -134,19 +141,21 @@ class Retrieve_R:
                             workbook.formats[0].set_font_size(size)
                         if list(font_type_size.keys())[0] != False:
                             workbook.formats[0].set_font_name(list(font_type_size.keys())[0])
-                        progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
-                        crnt_rule += 1
-                        v.set(v.get()+".")
-                        root.update_idletasks()
+                        if not _test:
+                            progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
+                            crnt_rule += 1
+                            v.set(v.get()+".")
+                            root.update_idletasks()
                     except IndexError:
                         pass
                 if len(col_width) > 0:  # Set Column / Widths
                     for rule in col_width.items():
                         worksheet.set_column(rule[0], int(rule[1]))
-                        progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
-                        crnt_rule += 1
-                        v.set(v.get()+".")
-                        root.update_idletasks()
+                        if not _test:
+                            progress['value'] = (((crnt_rule /f_rule_cnt) * 100) / 2) + 50
+                            crnt_rule += 1
+                            v.set(v.get()+".")
+                            root.update_idletasks()
                 try:
                     writer_orig.save()
                 except Exception as e:
@@ -167,7 +176,8 @@ class Retrieve_R:
                 end = time.time()
                 print('-------' + str(end - start) + '-------')
                 print('done')
-            root.destroy()
+            if not _test:
+                root.destroy()
 
         except PermissionError as e:
             print(str(e)[:28] + ": Close File Before Searching")
