@@ -1,6 +1,6 @@
 from tkinter import *
-from scrollbarClass import Scrollable
-from func_file import GenFuncs
+from _gui.scrollbarClass import Scrollable
+from _gui.func_file import GenFuncs
 import pandas as pd
 class MakeFooter:
     def update_footer(rootx, fields, li, ents, body):
