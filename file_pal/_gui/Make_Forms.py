@@ -2,11 +2,11 @@
 Class to store tkinter Frames that don't read from df classes
 """
 from tkinter import *
-from scrollbarClass import Scrollable
+from _gui.scrollbarClass import Scrollable
 import shelve, os, sys, tempfile
 import pandas as pd
 from functools import partial
-from func_file import GenFuncs
+from _funcs.func_file import GenFuncs
 class MakeForm:
     def __init__(self, answer_in=[]):
         self.entries = []
