@@ -4,13 +4,16 @@ Per file Open functions
 import pandas as pd
 import numpy as np
 import time, os
-from tkinter.ttk import Progressbar
-from tkinter import HORIZONTAL, StringVar, Label, Frame, X
 import mmap
-from func_file import GenFuncs
-from retrieve_info import Retrieve_R
+from _funcs.func_file import GenFuncs
+from _funcs.retrieve_info import Retrieve_R
+
+_test = False
+if not _test:
+    from tkinter.ttk import Progressbar
+    from tkinter import HORIZONTAL, StringVar, Label, Frame, X
 class OpenFile:
-    def open_file(entry1, inp_options1, root):
+    def open_file(entry1, inp_options1, root, _test=False):
         """
         :param entry1: Directory/FileName
         :param inp_options1: Input options
@@ -51,9 +54,10 @@ class OpenFile:
                 else:
                     chunks.append(df_chunk)
                 line_count += df_chunk.shape[0]
-                progress['value'] = (line_count / total_lines) * 100
-                v.set(str(line_count) + " : " + str(total_lines))
-                root.update_idletasks()
+                if not _test:
+                    progress['value'] = (line_count / total_lines) * 100
+                    v.set(str(line_count) + " : " + str(total_lines))
+                    root.update_idletasks()
             df_chunks = pd.concat(chunks,sort=False)
             columns = {i: col for i, col in enumerate(df_header.columns.tolist())}
             df_chunks.rename(columns=columns, inplace=True)
@@ -217,13 +221,14 @@ class OpenFile:
             :return: Dataframe, Dictionary of Column/FillVal's
             """
             global var
-            progress = Progressbar(root, orient=HORIZONTAL, length=100, mode='determinate')
-            progress.pack(fill=X)
             temp_df = []
             new_field = GenFuncs.strip_dir(entry1)
-            v = StringVar()
-            Label(root, text=new_field).pack()
-            Label(root, textvariable=v).pack()
+            if not _test:
+                progress = Progressbar(root, orient=HORIZONTAL, length=100, mode='determinate')
+                progress.pack(fill=X)
+                v = StringVar()
+                Label(root, text=new_field).pack()
+                Label(root, textvariable=v).pack()
             gen_rules = inp_options[0]
             delimiter = gen_rules['Delimiter']
             terminator = gen_rules['Terminator']
@@ -306,9 +311,10 @@ class OpenFile:
                                            lineterminator=terminator, low_memory=False):
                             line_count += gm_chunk.shape[0]
                             temp_df.append(gm_chunk)
-                            progress['value'] = (line_count/total_lines)*100
-                            v.set(str(line_count) + " : " + str(total_lines))
-                            root.update_idletasks()
+                            if not _test:
+                                progress['value'] = (line_count/total_lines)*100
+                                v.set(str(line_count) + " : " + str(total_lines))
+                                root.update_idletasks()
                         data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 1:
                         for gm_chunk in pd.read_csv(entry, header=header_line, chunksize=chunk, index_col=index_col,
@@ -316,9 +322,10 @@ class OpenFile:
                                            lineterminator=terminator, low_memory=False):
                             line_count += gm_chunk.shape[0]
                             temp_df.append(gm_chunk)
-                            progress['value'] = (line_count/total_lines)*100
-                            v.set(str(line_count) + " : " + str(total_lines))
-                            root.update_idletasks()
+                            if not _test:
+                                progress['value'] = (line_count/total_lines)*100
+                                v.set(str(line_count) + " : " + str(total_lines))
+                                root.update_idletasks()
                         data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 2:
                         settings = [entry, header_line, name, index_col, new_only_cols, new_dtypes, skip_rows, verbose, line_count]
@@ -347,9 +354,10 @@ class OpenFile:
                                            lineterminator=terminator, low_memory=False):
                             line_count += gm_chunk.shape[0]
                             temp_df.append(gm_chunk)
-                            progress['value'] = (line_count/total_lines)*100
-                            v.set(str(line_count) + " : " + str(total_lines))
-                            root.update_idletasks()
+                            if not _test:
+                                progress['value'] = (line_count/total_lines)*100
+                                v.set(str(line_count) + " : " + str(total_lines))
+                                root.update_idletasks()
                         data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 1:
                         for gm_chunk in pd.read_csv(entry, header=header_line, names=name, chunksize=chunk, index_col=index_col,
@@ -357,9 +365,10 @@ class OpenFile:
                                            lineterminator=terminator, low_memory=False):
                             line_count += gm_chunk.shape[0]
                             temp_df.append(gm_chunk)
-                            progress['value'] = (line_count/total_lines)*100
-                            v.set(str(line_count) + " : " + str(total_lines))
-                            root.update_idletasks()
+                            if not _test:
+                                progress['value'] = (line_count/total_lines)*100
+                                v.set(str(line_count) + " : " + str(total_lines))
+                                root.update_idletasks()
                         data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 2:
                         settings = [entry, header_line, name, index_col, new_only_cols, new_dtypes, skip_rows, verbose, line_count]
