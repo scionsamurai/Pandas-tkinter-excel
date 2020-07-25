@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import time, os
 from tkinter.ttk import Progressbar
-from tkinter import HORIZONTAL, StringVar, Label, Frame, X, messagebox, simpledialog
+from tkinter import HORIZONTAL, StringVar, Label, Frame, X
 import mmap
 from func_file import GenFuncs
 from retrieve_info import Retrieve_R
@@ -19,12 +19,6 @@ class OpenFile:
         new_field = GenFuncs.strip_dir(entry1)
         print('Opening ' + new_field)
         start1 = time.time()
-        progress = Progressbar(root, orient=HORIZONTAL, length=100, mode='determinate')
-        progress.pack(fill=X)
-        temp_df = []
-        v = StringVar()
-        Label(root, text=new_field).pack()
-        Label(root, textvariable=v).pack()
 
         def get_num_lines(file_path):
             fp = open(file_path, "r+")
@@ -223,6 +217,13 @@ class OpenFile:
             :return: Dataframe, Dictionary of Column/FillVal's
             """
             global var
+            progress = Progressbar(root, orient=HORIZONTAL, length=100, mode='determinate')
+            progress.pack(fill=X)
+            temp_df = []
+            new_field = GenFuncs.strip_dir(entry1)
+            v = StringVar()
+            Label(root, text=new_field).pack()
+            Label(root, textvariable=v).pack()
             gen_rules = inp_options[0]
             delimiter = gen_rules['Delimiter']
             terminator = gen_rules['Terminator']
@@ -413,7 +414,7 @@ class OpenFile:
         elif (entry1[-4:] == 'xlsx') or (entry1[-4:] == '.xls') or ((entry1[-4:])[:3] == 'xls') or ((entry1[-4:])[:2] == 'xl'):
             file_stats = os.stat(entry1)
             if (file_stats.st_size / (1024*1024)) > 2: # check if xls file is larger than 2mb - don't open if so until large file support is added
-                messagebox.showinfo('Access is denied', 'xls Error: Size not supported\nConsider saving the file as .csv\nLarge csv files are supported')
+                print(f"{GenFuncs.strip_dir(entry1)}Access is denied", 'xls Error: Size not supported\nConsider saving the file as .csv\nLarge csv files are supported')#############################
                 df_empty = pd.DataFrame({'A':[]})
                 end = time.time()
                 print('-------'+ str(end-start1) +'-------')
