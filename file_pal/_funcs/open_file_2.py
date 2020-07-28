@@ -32,9 +32,7 @@ class OpenFile:
             fp.close()
             return lines
 
-        total_lines = get_num_lines(entry1)
-
-        def readExcel(file_name, nrows, func=0, sets=[], line_count=0):
+        def readExcel(file_name, nrows, progress, v, func=0, sets=[], line_count=0):
             xl = pd.ExcelFile(file_name)
             sheetname = xl.sheet_names[0]
             df_header = pd.read_excel(file_name, sheet_name=sheetname,nrows=1)
@@ -210,11 +208,28 @@ class OpenFile:
 
                     return None, 0, name
 
-        def open_func(entry, df, inp_options, start, func=0):
+        def header_function(header_func, df, inp_opts):
+            skip_rows = None
+            skip_cols = 0
+            name = None
+            if inp_opts[0]['Header Func']:
+                skip_rows, skip_cols, name = col_check(df, inp_opts[3])
+            if skip_cols > 0:
+                for i in range(skip_cols):
+                    df = df.drop(df.columns[1], axis=1)
+            if skip_rows is not None:
+                if skip_rows > 0:
+                    tem_list = range(skip_rows - 1)
+                    df = df.drop(df.index[tem_list])
+                    df.columns = df.loc[(skip_rows - 1), :]
+            orig_headers = df.columns.values.tolist()
+            return skip_rows, skip_cols, name, orig_headers
+
+        def open_func(entry, orig_headers, inp_options, start, skip_rows, skip_cols, name, total_lines, func=0):
             """
             Function for applying input settings to Open
             :param entry: File Name and Directory
-            :param df: First 50 Lines of Opening File
+            :param orig_headers: original headers
             :param inp_options: Input Settings ;)
             :param start: Start Time
             :param func: 0=CSVw/Delimiter,1=CSV,2=Excel
@@ -237,9 +252,6 @@ class OpenFile:
             chunk = gen_rules['Chunk']
             verbose = gen_rules['Verbose']
             header_func = gen_rules['Header Func']
-            skip_rows = None
-            skip_cols = 0
-            name = None
             var = verbose
             line_count = 0
 
@@ -253,17 +265,6 @@ class OpenFile:
             else:
                 filter_results = False
             new_field = GenFuncs.strip_dir(entry)
-            if header_func:
-                skip_rows, skip_cols, name = col_check(df, head_func_dtypes)
-            if skip_cols > 0:
-                for i in range(skip_cols):
-                    df = df.drop(df.columns[1], axis=1)
-            if skip_rows is not None:
-                if skip_rows > 0:
-                    tem_list = range(skip_rows - 1)
-                    df = df.drop(df.index[tem_list])
-                    df.columns = df.loc[(skip_rows - 1), :]
-            orig_headers = df.columns.values.tolist()
             stripped_headers = []
             for item in orig_headers:
                 try:
@@ -329,7 +330,7 @@ class OpenFile:
                         data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 2:
                         settings = [entry, header_line, name, index_col, new_only_cols, new_dtypes, skip_rows, verbose, line_count]
-                        data = readExcel(entry,chunk,0,settings)
+                        data = readExcel(entry,chunk, progress, v,0,settings)
                     try:
                         data.columns = [col.strip() for col in data.columns]
                     except AttributeError:  # 'int'object has no attribute 'strip'  < - files with int headers
@@ -372,7 +373,7 @@ class OpenFile:
                         data = pd.concat(temp_df, axis=0, sort=False, ignore_index=True)
                     elif func == 2:
                         settings = [entry, header_line, name, index_col, new_only_cols, new_dtypes, skip_rows, verbose, line_count]
-                        data = readExcel(entry, chunk, 1, settings)
+                        data = readExcel(entry, chunk, progress, v, 1, settings)
                     if skip_cols > 0:
                         for i in range(skip_cols):
                             data.drop(data.columns[1], axis=1)
@@ -399,26 +400,48 @@ class OpenFile:
 
         if entry1[-4:] == '.csv':
             if inp_options1[0]['Delimiter'] != ',':
-                df1 = pd.read_csv(entry1, sep=inp_options1[0]['Delimiter'], nrows=50, low_memory=False)
-                if len(df1.columns) == 1:
-                    print('Delimiter Error: Only one row returned.\n File skipped. Please consider changing delimiter in the input settings.')
-                    df_empty = pd.DataFrame({'A':[]})
-                    end = time.time()
-                    print('-------'+ str(end-start1) +'-------')
-                    return df_empty, 'non_val'
+                try:
+                    orig_headers, name, skip_rows, skip_cols, total_lines = GenFuncs.file_opened(entry1)
+                except TypeError:
+                    orig_headers = False
+                if not orig_headers:
+                    total_lines = get_num_lines(entry1)
+                    df1 = pd.read_csv(entry1, sep=inp_options1[0]['Delimiter'], nrows=50, low_memory=False)
+                    if len(df1.columns) == 1:
+                        print('Delimiter Error: Only one row returned.\n File skipped. Please consider changing delimiter in the input settings.')
+                        df_empty = pd.DataFrame({'A':[]})
+                        end = time.time()
+                        print('-------'+ str(end-start1) +'-------')
+                        return df_empty, 'non_val'
+                    else:
+                        skip_rows, skip_cols, name, orig_headers = header_function(entry1, df1, inp_options1)
+                        GenFuncs.update_opened_list(entry1,orig_headers,name, skip_rows, skip_cols, total_lines)
+                        data, NA_list = open_func(entry1, orig_headers, inp_options1, start1, skip_rows, skip_cols, name, total_lines)
+                        return data, entry1, NA_list
                 else:
-                    data, NA_list = open_func(entry1, df1, inp_options1, start1)
+                    data, NA_list = open_func(entry1, orig_headers, inp_options1, start1, skip_rows, skip_cols, name, total_lines)
                     return data, entry1, NA_list
             else:
-                df1 = pd.read_csv(entry1, nrows=50, low_memory=False)
-                if len(df1.columns) == 1:
-                    print('Delimiter Error: Only one row returned.\n File skipped. Please consider changing delimiter in the input settings.')
-                    df_empty = pd.DataFrame({'A':[]})
-                    end = time.time()
-                    print('-------'+ str(end-start1) +'-------')
-                    return df_empty, 'non_val'
+                try:
+                    orig_headers, name, skip_rows, skip_cols, total_lines = GenFuncs.file_opened(entry1)
+                except TypeError:
+                    orig_headers = False
+                if not orig_headers:
+                    total_lines = get_num_lines(entry1)
+                    df1 = pd.read_csv(entry1, nrows=50, low_memory=False)
+                    if len(df1.columns) == 1:
+                        print('Delimiter Error: Only one row returned.\n File skipped. Please consider changing delimiter in the input settings.')
+                        df_empty = pd.DataFrame({'A':[]})
+                        end = time.time()
+                        print('-------'+ str(end-start1) +'-------')
+                        return df_empty, 'non_val'
+                    else:
+                        skip_rows, skip_cols, name, orig_headers = header_function(entry1, df1, inp_options1)
+                        GenFuncs.update_opened_list(entry1,orig_headers,name, skip_rows, skip_cols, total_lines)
+                        data, NA_list = open_func(entry1, orig_headers, inp_options1, start1, skip_rows, skip_cols, name, total_lines, func=1)
+                        return data, entry1, NA_list
                 else:
-                    data, NA_list = open_func(entry1, df1, inp_options1, start1, func=1)
+                    data, NA_list = open_func(entry1, orig_headers, inp_options1, start1, skip_rows, skip_cols, name, total_lines, func=1)
                     return data, entry1, NA_list
         elif (entry1[-4:] == 'xlsx') or (entry1[-4:] == '.xls') or ((entry1[-4:])[:3] == 'xls') or ((entry1[-4:])[:2] == 'xl'):
             file_stats = os.stat(entry1)
@@ -429,9 +452,20 @@ class OpenFile:
                 print('-------'+ str(end-start1) +'-------')
                 return df_empty, 'non_val'
             else:
-                df1 = pd.read_excel(entry1, sheet_name=0, nrows=50)
-                data, NA_list = open_func(entry1, df1, inp_options1, start1, func=2)
-                return data, entry1, NA_list
+                try:
+                    orig_headers, name, skip_rows, skip_cols, total_lines = GenFuncs.file_opened(entry1)
+                except TypeError:
+                    orig_headers = False
+                if not orig_headers:
+                    total_lines = get_num_lines(entry1)
+                    df1 = pd.read_excel(entry1, sheet_name=0, nrows=50)
+                    skip_rows, skip_cols, name, orig_headers = header_function(entry1, df1, inp_options1)
+                    GenFuncs.update_opened_list(entry1,orig_headers,name, skip_rows, skip_cols, total_lines)
+                    data, NA_list = open_func(entry1, orig_headers, inp_options1, start1, skip_rows, skip_cols, name, total_lines, func=2)
+                    return data, entry1, NA_list
+                else:
+                    data, NA_list = open_func(entry1, orig_headers, inp_options1, start1, skip_rows, skip_cols, name, total_lines, func=2)
+                    return data, entry1, NA_list
         elif entry1[-3:] == '.h5':
             data = pd.read_hdf(entry1,'df')
             filter_results = False
