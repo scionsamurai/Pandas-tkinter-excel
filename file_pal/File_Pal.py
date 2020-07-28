@@ -12,7 +12,7 @@ import multiprocessing
 from multiprocessing import Pool
 from threading import Thread
 from tkinter import filedialog, simpledialog, messagebox
-import os, warnings, tables, shelve, webbrowser
+import os, warnings, tables, shelve, webbrowser, tempfile
 import pandas as pd
 import numpy as np
 from _gui.footer_frame import MakeFooter
@@ -188,6 +188,19 @@ def sort_second(val):
 
 def ask_quit():
     if messagebox.askyesno("Quit", "Do you want to quit now?"):
+        try:
+            var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
+            output_path = var_file['dir_location']
+            var_file.close()
+        except:
+            output_path = tempfile.gettempdir()
+        
+        for FP_out in os.listdir(output_path): # Clean output folder of past search items
+            if FP_out.endswith("FP_out.xlsx"):
+                try:
+                    os.remove(os.path.join(output_path, FP_out))
+                except PermissionError:
+                    pass
         try:
             root.destroy()
         except:
