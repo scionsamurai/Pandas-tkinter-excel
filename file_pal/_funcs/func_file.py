@@ -1,7 +1,7 @@
 """
 General Functions Pulled to trim primary code
 """
-import shelve, os, re, tempfile
+import shelve, os, re, tempfile, time
 from _funcs.SplitEntry import Split_Entry
 
 class GenFuncs:
@@ -344,3 +344,40 @@ class GenFuncs:
         temp_list = file_dir.split('/')
         file_name = temp_list[(len(temp_list) - 1)]
         return file_name
+
+    def file_opened(file_name):
+        var_file1 = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
+        try:
+            var_file = var_file1['opened_files']
+        except KeyError as e:
+            #print(e)
+            var_file = {}
+        var_file1.close()
+        if file_name in list(var_file.keys()):
+            orig_headers = var_file[file_name][0]
+            last_opened = var_file[file_name][1]
+            col_names = var_file[file_name][2]
+            skipped_rows = var_file[file_name][3]
+            skipped_cols = var_file[file_name][4]
+            total_rows = var_file[file_name][5]
+            file_stats = os.stat(file_name)
+            last_modified = int(round(file_stats.st_mtime * 1000))
+            if (last_opened-last_modified)>0:
+                return orig_headers, col_names, skipped_rows, skipped_cols, total_rows
+            else:
+                return False
+        else:
+            return False
+    
+    def update_opened_list(file_name, orig_headers, col_names, skipped_rows, skipped_cols, total_rows):
+        var_file = shelve.open(os.path.join(os.path.expanduser('~'),'var_file'))
+        time_n = int(round(time.time() * 1000))
+        try:
+            var1_file = var_file['opened_files']
+        except KeyError as e:
+            #print(f"{e} --- opened_files")
+            var1_file = {}
+        var1_file[file_name] = (orig_headers,time_n, col_names, skipped_rows, skipped_cols, total_rows)
+        var_file['opened_files'] = var1_file
+        var_file.close()
+        print("saved Col names for faster file opens later.")
